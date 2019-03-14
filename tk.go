@@ -1,4 +1,4 @@
-package txtk
+package tk
 
 import (
 	"bufio"
@@ -1230,6 +1230,11 @@ func Pl(formatA string, argsA ...interface{}) {
 	fmt.Printf(formatA+"\n", argsA...)
 }
 
+// Fpl 类似Pl，但向流中写入(Fprintf)
+func Fpl(wA io.Writer, formatA string, argsA ...interface{}) {
+	fmt.Fprintf(wA, formatA+"\n", argsA...)
+}
+
 // Printf 仅仅封装了fmt.Printf函数，与其完全一致
 func Printf(format string, a ...interface{}) {
 	fmt.Printf(format, a...)
@@ -1340,6 +1345,18 @@ func GetOSName() string {
 	return runtime.GOOS
 }
 
+func GetCurrentDir() string {
+	strT, errT := os.Getwd()
+	if errT != nil {
+		strT, errT = filepath.Abs(".")
+		if errT != nil {
+			return "."
+		}
+	}
+
+	return strT
+}
+
 func GetApplicationPath() string {
 	file, _ := exec.LookPath(os.Args[0])
 	pathT, _ := filepath.Abs(file)
@@ -1398,6 +1415,75 @@ func GetParameterByIndexWithDefaultValue(argsA []string, idxA int, defaultA stri
 	}
 
 	return defaultA
+}
+
+// ParseCommandLine 分析命令行字符串，类似os.Args的获取过程
+func ParseCommandLine(command string) ([]string, error) {
+	var args []string
+
+	state := "start"
+	current := ""
+	quote := "\""
+	escapeNext := false
+
+	for i := 0; i < len(command); i++ {
+		c := command[i]
+
+		if state == "quotes" {
+			if string(c) != quote {
+				current += string(c)
+			} else {
+				args = append(args, current)
+				current = ""
+				state = "start"
+			}
+			continue
+		}
+
+		if escapeNext {
+			current += string(c)
+			escapeNext = false
+			continue
+		}
+
+		if c == '\\' {
+			escapeNext = true
+			continue
+		}
+
+		if c == '"' || c == '\'' {
+			state = "quotes"
+			quote = string(c)
+			continue
+		}
+
+		if state == "arg" {
+			if c == ' ' || c == '\t' {
+				args = append(args, current)
+				current = ""
+				state = "start"
+			} else {
+				current += string(c)
+			}
+			// Pl("state: %v, current: %v, args: %v", state, current, args)
+			continue
+		}
+
+		if c != ' ' && c != '\t' {
+			state = "arg"
+			current += string(c)
+		}
+	}
+
+	if state == "quotes" {
+		return []string{}, fmt.Errorf("Unclosed quote in command line: %s", command)
+	}
+
+	if current != "" {
+		args = append(args, current)
+	}
+
+	return args, nil
 }
 
 // GetSwitchWithDefaultValue 获取命令行参数中的开关，用法：tmps := tk.GetSwitchWithDefaultValue(args, "-verbose=", "false")
