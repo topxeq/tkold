@@ -148,7 +148,8 @@ func TXResultFromString(strA string) (*TXResult, error) {
 // 全局变量 global variables
 
 var logFileG = "c:\\txtk.log"
-var TXTimeFormatCompact = "20060102150405"
+var TimeFormatCompact = "20060102150405"
+var TimeFormatCompact2 = "2006/01/02 15:04:05"
 var GlobalEnvSetG *TXCollection = nil
 
 // 全局环境集合相关 global environment related
@@ -1208,11 +1209,40 @@ func Int64ArrayToFloat64Array(aryA []int64) []float64 {
 
 }
 
+// 映射相关 map related
+
+// GetValueOfMSS get the value for key in map[string]string
+// returns default value if not ok
+func GetValueOfMSS(mapA map[string]string, keyA string, defaultA string) string {
+	v, ok := mapA[keyA]
+
+	if ok {
+		return v
+	}
+
+	return defaultA
+}
+
 // 系统相关函数 system related
 
 // Prf 仅仅是封装了fmt.Printf函数
 func Prf(formatA string, argsA ...interface{}) {
 	fmt.Printf(formatA, argsA...)
+}
+
+// Prl 仅仅封装了fmt.Println函数
+func Prl(a ...interface{}) {
+	fmt.Println(a...)
+}
+
+// Printf 仅仅封装了fmt.Printf函数，与其完全一致
+func Printf(format string, a ...interface{}) {
+	fmt.Printf(format, a...)
+}
+
+// Printfln 仅仅封装了fmt.Printf函数，但结尾会多输出一个换行符
+func Printfln(format string, a ...interface{}) {
+	fmt.Printf(format+"\n", a...)
 }
 
 // Spr 仅仅是封装了fmt.Sprintf函数
@@ -1233,16 +1263,6 @@ func Pl(formatA string, argsA ...interface{}) {
 // Fpl 类似Pl，但向流中写入(Fprintf)
 func Fpl(wA io.Writer, formatA string, argsA ...interface{}) {
 	fmt.Fprintf(wA, formatA+"\n", argsA...)
-}
-
-// Printf 仅仅封装了fmt.Printf函数，与其完全一致
-func Printf(format string, a ...interface{}) {
-	fmt.Printf(format, a...)
-}
-
-// Printfln 仅仅封装了fmt.Printf函数，但结尾会多输出一个换行符
-func Printfln(format string, a ...interface{}) {
-	fmt.Printf(format+"\n", a...)
 }
 
 func PlvWithError(vA interface{}, errStrA string) {
@@ -1291,6 +1311,11 @@ func PlErr(errA error) {
 
 func Plv(argsA ...interface{}) {
 	fmt.Printf("%#v\n", argsA...)
+}
+
+// Errf wrap fmt.Errorf function
+func Errf(formatA string, argsA ...interface{}) error {
+	return fmt.Errorf(formatA, argsA...)
 }
 
 var stdinBufferedReader *bufio.Reader
@@ -1600,7 +1625,7 @@ func Float64ToStr(floatA float64) string {
 }
 
 func StrToTimeCompact(strA string, defaultA time.Time) time.Time {
-	t, err := time.Parse(TXTimeFormatCompact, strA)
+	t, err := time.Parse(TimeFormatCompact, strA)
 	if err != nil {
 		return defaultA
 	}
@@ -1609,7 +1634,7 @@ func StrToTimeCompact(strA string, defaultA time.Time) time.Time {
 }
 
 func StrToTimeCompactNoError(strA string) time.Time {
-	t, _ := time.Parse(TXTimeFormatCompact, strA)
+	t, _ := time.Parse(TimeFormatCompact, strA)
 
 	return t
 }
@@ -1625,6 +1650,14 @@ func LogWithTime(formatA string, argsA ...interface{}) {
 		AppendStringToFile(fmt.Sprintf(fmt.Sprintf("[%v] ", time.Now())+formatA, argsA...), logFileG)
 	} else {
 		AppendStringToFile(fmt.Sprintf(fmt.Sprintf("[%v] ", time.Now())+formatA+"\n", argsA...), logFileG)
+	}
+}
+
+func LogWithTimeCompact(formatA string, argsA ...interface{}) {
+	if EndsWith(formatA, "\n") {
+		AppendStringToFile(fmt.Sprintf(fmt.Sprintf("[%v] ", time.Now().Format(TimeFormatCompact2))+formatA, argsA...), logFileG)
+	} else {
+		AppendStringToFile(fmt.Sprintf(fmt.Sprintf("[%v] ", time.Now().Format(TimeFormatCompact2))+formatA+"\n", argsA...), logFileG)
 	}
 }
 
@@ -2403,6 +2436,26 @@ func AnalyzeURLParams(strA string) map[string]string {
 	}
 
 	return rMapT
+}
+
+func UrlEncode(strA string) string {
+	return url.QueryEscape(strA)
+}
+
+func UrlEncode2(strA string) string {
+	u, err := url.Parse(strA)
+	if err != nil {
+		return GenerateErrorString("parsing URL failed")
+	}
+	return u.String()
+}
+
+func UrlDecode(strA string) string {
+	rStrT, errT := url.QueryUnescape(strA)
+	if errT != nil {
+		return GenerateErrorString(errT.Error())
+	}
+	return rStrT
 }
 
 // debug related
