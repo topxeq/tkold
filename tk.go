@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -148,6 +149,8 @@ func TXResultFromString(strA string) (*TXResult, error) {
 // 全局变量 global variables
 
 var logFileG = "c:\\txtk.log"
+var TimeFormat = "2006-01-02 15:04:05"
+var TimeFormatMS = "2006-01-02 15:04:05.000"
 var TimeFormatCompact = "20060102150405"
 var TimeFormatCompact2 = "2006/01/02 15:04:05"
 var GlobalEnvSetG *TXCollection = nil
@@ -1125,6 +1128,32 @@ func NowToFileName() string {
 func GetNowTimeStringHourMinute() string {
 	t := time.Now()
 	return fmt.Sprintf("%02d:%02d", t.Hour(), t.Minute())
+}
+
+func GetNowMinutesInDay() int {
+	t := time.Now()
+
+	rs := int(t.Hour())*60 + int(t.Minute())
+
+	return rs
+}
+
+func NowToStrUTC(formatA string) string {
+	n := time.Now().UTC()
+	if formatA == "" {
+		return (n.Format(TimeFormat))
+	}
+
+	return n.Format(formatA)
+}
+
+func StrToTime(strA string, defaultA time.Time) time.Time {
+	t, err := time.Parse(TimeFormat, strA)
+	if err != nil {
+		return defaultA
+	}
+
+	return t
 }
 
 // 切片、数组相关 slice and array related
@@ -2351,6 +2380,128 @@ func MD5Encrypt(strA string) string {
 }
 
 // 加密解密相关
+
+func BytesToHex(bufA []byte) string {
+	return strings.ToUpper(hex.EncodeToString(bufA))
+}
+
+func HexToBytes(strA string) []byte {
+	buf, err := hex.DecodeString(strA)
+	if err != nil {
+		return nil
+	}
+
+	return buf
+}
+
+func GetRandomByte() byte {
+	Randomize()
+
+	randT := rand.Intn(256)
+
+	return byte(randT)
+}
+
+func EncryptDataByTXDEE(srcDataA []byte, codeA string) []byte {
+	if srcDataA == nil {
+		return nil
+	}
+
+	dataLen := len(srcDataA)
+	if dataLen < 1 {
+		return srcDataA
+	}
+
+	codeT := codeA
+	if codeT == "" {
+		codeT = "topxeq"
+	}
+
+	codeBytes := []byte(codeT)
+	codeLen := len(codeBytes)
+
+	bufB := make([]byte, dataLen+4)
+
+	bufB[0] = GetRandomByte()
+	bufB[1] = GetRandomByte()
+
+	for i := 0; i < dataLen; i++ {
+		bufB[2+i] = srcDataA[i] + codeBytes[i%codeLen] + byte(i+1) + bufB[1]
+	}
+
+	bufB[dataLen+4-2] = GetRandomByte()
+	bufB[dataLen+4-1] = GetRandomByte()
+
+	return bufB
+}
+
+func DecryptDataByTXDEE(srcDataA []byte, codeA string) []byte {
+	if srcDataA == nil {
+		return nil
+	}
+
+	dataLen := len(srcDataA)
+	if dataLen < 4 {
+		return nil
+	}
+
+	dataLen -= 4
+
+	codeT := codeA
+	if codeT == "" {
+		codeT = "topxeq"
+	}
+
+	codeBytes := []byte(codeT)
+	codeLen := len(codeBytes)
+
+	bufB := make([]byte, dataLen)
+
+	for i := 0; i < dataLen; i++ {
+		bufB[i] = srcDataA[2+i] - codeBytes[i%codeLen] - byte(i+1) - srcDataA[1]
+	}
+
+	return bufB
+}
+
+func EncryptStringByTXDEE(strA, codeA string) string {
+	if strA == "" {
+		return ""
+	}
+
+	dataDT := EncryptDataByTXDEE([]byte(strA), codeA)
+	if dataDT == nil {
+		return GenerateErrorStringF("encrypting failed")
+	}
+
+	return strings.ToUpper(hex.EncodeToString(dataDT))
+}
+
+func DecryptStringByTXDEE(strA, codeA string) string {
+	if strA == "" {
+		return ""
+	}
+
+	var sBufT []byte
+	var errT error
+
+	if StartsWith(strA, "740404") {
+		sBufT, errT = hex.DecodeString(strA[6:])
+	} else {
+		sBufT, errT = hex.DecodeString(strA)
+	}
+
+	if errT != nil {
+		return GenerateErrorStringF("decrypting failed")
+	}
+
+	dataDT := DecryptDataByTXDEE(sBufT, codeA)
+	if dataDT == nil {
+		return GenerateErrorStringF("decrypting failed")
+	}
+
+	return string(dataDT)
+}
 
 func Pkcs7Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
