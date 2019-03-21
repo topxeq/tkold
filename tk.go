@@ -2098,6 +2098,38 @@ func LoadSimpleMapFromFile(fileNameA string) map[string]string {
 	return mapT
 }
 
+func SimpleMapToString(mapA map[string]string) string {
+	strListT := make([]string, 0, len(mapA)+1)
+
+	var kk string
+	for k, v := range mapA {
+		kk = Replace(k, "=", "`EQ`")
+		strListT = append(strListT, kk+"="+ReplaceLineEnds(v, "#CR#"))
+	}
+
+	return JoinLines(strListT)
+}
+
+func LoadSimpleMapFromString(strA string) map[string]string {
+	strListT := SplitLines(strA)
+
+	if strListT == nil {
+		return nil
+	}
+
+	mapT := make(map[string]string)
+	for i := range strListT {
+		lineT := strListT[i]
+		lineListT := strings.SplitN(lineT, "=", 2)
+		if (lineListT == nil) || (len(lineListT) < 2) {
+			continue
+		}
+		mapT[Replace(lineListT[0], "`EQ`", "=")] = RestoreLineEnds(lineListT[1], "#CR#")
+	}
+
+	return mapT
+}
+
 func ReplaceLineEnds(strA string, replacementA string) string {
 	rs := strings.Replace(strA, "\r", "", -1)
 	rs = strings.Replace(rs, "\n", replacementA, -1)
