@@ -810,6 +810,7 @@ func RegFindAll(strA, patternA string, groupA int) []string {
 	return nil
 }
 
+// RegFindFirst returns error string if no match or no matching group
 func RegFindFirst(strA, patternA string, groupA int) string {
 	regexpT, errT := regexp.Compile(patternA)
 
