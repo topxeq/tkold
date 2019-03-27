@@ -1348,6 +1348,32 @@ func Errf(formatA string, argsA ...interface{}) error {
 	return fmt.Errorf(formatA, argsA...)
 }
 
+func FatalErr(prefixA string, errA error) {
+	Pl("%v%v", prefixA, errA.Error())
+
+	os.Exit(1)
+}
+
+func CheckErr(prefixA string, errA error) {
+	if errA == nil {
+		return
+	}
+
+	Pl("%v%v", prefixA, errA.Error())
+
+	os.Exit(1)
+}
+
+func CheckErrCompact(errA error) {
+	if errA == nil {
+		return
+	}
+
+	Prl(errA.Error())
+
+	os.Exit(1)
+}
+
 var stdinBufferedReader *bufio.Reader
 var stdinBufferedScanner *bufio.Scanner
 
@@ -2814,6 +2840,44 @@ func PostRequest(urlA, reqBodyA string, timeoutSecsA time.Duration) (string, err
 	}
 
 	req.Header.Set("Content-Type", "application/json; encoding=utf-8")
+
+	client := &http.Client{
+		//CheckRedirect: redirectPolicyFunc,
+		Timeout: time.Second * timeoutSecsA,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
+}
+
+// PostRequest : PostRequest with custom headers
+func PostRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA time.Duration) (string, error) {
+
+	req, err := http.NewRequest("POST", urlA, strings.NewReader(reqBodyA))
+
+	if err != nil {
+		return "", err
+	}
+
+	headersT := SplitLines(customHeadersA)
+
+	for i := 0; i < len(headersT); i++ {
+		lineT := headersT[i]
+		aryT := strings.Split(lineT, ":")
+		req.Header.Add(aryT[0], Replace(aryT[1], "`", ":"))
+		// Pl("%s=%s", aryT[0], aryT[1])
+	}
 
 	client := &http.Client{
 		//CheckRedirect: redirectPolicyFunc,
