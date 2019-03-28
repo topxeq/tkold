@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/md5"
+	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -3041,6 +3042,37 @@ func CalCosineSimilarityBetweenFloatsBig(f1, f2 []float64) float64 {
 	rs, _ := (rr.Quo(rr, tmprsr)).Float64()
 
 	return rs
+}
+
+// 数据库相关 database related
+
+// GetDBRowCount 获取类似select count(*)的结果
+func GetDBRowCount(dbA *sql.DB, sqlA string) (int, error) {
+	if dbA == nil {
+		return 0, fmt.Errorf("DB pointer nil")
+	}
+
+	var c int
+
+	errT := dbA.QueryRow(sqlA).Scan(&c)
+
+	if errT == sql.ErrNoRows {
+		return 0, fmt.Errorf("no rows")
+	}
+
+	return c, nil
+}
+
+// GetDBRowCountCompact 获取类似select count(*)的结果
+// return < 0 if fail
+func GetDBRowCountCompact(dbA *sql.DB, sqlA string) int {
+	c, errT := GetDBRowCount(dbA, sqlA)
+
+	if errT != nil {
+		return -1
+	}
+
+	return c
 }
 
 // 事件相关 event related
