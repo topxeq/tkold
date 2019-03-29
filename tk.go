@@ -1361,6 +1361,18 @@ func FatalErr(prefixA string, errA error) {
 	os.Exit(1)
 }
 
+func FatalErrf(formatA string, errA error) {
+	Pl(formatA, errA.Error())
+
+	os.Exit(1)
+}
+
+func Fatalf(formatA string, strA string) {
+	Pl(formatA, strA)
+
+	os.Exit(1)
+}
+
 func CheckErr(prefixA string, errA error) {
 	if errA == nil {
 		return
@@ -1700,6 +1712,26 @@ func StrToTimeCompactNoError(strA string) time.Time {
 	t, _ := time.Parse(TimeFormatCompact, strA)
 
 	return t
+}
+
+func FormatStringSliceSlice(sliceA [][]string, sepA string, lineSepA string) string {
+	var bufT strings.Builder
+
+	for i, v := range sliceA {
+		if i != 0 {
+			bufT.WriteString(lineSepA)
+		}
+
+		for ii, vv := range v {
+			if ii != 0 {
+				bufT.WriteString(sepA)
+			}
+
+			bufT.WriteString(vv)
+		}
+	}
+
+	return bufT.String()
 }
 
 // 日志相关
@@ -3052,6 +3084,24 @@ func CalCosineSimilarityBetweenFloatsBig(f1, f2 []float64) float64 {
 
 // 数据库相关 database related
 
+// GetDBConnection must close it manually
+func GetDBConnection(driverA string, pathT string) *sql.DB {
+	dbT, errT := sql.Open(driverA, pathT)
+
+	if errT != nil {
+		return nil
+	}
+
+	errT = dbT.Ping()
+
+	if errT != nil {
+		dbT.Close()
+		return nil
+	}
+
+	return dbT
+}
+
 // GetDBRowCount 获取类似select count(*)的结果
 func GetDBRowCount(dbA *sql.DB, sqlA string) (int, error) {
 	if dbA == nil {
@@ -3079,6 +3129,86 @@ func GetDBRowCountCompact(dbA *sql.DB, sqlA string) int {
 	}
 
 	return c
+}
+
+// GetDBResultString 获取类似select a from ...的结果
+func GetDBResultString(dbA *sql.DB, sqlA string) (string, error) {
+	if dbA == nil {
+		return "", fmt.Errorf("DB pointer nil")
+	}
+
+	var s string
+
+	errT := dbA.QueryRow(sqlA).Scan(&s)
+
+	if errT == sql.ErrNoRows {
+		return "", fmt.Errorf("no rows")
+	}
+
+	return s, nil
+}
+
+// GetDBResultArray 获取类似select a from ...的多行结果
+func GetDBResultArray(dbA *sql.DB, sqlA string) ([][]string, error) {
+	if dbA == nil {
+		return nil, fmt.Errorf("DB pointer nil")
+	}
+
+	rowsT, errT := dbA.Query(sqlA)
+	if errT != nil {
+		return nil, errT
+	}
+
+	defer rowsT.Close()
+
+	columnsT, errT := rowsT.Columns()
+
+	if errT != nil {
+		return nil, errT
+	}
+
+	// columnsTypesT, errT := rowsT.ColumnTypes()
+
+	columnCountT := len(columnsT)
+
+	if columnCountT < 1 {
+		return nil, Errf("zero columns")
+	}
+
+	sliceT := make([][]string, 0)
+
+	for rowsT.Next() {
+		subSliceT := make([]interface{}, columnCountT)
+		subSlicePointerT := make([]interface{}, columnCountT)
+
+		for j := 0; j < columnCountT; j++ {
+			subSlicePointerT[j] = &subSliceT[j]
+		}
+
+		errT := rowsT.Scan(subSlicePointerT...)
+
+		if errT != nil {
+			return nil, errT
+		}
+
+		// subSliceT[j] = tmps
+
+		errT = rowsT.Err()
+		if errT != nil {
+			return nil, errT
+		}
+
+		subStringSliceT := make([]string, columnCountT)
+
+		for j := 0; j < columnCountT; j++ {
+			subStringSliceT[j] = Spr("%v", subSliceT[j])
+		}
+
+		sliceT = append(sliceT, subStringSliceT)
+
+	}
+
+	return sliceT, nil
 }
 
 // 事件相关 event related
