@@ -1111,6 +1111,12 @@ func GetNowTimeString() string {
 	return fmt.Sprintf("%04d%02d%02d%02d%02d%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
 }
 
+// GetNowTimeStringFormat GetNowTimeStringFormat
+func GetNowTimeStringFormat(formatA string) string {
+	t := time.Now()
+	return t.Format(formatA)
+}
+
 func GetNowTimeStringFormal() string {
 	t := time.Now()
 	return fmt.Sprintf("%04d-%02d-%02d %02d:%02d:%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
@@ -2404,7 +2410,7 @@ func MD5Encrypt(strA string) string {
 
 	tmpbb := tmpb[:]
 
-	return string(tmpbb)
+	return hex.EncodeToString(tmpbb)
 }
 
 // 加密解密相关
