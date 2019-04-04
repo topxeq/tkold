@@ -2952,7 +2952,9 @@ func GenerateJSONPResponse(statusA string, valueA string, reqA *http.Request) st
 
 	if valueOnlyT {
 		if _, withErrorT := reqA.Form["witherror"]; withErrorT {
-			return GenerateErrorString(valueA)
+			if statusA != "success" {
+				return GenerateErrorString(valueA)
+			}
 		}
 
 		return valueA
