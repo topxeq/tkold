@@ -2951,6 +2951,10 @@ func GenerateJSONPResponse(statusA string, valueA string, reqA *http.Request) st
 	_, valueOnlyT := reqA.Form["valueonly"]
 
 	if valueOnlyT {
+		if _, withErrorT := reqA.Form["witherror"]; withErrorT {
+			return GenerateErrorString(valueA)
+		}
+
 		return valueA
 	} else {
 		mT := make(map[string]string)
