@@ -2922,7 +2922,7 @@ func PostRequest(urlA, reqBodyA string, timeoutSecsA time.Duration) (string, err
 	return string(body), nil
 }
 
-// PostRequest : PostRequest with custom headers
+// PostRequestX : PostRequest with custom headers
 func PostRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA time.Duration) (string, error) {
 
 	req, err := http.NewRequest("POST", urlA, strings.NewReader(reqBodyA))
@@ -2958,6 +2958,44 @@ func PostRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA tim
 	}
 
 	return string(body), nil
+}
+
+// PostRequestBytesX : PostRequest with custom headers
+func PostRequestBytesX(urlA string, reqBodyA []byte, customHeadersA string, timeoutSecsA time.Duration) ([]byte, error) {
+
+	req, err := http.NewRequest("POST", urlA, bytes.NewReader(reqBodyA))
+
+	if err != nil {
+		return nil, err
+	}
+
+	headersT := SplitLines(customHeadersA)
+
+	for i := 0; i < len(headersT); i++ {
+		lineT := headersT[i]
+		aryT := strings.Split(lineT, ":")
+		req.Header.Add(aryT[0], Replace(aryT[1], "`", ":"))
+		// Pl("%s=%s", aryT[0], aryT[1])
+	}
+
+	client := &http.Client{
+		//CheckRedirect: redirectPolicyFunc,
+		Timeout: time.Second * timeoutSecsA,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }
 
 func GetFormValueWithDefaultValue(reqA *http.Request, keyA string, defaultA string) string {
