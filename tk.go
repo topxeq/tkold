@@ -1987,6 +1987,28 @@ func LoadStringList(fileNameA string) ([]string, string) {
 	return stringList, ""
 }
 
+func LoadStringListFromFile(fileNameA string) ([]string, error) {
+	if !IfFileExists(fileNameA) {
+		return nil, fmt.Errorf("file not exists")
+	}
+
+	fileT, err := os.Open(fileNameA)
+	if err != nil {
+		return nil, err
+	}
+
+	defer fileT.Close()
+
+	fileContentT, err := ioutil.ReadAll(fileT)
+	if err != nil {
+		return nil, err
+	}
+
+	stringList := SplitLines(string(fileContentT))
+
+	return stringList, nil
+}
+
 func SaveStringList(strListA []string, fileA string) string {
 	if strListA == nil {
 		return GenerateErrorString("invalid parameter")
