@@ -263,6 +263,16 @@ func InStrings(strA string, argsA ...string) bool {
 	return false
 }
 
+func GetSliceMaxLen(strA string, maxBytesA int) string {
+	lenT := len(strA)
+
+	if lenT <= maxBytesA {
+		return strA
+	}
+
+	return strA[:maxBytesA]
+}
+
 func FindFirstDiffIndex(strA string, str2A string) int {
 	lent1 := len(strA)
 	lent2 := len(str2A)
@@ -898,6 +908,59 @@ func GetRandomInt64InRange(minA int64, maxA int64) int64 {
 	return randT
 }
 
+func GenerateRandomString(minCharA, maxCharA int, hasUpperA, hasLowerA, hasDigitA, hasSpecialCharA, hasSpaceA bool, hasInvalidChars bool) string {
+	Randomize()
+
+	if minCharA <= 0 {
+		return ""
+	}
+
+	if maxCharA <= 0 {
+		return ""
+	}
+
+	if minCharA > maxCharA {
+		return ""
+	}
+
+	countT := minCharA + rand.Intn(maxCharA+1-minCharA)
+
+	baseT := ""
+	if hasUpperA {
+		baseT += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	}
+
+	if hasLowerA {
+		baseT += "abcdefghijklmnopqrstuvwxyz"
+	}
+
+	if hasDigitA {
+		baseT += "0123456789"
+	}
+
+	if hasSpecialCharA {
+		baseT += "!@#$%^&*-=[]{}."
+	}
+
+	if hasSpaceA {
+		baseT += " "
+	}
+
+	if hasInvalidChars {
+		baseT += "/\\:*\"<>|(),+?;"
+	}
+
+	rStrT := ""
+	var idxT int
+
+	for i := 0; i < countT; i++ {
+		idxT = rand.Intn(len(baseT))
+		rStrT += baseT[idxT:(idxT + 1)]
+	}
+
+	return rStrT
+}
+
 // RandomX 是一个线程不安全的随机数产生器
 type RandomX struct {
 	r uint64
@@ -1112,6 +1175,7 @@ func GetNowTimeString() string {
 }
 
 // GetNowTimeStringFormat GetNowTimeStringFormat
+// "2006-01-02 15:04:05.000"
 func GetNowTimeStringFormat(formatA string) string {
 	t := time.Now()
 	return t.Format(formatA)
@@ -1155,6 +1219,27 @@ func NowToStrUTC(formatA string) string {
 	return n.Format(formatA)
 }
 
+func GetTimeStringDiffMS(str1A, str2A, formatA string, defaultA int64) int64 {
+	formatT := Trim(formatA)
+	if formatT == "" {
+		formatT = TimeFormat
+	}
+
+	t1, err := time.Parse(formatT, str1A)
+	if err != nil {
+		return defaultA
+	}
+
+	t2, err := time.Parse(formatT, str2A)
+	if err != nil {
+		return defaultA
+	}
+
+	diffT := t2.Sub(t1)
+
+	return int64(diffT / 1000000)
+}
+
 func StrToTime(strA string, defaultA time.Time) time.Time {
 	t, err := time.Parse(TimeFormat, strA)
 	if err != nil {
@@ -1162,6 +1247,16 @@ func StrToTime(strA string, defaultA time.Time) time.Time {
 	}
 
 	return t
+}
+
+// StrToTimeByFormat default "2006-01-02 15:04:05"
+func StrToTimeByFormat(strA string, formatA string) (time.Time, error) {
+
+	if formatA == "" {
+		formatA = "2006-01-02 15:04:05"
+	}
+
+	return time.Parse(formatA, strA)
 }
 
 // 切片、数组相关 slice and array related
@@ -1297,6 +1392,13 @@ func Pl(formatA string, argsA ...interface{}) {
 	fmt.Printf(formatA+"\n", argsA...)
 }
 
+// PlVerbose 类似Pl，但仅在verboseA为true时才输出
+func PlVerbose(verboseA bool, formatA string, argsA ...interface{}) {
+	if verboseA {
+		fmt.Printf(formatA+"\n", argsA...)
+	}
+}
+
 // Fpl 类似Pl，但向流中写入(Fprintf)
 func Fpl(wA io.Writer, formatA string, argsA ...interface{}) {
 	fmt.Fprintf(wA, formatA+"\n", argsA...)
@@ -1346,6 +1448,14 @@ func PlErr(errA error) {
 	Pl("Error: %v", errA.Error())
 }
 
+func PlErrWithPrefix(prefixA string, errA error) {
+	if errA == nil {
+		return
+	}
+
+	Pl("%v%v", prefixA, errA.Error())
+}
+
 func Plv(argsA ...interface{}) {
 	fmt.Printf("%#v\n", argsA...)
 }
@@ -1367,8 +1477,8 @@ func FatalErrf(formatA string, errA error) {
 	os.Exit(1)
 }
 
-func Fatalf(formatA string, strA string) {
-	Pl(formatA, strA)
+func Fatalf(formatA string, argsA ...interface{}) {
+	Pl(formatA, argsA...)
 
 	os.Exit(1)
 }
@@ -1475,6 +1585,23 @@ func EnsureMakeDirs(pathA string) string {
 			return ""
 		} else {
 			return GenerateErrorString("a file with same name exists")
+		}
+	}
+}
+
+func EnsureMakeDirsE(pathA string) error {
+	if !IfFileExists(pathA) {
+		os.MkdirAll(pathA, 0777)
+
+		if !IfFileExists(pathA) {
+			return fmt.Errorf("failed to make directory")
+		}
+		return nil
+	} else {
+		if IsDirectory(pathA) {
+			return nil
+		} else {
+			return fmt.Errorf("a file with same name exists")
 		}
 	}
 }
@@ -1658,7 +1785,7 @@ func Int64ToStr(intA int64) string {
 	return strconv.FormatInt(intA, 10)
 }
 
-// StrToIntWithDefaultValue 字符串转扎整数，如果有问题则返回默认数值
+// StrToIntWithDefaultValue 字符串转整数，如果有问题则返回默认数值
 func StrToIntWithDefaultValue(strA string, defaultA int) int {
 	nT, errT := strconv.ParseInt(strA, 10, 0)
 	if errT != nil {
@@ -1666,6 +1793,13 @@ func StrToIntWithDefaultValue(strA string, defaultA int) int {
 	}
 
 	return int(nT)
+}
+
+// StrToInt 字符串转整数
+func StrToInt(strA string) (int, error) {
+	nT, errT := strconv.ParseInt(strA, 10, 0)
+
+	return int(nT), errT
 }
 
 func StrToInt64WithDefaultValue(strA string, defaultA int64) int64 {
@@ -1693,6 +1827,12 @@ func StrToFloat64WithDefaultValue(strA string, defaultA float64) float64 {
 	}
 
 	return nT
+}
+
+func StrToFloat64(strA string) (float64, error) {
+	nT, errT := strconv.ParseFloat(strA, 64)
+
+	return nT, errT
 }
 
 func Float64ToStr(floatA float64) string {
@@ -1901,6 +2041,26 @@ func LoadStringFromFile(fileNameA string) string {
 	return string(fileContentT)
 }
 
+func LoadStringFromFileE(fileNameA string) (string, error) {
+	if !IfFileExists(fileNameA) {
+		return "", fmt.Errorf("file not exists")
+	}
+
+	fileT, err := os.Open(fileNameA)
+	if err != nil {
+		return "", err
+	}
+
+	defer fileT.Close()
+
+	fileContentT, err := ioutil.ReadAll(fileT)
+	if err != nil {
+		return "", err
+	}
+
+	return string(fileContentT), nil
+}
+
 // LoadBytes LoadBytes
 func LoadBytes(fileNameA string, numA int) []byte {
 	if !IfFileExists(fileNameA) {
@@ -1945,6 +2105,20 @@ func SaveStringToFile(strA string, fileA string) string {
 	wFile.Flush()
 
 	return ""
+}
+
+func SaveStringToFileE(strA string, fileA string) error {
+	file, err := os.Create(fileA)
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+	wFile := bufio.NewWriter(file)
+	wFile.WriteString(strA)
+	wFile.Flush()
+
+	return nil
 }
 
 func AppendStringToFile(strA string, fileA string) string {
@@ -2215,6 +2389,20 @@ func LoadSimpleMapFromFile(fileNameA string) map[string]string {
 	return mapT
 }
 
+func LoadSimpleMapFromFileE(fileNameA string) (map[string]string, error) {
+	if !IfFileExists(fileNameA) {
+		return nil, fmt.Errorf("file not exists")
+	}
+
+	fc, errT := LoadStringFromFileE(fileNameA)
+
+	if errT != nil {
+		return nil, errT
+	}
+
+	return LoadSimpleMapFromStringE(fc)
+}
+
 func SimpleMapToString(mapA map[string]string) string {
 	strListT := make([]string, 0, len(mapA)+1)
 
@@ -2245,6 +2433,26 @@ func LoadSimpleMapFromString(strA string) map[string]string {
 	}
 
 	return mapT
+}
+
+func LoadSimpleMapFromStringE(strA string) (map[string]string, error) {
+	strListT := SplitLines(strA)
+
+	if strListT == nil {
+		return nil, fmt.Errorf("string nil")
+	}
+
+	mapT := make(map[string]string)
+	for i := range strListT {
+		lineT := strListT[i]
+		lineListT := strings.SplitN(lineT, "=", 2)
+		if (lineListT == nil) || (len(lineListT) < 2) {
+			continue
+		}
+		mapT[Replace(lineListT[0], "`EQ`", "=")] = RestoreLineEnds(lineListT[1], "#CR#")
+	}
+
+	return mapT, nil
 }
 
 func ReplaceLineEnds(strA string, replacementA string) string {
