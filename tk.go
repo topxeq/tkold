@@ -1259,6 +1259,24 @@ func StrToTimeByFormat(strA string, formatA string) (time.Time, error) {
 	return time.Parse(formatA, strA)
 }
 
+// IsYesterday 判断字符串是否是昨天，formatA默认为"20060102"格式
+func IsYesterday(dateStrA string, formatA string) bool {
+	if formatA == "" {
+		formatA = "20060102"
+	}
+
+	// dateT, errT := time.Parse(formatA, dateStrA)
+	// if errT != nil {
+	// 	return false
+	// }
+
+	if time.Now().Add(time.Hour*24*time.Duration(-1)).Format(formatA) == dateStrA {
+		return true
+	}
+
+	return false
+}
+
 // 切片、数组相关 slice and array related
 
 // DeleteItemInStringArray 删除字符串切片中的某一项
