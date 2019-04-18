@@ -2079,7 +2079,27 @@ func LoadStringFromFileE(fileNameA string) (string, error) {
 	return string(fileContentT), nil
 }
 
-// LoadBytes LoadBytes
+func LoadStringFromFileB(fileNameA string) (string, bool) {
+	if !IfFileExists(fileNameA) {
+		return "file not exists", false
+	}
+
+	fileT, err := os.Open(fileNameA)
+	if err != nil {
+		return err.Error(), false
+	}
+
+	defer fileT.Close()
+
+	fileContentT, err := ioutil.ReadAll(fileT)
+	if err != nil {
+		return err.Error(), false
+	}
+
+	return string(fileContentT), true
+}
+
+// LoadBytes LoadBytes, numA < 0 indicates read all
 func LoadBytes(fileNameA string, numA int) []byte {
 	if !IfFileExists(fileNameA) {
 		return nil
