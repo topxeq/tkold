@@ -1277,7 +1277,7 @@ func IsYesterday(dateStrA string, formatA string) bool {
 	return false
 }
 
-// 切片、数组相关 slice and array related
+// 切片、数组相关 slice related and array related
 
 // DeleteItemInStringArray 删除字符串切片中的某一项
 func DeleteItemInStringArray(aryA []string, idxA int) []string {
@@ -1335,6 +1335,20 @@ func IndexInStringListFromEnd(strA string, strListA []string) int {
 	}
 
 	return -1
+}
+
+func GetStringSliceFilled(filledString string, countA int) []string {
+	if countA < 0 {
+		countA = 0
+	}
+
+	bufT := make([]string, countA)
+
+	for i := 0; i < countA; i++ {
+		bufT[i] = filledString
+	}
+
+	return bufT
 }
 
 // Len64 返回int64结果的len
@@ -1474,8 +1488,25 @@ func PlErrWithPrefix(prefixA string, errA error) {
 	Pl("%v%v", prefixA, errA.Error())
 }
 
+// Plv output one variable
 func Plv(argsA ...interface{}) {
 	fmt.Printf("%#v\n", argsA...)
+}
+
+// Plvs output several variables, seperated by sepA
+func Plvs(sepA string, argsA ...interface{}) {
+	lenT := len(argsA)
+
+	strListA := GetStringSliceFilled("%#v", lenT)
+
+	formatT := strings.Join(strListA, sepA)
+
+	fmt.Printf(formatT+"\n", argsA...)
+}
+
+// Plvsr output several variables, seperated by \n (new line character)
+func Plvsr(argsA ...interface{}) {
+	Plvs("\n", argsA...)
 }
 
 // Errf wrap fmt.Errorf function
