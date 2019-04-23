@@ -1259,6 +1259,15 @@ func StrToTimeByFormat(strA string, formatA string) (time.Time, error) {
 	return time.Parse(formatA, strA)
 }
 
+// FormatTime default format "2006-01-02 15:04:05"
+func FormatTime(timeA time.Time, formatA string) string {
+	if formatA == "" {
+		formatA = "2006-01-02 15:04:05"
+	}
+
+	return timeA.Format(formatA)
+}
+
 // IsYesterday 判断字符串是否是昨天，formatA默认为"20060102"格式
 func IsYesterday(dateStrA string, formatA string) bool {
 	if formatA == "" {
@@ -1538,6 +1547,16 @@ func CheckErr(prefixA string, errA error) {
 	}
 
 	Pl("%v%v", prefixA, errA.Error())
+
+	os.Exit(1)
+}
+
+func CheckErrf(formatA string, errA error) {
+	if errA == nil {
+		return
+	}
+
+	Pl(formatA, errA.Error())
 
 	os.Exit(1)
 }
