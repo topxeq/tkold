@@ -15,6 +15,7 @@ import (
 	"math/big"
 	"math/rand"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"os"
 	"os/exec"
@@ -3353,6 +3354,64 @@ func PostRequestBytesX(urlA string, reqBodyA []byte, customHeadersA string, time
 	}
 
 	return body, nil
+}
+
+// PostRequestBytesWithCookieX : PostRequest with custom headers
+func PostRequestBytesWithCookieX(urlA string, reqBodyA []byte, customHeadersA string, jarA *cookiejar.Jar, timeoutSecsA time.Duration) ([]byte, *cookiejar.Jar, error) {
+
+	req, err := http.NewRequest("POST", urlA, bytes.NewReader(reqBodyA))
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	headersT := SplitLines(customHeadersA)
+
+	for i := 0; i < len(headersT); i++ {
+		lineT := headersT[i]
+		aryT := strings.Split(lineT, ":")
+
+		if len(aryT) < 2 {
+			continue
+		}
+
+		req.Header.Add(aryT[0], Replace(aryT[1], "`", ":"))
+		// Pl("%s=%s", aryT[0], aryT[1])
+	}
+
+	jarT := jarA
+
+	if jarT == nil {
+		jarT, _ = cookiejar.New(nil)
+	}
+
+	client := &http.Client{
+		//CheckRedirect: redirectPolicyFunc,
+		Timeout: time.Second * timeoutSecsA,
+		Jar:     jarT,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Pl("%#v", client.Jar)
+
+	// cookiesT := resp.Cookies()
+
+	// for i, v := range cookiesT {
+	// 	Pl("%v, %#v", i, v)
+	// }
+
+	return body, jarT, nil
 }
 
 func GetFormValueWithDefaultValue(reqA *http.Request, keyA string, defaultA string) string {
