@@ -336,6 +336,15 @@ func GenerateErrorStringF(formatA string, argsA ...interface{}) string {
 	return fmt.Sprintf("TXERROR:"+formatA, argsA...)
 }
 
+// ErrorStringToError convert errorstring to error, if not, return nil
+func ErrorStringToError(strA string) error {
+	if IsErrorString(strA) {
+		return fmt.Errorf("%v", GetErrorString(strA))
+	}
+
+	return nil
+}
+
 func Replace(strA, findA, replaceA string) string {
 	return strings.Replace(strA, findA, replaceA, -1)
 }
@@ -3170,69 +3179,69 @@ func DownloadPageUTF8(urlA string, postDataA url.Values, customHeaders string, t
 }
 
 // DownloadPage download page with any encoding and convert to UTF-8
-// func DownloadPage(urlA string, originalEncodingA string, postDataA url.Values, customHeaders string, timeoutSecsA time.Duration) string {
-// 	client := &http.Client{
-// 		Timeout: time.Second * timeoutSecsA,
-// 	}
+func DownloadPage(urlA string, originalEncodingA string, postDataA url.Values, customHeaders string, timeoutSecsA time.Duration) string {
+	client := &http.Client{
+		Timeout: time.Second * timeoutSecsA,
+	}
 
-// 	var urlT string
-// 	if !strings.HasPrefix(strings.ToLower(urlA), "http") {
-// 		urlT = "http://" + urlA
-// 	} else {
-// 		urlT = urlA
-// 	}
+	var urlT string
+	if !strings.HasPrefix(strings.ToLower(urlA), "http") {
+		urlT = "http://" + urlA
+	} else {
+		urlT = urlA
+	}
 
-// 	var respT *http.Response
-// 	var errT error
-// 	var req *http.Request
+	var respT *http.Response
+	var errT error
+	var req *http.Request
 
-// 	if Trim(customHeaders) != "" {
-// 		if postDataA == nil {
-// 			req, errT = http.NewRequest("GET", urlT, nil)
-// 		} else {
-// 			req, errT = http.NewRequest("POST", urlT, nil)
-// 			req.PostForm = postDataA
-// 		}
+	if Trim(customHeaders) != "" {
+		if postDataA == nil {
+			req, errT = http.NewRequest("GET", urlT, nil)
+		} else {
+			req, errT = http.NewRequest("POST", urlT, nil)
+			req.PostForm = postDataA
+		}
 
-// 		headersT := SplitLines(customHeaders)
+		headersT := SplitLines(customHeaders)
 
-// 		for i := 0; i < len(headersT); i++ {
-// 			lineT := headersT[i]
-// 			aryT := strings.Split(lineT, ":")
-// 			req.Header.Add(aryT[0], Replace(aryT[1], "`", ":"))
-// 		}
+		for i := 0; i < len(headersT); i++ {
+			lineT := headersT[i]
+			aryT := strings.Split(lineT, ":")
+			req.Header.Add(aryT[0], Replace(aryT[1], "`", ":"))
+		}
 
-// 		respT, errT = client.Do(req)
-// 	} else {
-// 		if postDataA == nil {
-// 			respT, errT = client.Get(urlT)
-// 		} else {
-// 			respT, errT = client.PostForm(urlT, postDataA)
-// 		}
-// 	}
+		respT, errT = client.Do(req)
+	} else {
+		if postDataA == nil {
+			respT, errT = client.Get(urlT)
+		} else {
+			respT, errT = client.PostForm(urlT, postDataA)
+		}
+	}
 
-// 	if errT == nil {
-// 		defer respT.Body.Close()
-// 		if respT.StatusCode != 200 {
-// 			return GenerateErrorStringF("response status: %v", respT.StatusCode)
-// 		} else {
-// 			body, errT := ioutil.ReadAll(respT.Body)
+	if errT == nil {
+		defer respT.Body.Close()
+		if respT.StatusCode != 200 {
+			return GenerateErrorStringF("response status: %v", respT.StatusCode)
+		} else {
+			body, errT := ioutil.ReadAll(respT.Body)
 
-// 			if errT == nil {
-// 				if (originalEncodingA == "") || (strings.ToLower(originalEncodingA) == "utf-8") {
-// 					return string(body)
-// 				} else {
-// 					return ConvertToUTF8(body, originalEncodingA)
-// 				}
-// 			} else {
-// 				return GenerateErrorString(errT.Error())
-// 			}
-// 		}
-// 	} else {
-// 		return GenerateErrorString(errT.Error())
-// 	}
+			if errT == nil {
+				if (originalEncodingA == "") || (strings.ToLower(originalEncodingA) == "utf-8") {
+					return string(body)
+				} else {
+					return ConvertToUTF8(body, originalEncodingA)
+				}
+			} else {
+				return GenerateErrorString(errT.Error())
+			}
+		}
+	} else {
+		return GenerateErrorString(errT.Error())
+	}
 
-// }
+}
 
 // PostRequest : another POST request sender
 func PostRequest(urlA, reqBodyA string, timeoutSecsA time.Duration) (string, error) {
@@ -3317,6 +3326,11 @@ func PostRequestBytesX(urlA string, reqBodyA []byte, customHeadersA string, time
 	for i := 0; i < len(headersT); i++ {
 		lineT := headersT[i]
 		aryT := strings.Split(lineT, ":")
+
+		if len(aryT) < 2 {
+			continue
+		}
+
 		req.Header.Add(aryT[0], Replace(aryT[1], "`", ":"))
 		// Pl("%s=%s", aryT[0], aryT[1])
 	}
