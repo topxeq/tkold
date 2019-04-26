@@ -3148,6 +3148,9 @@ func DownloadPageUTF8(urlA string, postDataA url.Values, customHeaders string, t
 		for i := 0; i < len(headersT); i++ {
 			lineT := headersT[i]
 			aryT := strings.Split(lineT, ":")
+			if len(aryT) < 2 {
+				continue
+			}
 			req.Header.Add(aryT[0], Replace(aryT[1], "`", ":"))
 			//TXPl("%s=%s", aryT[0], aryT[1])
 		}
@@ -3209,6 +3212,9 @@ func DownloadPage(urlA string, originalEncodingA string, postDataA url.Values, c
 		for i := 0; i < len(headersT); i++ {
 			lineT := headersT[i]
 			aryT := strings.Split(lineT, ":")
+			if len(aryT) < 2 {
+				continue
+			}
 			req.Header.Add(aryT[0], Replace(aryT[1], "`", ":"))
 		}
 
@@ -3289,6 +3295,9 @@ func PostRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA tim
 	for i := 0; i < len(headersT); i++ {
 		lineT := headersT[i]
 		aryT := strings.Split(lineT, ":")
+		if len(aryT) < 2 {
+			continue
+		}
 		req.Header.Add(aryT[0], Replace(aryT[1], "`", ":"))
 		// Pl("%s=%s", aryT[0], aryT[1])
 	}
