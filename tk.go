@@ -1737,17 +1737,6 @@ func ParseCommandLine(command string) ([]string, error) {
 	for i := 0; i < len(command); i++ {
 		c := command[i]
 
-		if state == "quotes" {
-			if string(c) != quote {
-				current += string(c)
-			} else {
-				args = append(args, current)
-				current = ""
-				state = "start"
-			}
-			continue
-		}
-
 		if escapeNext {
 			current += string(c)
 			escapeNext = false
@@ -1759,7 +1748,18 @@ func ParseCommandLine(command string) ([]string, error) {
 			continue
 		}
 
-		if c == '"' || c == '\'' {
+		if state == "quotes" {
+			if string(c) != quote {
+				current += string(c)
+			} else {
+				args = append(args, current)
+				current = ""
+				state = "start"
+			}
+			continue
+		}
+
+		if c == '"' || c == '\'' || c == '`' {
 			state = "quotes"
 			quote = string(c)
 			continue
