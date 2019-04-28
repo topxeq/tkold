@@ -9,3 +9,9 @@ func Test001(t *testing.T) {
 	Pl("%v", DecodeStringUnderline(tmps))
 
 }
+
+func Test002(t *testing.T) {
+	tmpList, errT := ParseCommandLine("list abcXYZ*^&的技术开发")
+	Plvsr(tmpList, errT)
+
+}

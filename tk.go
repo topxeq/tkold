@@ -1726,13 +1726,15 @@ func GetParameterByIndexWithDefaultValue(argsA []string, idxA int, defaultA stri
 }
 
 // ParseCommandLine 分析命令行字符串，类似os.Args的获取过程
-func ParseCommandLine(command string) ([]string, error) {
+func ParseCommandLine(commandA string) ([]string, error) {
 	var args []string
 
 	state := "start"
 	current := ""
 	quote := "\""
 	escapeNext := false
+
+	command := []rune(commandA)
 
 	for i := 0; i < len(command); i++ {
 		c := command[i]
@@ -1784,7 +1786,7 @@ func ParseCommandLine(command string) ([]string, error) {
 	}
 
 	if state == "quotes" {
-		return []string{}, fmt.Errorf("Unclosed quote in command line: %s", command)
+		return []string{}, fmt.Errorf("Unclosed quote in command line: %v", command)
 	}
 
 	if current != "" {
