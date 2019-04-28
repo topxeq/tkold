@@ -11,7 +11,7 @@ func Test001(t *testing.T) {
 }
 
 func Test002(t *testing.T) {
-	tmpList, errT := ParseCommandLine("list abcXYZ*^&的技术开发")
+	tmpList, errT := ParseCommandLine("list -open=`abcXYZ*^&的技术开发` -s='sdf' abc")
 	Plvsr(tmpList, errT)
 
 }

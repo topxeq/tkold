@@ -3367,6 +3367,41 @@ func PostRequestBytesX(urlA string, reqBodyA []byte, customHeadersA string, time
 	return body, nil
 }
 
+// PostRequestBytesX : PostRequest with custom headers
+func PostRequestBytesWithMSSHeaderX(urlA string, reqBodyA []byte, customHeadersA map[string]string, timeoutSecsA time.Duration) ([]byte, error) {
+
+	req, err := http.NewRequest("POST", urlA, bytes.NewReader(reqBodyA))
+
+	if err != nil {
+		return nil, err
+	}
+
+	if customHeadersA != nil {
+		for k, v := range customHeadersA {
+			req.Header.Add(k, v)
+		}
+	}
+
+	client := &http.Client{
+		//CheckRedirect: redirectPolicyFunc,
+		Timeout: time.Second * timeoutSecsA,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
+}
+
 // PostRequestBytesWithCookieX : PostRequest with custom headers
 func PostRequestBytesWithCookieX(urlA string, reqBodyA []byte, customHeadersA string, jarA *cookiejar.Jar, timeoutSecsA time.Duration) ([]byte, *cookiejar.Jar, error) {
 
