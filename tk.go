@@ -1395,6 +1395,26 @@ func Int64ArrayToFloat64Array(aryA []int64) []float64 {
 
 }
 
+func ByteSliceToStringDec(bufA []byte, sepA string) string {
+	if bufA == nil {
+		return ""
+	}
+
+	var outBufT strings.Builder
+
+	lenT := len(bufA)
+
+	for i := 0; i < lenT; i++ {
+		if i != 0 {
+			outBufT.WriteString(sepA)
+		}
+
+		outBufT.WriteString(fmt.Sprintf("%d", bufA[i]))
+	}
+
+	return outBufT.String()
+}
+
 // 映射相关 map related
 
 // GetValueOfMSS get the value for key in map[string]string

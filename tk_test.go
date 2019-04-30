@@ -15,3 +15,9 @@ func Test002(t *testing.T) {
 	Plvsr(tmpList, errT)
 
 }
+
+func Test003(t *testing.T) {
+	buf := []byte("abcABZ%&*&我们大家都很好。")
+	Pl("%v", ByteSliceToStringDec(buf, ","))
+
+}
