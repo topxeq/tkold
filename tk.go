@@ -2907,6 +2907,61 @@ func DecryptDataByTXDEE(srcDataA []byte, codeA string) []byte {
 	return bufB
 }
 
+func EncryptStringByTXTE(strA string, codeA string) string {
+	if strA == "" {
+		return ""
+	}
+
+	codeT := codeA
+	if codeT == "" {
+		codeT = "topxeq"
+	}
+
+	sBufT := []byte(strA)
+	codeButT := []byte(codeT)
+
+	sDataLen := len(sBufT)
+	codeLenT := len(codeButT)
+
+	dBufT := make([]byte, sDataLen)
+
+	for i := 0; i < sDataLen; i++ {
+		dBufT[i] = sBufT[i] + codeButT[i%codeLenT] + byte(i+1)
+	}
+
+	return strings.ToUpper(hex.EncodeToString(dBufT))
+
+}
+
+func DecryptStringByTXTE(strA string, codeA string) string {
+	if strA == "" {
+		return ""
+	}
+
+	codeT := codeA
+	if codeT == "" {
+		codeT = "topxeq"
+	}
+
+	sBufT, errT := hex.DecodeString(strA)
+	if errT != nil {
+		return ""
+	}
+	codeButT := []byte(codeT)
+
+	sDataLen := len(sBufT)
+	codeLenT := len(codeButT)
+
+	dBufT := make([]byte, sDataLen)
+
+	for i := 0; i < sDataLen; i++ {
+		dBufT[i] = sBufT[i] - codeButT[i%codeLenT] - byte(i+1)
+	}
+
+	return string(dBufT)
+
+}
+
 func EncryptStringByTXDEE(strA, codeA string) string {
 	if strA == "" {
 		return ""
