@@ -2898,6 +2898,59 @@ func EncryptDataByTXDEE(srcDataA []byte, codeA string) []byte {
 	return bufB
 }
 
+func SumBytes(srcDataA []byte) byte {
+	if srcDataA == nil {
+		return 0
+	}
+
+	lenT := len(srcDataA)
+
+	var b byte = 0
+
+	for i := 0; i < lenT; i++ {
+		b += srcDataA[i]
+	}
+
+	return b
+}
+
+func EncryptDataByTXDEF(srcDataA []byte, codeA string) []byte {
+	if srcDataA == nil {
+		return nil
+	}
+
+	dataLen := len(srcDataA)
+	if dataLen < 1 {
+		return srcDataA
+	}
+
+	codeT := codeA
+	if codeT == "" {
+		codeT = "topxeq"
+	}
+
+	codeBytes := []byte(codeT)
+	codeLen := len(codeBytes)
+
+	sumT := int(SumBytes(codeBytes))
+
+	addLenT := int((sumT % 5) + 2)
+	encIndexT := sumT % addLenT
+	// Plvsr(addLenT, encIndexT)
+
+	bufB := make([]byte, dataLen+addLenT)
+
+	for i := 0; i < addLenT; i++ {
+		bufB[i] = GetRandomByte()
+	}
+
+	for i := 0; i < dataLen; i++ {
+		bufB[addLenT+i] = srcDataA[i] + codeBytes[i%codeLen] + byte(i+1) + bufB[encIndexT]
+	}
+
+	return bufB
+}
+
 func DecryptDataByTXDEE(srcDataA []byte, codeA string) []byte {
 	if srcDataA == nil {
 		return nil
@@ -2922,6 +2975,40 @@ func DecryptDataByTXDEE(srcDataA []byte, codeA string) []byte {
 
 	for i := 0; i < dataLen; i++ {
 		bufB[i] = srcDataA[2+i] - codeBytes[i%codeLen] - byte(i+1) - srcDataA[1]
+	}
+
+	return bufB
+}
+
+func DecryptDataByTXDEF(srcDataA []byte, codeA string) []byte {
+	if srcDataA == nil {
+		return nil
+	}
+
+	codeT := codeA
+	if codeT == "" {
+		codeT = "topxeq"
+	}
+
+	codeBytes := []byte(codeT)
+	codeLen := len(codeBytes)
+
+	sumT := int(SumBytes(codeBytes))
+
+	addLenT := int((sumT % 5) + 2)
+	encIndexT := sumT % addLenT
+
+	dataLen := len(srcDataA)
+	if dataLen < addLenT {
+		return nil
+	}
+
+	dataLen -= addLenT
+
+	bufB := make([]byte, dataLen)
+
+	for i := 0; i < dataLen; i++ {
+		bufB[i] = srcDataA[addLenT+i] - codeBytes[i%codeLen] - byte(i+1) - srcDataA[encIndexT]
 	}
 
 	return bufB
@@ -3014,6 +3101,45 @@ func DecryptStringByTXDEE(strA, codeA string) string {
 	}
 
 	dataDT := DecryptDataByTXDEE(sBufT, codeA)
+	if dataDT == nil {
+		return GenerateErrorStringF("decrypting failed")
+	}
+
+	return string(dataDT)
+}
+
+func EncryptStringByTXDEF(strA, codeA string) string {
+	if strA == "" {
+		return ""
+	}
+
+	dataDT := EncryptDataByTXDEF([]byte(strA), codeA)
+	if dataDT == nil {
+		return GenerateErrorStringF("encrypting failed")
+	}
+
+	return strings.ToUpper(hex.EncodeToString(dataDT))
+}
+
+func DecryptStringByTXDEF(strA, codeA string) string {
+	if strA == "" {
+		return ""
+	}
+
+	var sBufT []byte
+	var errT error
+
+	if StartsWith(strA, "740404") {
+		sBufT, errT = hex.DecodeString(strA[6:])
+	} else {
+		sBufT, errT = hex.DecodeString(strA)
+	}
+
+	if errT != nil {
+		return GenerateErrorStringF("decrypting failed")
+	}
+
+	dataDT := DecryptDataByTXDEF(sBufT, codeA)
 	if dataDT == nil {
 		return GenerateErrorStringF("decrypting failed")
 	}

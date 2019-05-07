@@ -21,3 +21,16 @@ func Test003(t *testing.T) {
 	Pl("%v", ByteSliceToStringDec(buf, ","))
 
 }
+
+func Test004(t *testing.T) {
+	encS := EncryptStringByTXDEF("abcABZ%&*&我们大家都很好。", "")
+	Pl("enc: %v", encS)
+	decS := DecryptStringByTXDEF(encS, "")
+	Pl("dec: %v", decS)
+
+	encS = EncryptStringByTXDEF("abcABZ%&*&我们大家都很好。", "abcd")
+	Pl("enc: %v", encS)
+	decS = DecryptStringByTXDEF(encS, "abcd")
+	Pl("dec: %v", decS)
+
+}
