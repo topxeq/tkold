@@ -33,4 +33,7 @@ func Test004(t *testing.T) {
 	decS = DecryptStringByTXDEF(encS, "abcd")
 	Pl("dec: %v", decS)
 
+	decS = DecryptStringByTXDEF("63BF6D952E585B5E3E3D5724272927E98D94E9C2B5ECADB2F2B9C3F894CCF6D19DF8BAD4FC979B", "abcd")
+	Pl("decabcd: %v", decS)
+
 }
