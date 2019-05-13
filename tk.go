@@ -3147,6 +3147,99 @@ func DecryptStringByTXDEF(strA, codeA string) string {
 	return string(dataDT)
 }
 
+func EncryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
+	if !IfFileExists(fileNameA) {
+		return Errf("")
+	}
+
+	srcStatT, errT := os.Stat(fileNameA)
+	if errT != nil {
+		return Errf("error os.Stat src %s: %s", fileNameA, errT.Error())
+	}
+
+	codeT := codeA
+	if codeT == "" {
+		codeT = "topxeq"
+	}
+
+	outputFileT := outputFileA
+	if outputFileT == "" {
+		outputFileT = fileNameA + ".txdef"
+	}
+
+	fileContenT, errT := ioutil.ReadFile(fileNameA)
+	if errT != nil {
+		return errT
+	}
+
+	writeContentT := EncryptDataByTXDEF(fileContenT, codeT)
+	if writeContentT == nil {
+		return Errf("encrypt data failed")
+	}
+
+	errT = ioutil.WriteFile(outputFileT, writeContentT, srcStatT.Mode())
+	if errT != nil {
+		return errT
+	}
+
+	return nil
+}
+
+func ErrorToString(errA error) string {
+	if errA == nil {
+		return ""
+	}
+
+	return GenerateErrorString(errA.Error())
+}
+
+func EncryptFileByTXDEFS(fileNameA, codeA, outputFileA string) string {
+	return ErrorToString(EncryptFileByTXDEF(fileNameA, codeA, outputFileA))
+}
+
+func DecryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
+	if !IfFileExists(fileNameA) {
+		return Errf("file not exists")
+	}
+
+	srcStatT, errT := os.Stat(fileNameA)
+	if errT != nil {
+		return Errf("error os.Stat src %s: %s", fileNameA, errT.Error())
+	}
+
+	codeT := codeA
+	if codeT == "" {
+		codeT = "topxeq"
+	}
+
+	outputFileT := outputFileA
+	if outputFileT == "" {
+		outputFileT = fileNameA + ".untxdef"
+	}
+
+	fileContenT, errT := ioutil.ReadFile(fileNameA)
+	if errT != nil {
+		return errT
+	}
+
+	writeContentT := DecryptDataByTXDEF(fileContenT, codeT)
+	if writeContentT == nil {
+		return Errf("decrypt data failed")
+	}
+
+	errT = ioutil.WriteFile(outputFileT, writeContentT, srcStatT.Mode())
+	if errT != nil {
+		return errT
+	}
+
+	return nil
+
+}
+
+func DecryptFileByTXDEFS(fileNameA, codeA, outputFileA string) string {
+	return ErrorToString(DecryptFileByTXDEF(fileNameA, codeA, outputFileA))
+}
+
 func Pkcs7Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
