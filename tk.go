@@ -3386,6 +3386,108 @@ func EncryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
 	return nil
 }
 
+func EncryptFileByTXDEFStream(fileNameA, codeA, outputFileA string) error {
+	if !IfFileExists(fileNameA) {
+		return Errf("")
+	}
+
+	srcStatT, errT := os.Stat(fileNameA)
+	if errT != nil {
+		return Errf("error os.Stat src %s: %s", fileNameA, errT.Error())
+	}
+
+	codeT := codeA
+	if codeT == "" {
+		codeT = "topxeq"
+	}
+
+	outputFileT := outputFileA
+	if outputFileT == "" {
+		outputFileT = fileNameA + ".txdef"
+	}
+
+	fileT, errT := os.Open(fileNameA)
+	if errT != nil {
+		return Errf("failed to open source file: %v", errT)
+	}
+
+	defer fileT.Close()
+
+	file2T, errT := os.OpenFile(outputFileT, os.O_CREATE, srcStatT.Mode())
+	if errT != nil {
+		return Errf("failed to create target file: %v", errT)
+	}
+
+	defer file2T.Close()
+
+	bufT := bufio.NewWriter(file2T)
+
+	errT = EncryptStreamByTXDEF(fileT, codeT, bufT)
+
+	if errT != nil {
+		return Errf("failed to encrypt: %v", errT)
+	}
+
+	errT = bufT.Flush()
+
+	if errT != nil {
+		return Errf("failed to flush output file: %v", errT)
+	}
+
+	return nil
+}
+
+func DecryptFileByTXDEFStream(fileNameA, codeA, outputFileA string) error {
+	if !IfFileExists(fileNameA) {
+		return Errf("")
+	}
+
+	srcStatT, errT := os.Stat(fileNameA)
+	if errT != nil {
+		return Errf("error os.Stat src %s: %s", fileNameA, errT.Error())
+	}
+
+	codeT := codeA
+	if codeT == "" {
+		codeT = "topxeq"
+	}
+
+	outputFileT := outputFileA
+	if outputFileT == "" {
+		outputFileT = fileNameA + ".untxdef"
+	}
+
+	fileT, errT := os.Open(fileNameA)
+	if errT != nil {
+		return Errf("failed to open source file: %v", errT)
+	}
+
+	defer fileT.Close()
+
+	file2T, errT := os.OpenFile(outputFileT, os.O_CREATE, srcStatT.Mode())
+	if errT != nil {
+		return Errf("failed to create target file: %v", errT)
+	}
+
+	defer file2T.Close()
+
+	bufT := bufio.NewWriter(file2T)
+
+	errT = DecryptStreamByTXDEF(fileT, codeT, bufT)
+
+	if errT != nil {
+		return Errf("failed to decrypt: %v", errT)
+	}
+
+	errT = bufT.Flush()
+
+	if errT != nil {
+		return Errf("failed to flush output file: %v", errT)
+	}
+
+	return nil
+}
+
 func ErrorToString(errA error) string {
 	if errA == nil {
 		return ""
@@ -3396,6 +3498,10 @@ func ErrorToString(errA error) string {
 
 func EncryptFileByTXDEFS(fileNameA, codeA, outputFileA string) string {
 	return ErrorToString(EncryptFileByTXDEF(fileNameA, codeA, outputFileA))
+}
+
+func EncryptFileByTXDEFStreamS(fileNameA, codeA, outputFileA string) string {
+	return ErrorToString(EncryptFileByTXDEFStream(fileNameA, codeA, outputFileA))
 }
 
 func DecryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
@@ -3439,6 +3545,10 @@ func DecryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
 
 func DecryptFileByTXDEFS(fileNameA, codeA, outputFileA string) string {
 	return ErrorToString(DecryptFileByTXDEF(fileNameA, codeA, outputFileA))
+}
+
+func DecryptFileByTXDEFStreamS(fileNameA, codeA, outputFileA string) string {
+	return ErrorToString(DecryptFileByTXDEFStream(fileNameA, codeA, outputFileA))
 }
 
 func Pkcs7Padding(ciphertext []byte, blockSize int) []byte {
