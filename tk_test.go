@@ -1,6 +1,10 @@
 package tk
 
-import "testing"
+import (
+	"bufio"
+	"os"
+	"testing"
+)
 
 func Test001(t *testing.T) {
 	tmps := EncodeStringUnderline("abcXYZ*^&的技术开发")
@@ -35,5 +39,65 @@ func Test004(t *testing.T) {
 
 	decS = DecryptStringByTXDEF("63BF6D952E585B5E3E3D5724272927E98D94E9C2B5ECADB2F2B9C3F894CCF6D19DF8BAD4FC979B", "abcd")
 	Pl("decabcd: %v", decS)
+
+}
+
+func Test005(t *testing.T) {
+	fileT, errT := os.Open("/tmpx/tmp/ab.txt")
+	if errT != nil {
+		Pl("failed to open source file: %v", errT)
+		return
+	}
+
+	defer fileT.Close()
+
+	file2T, errT := os.Create("/tmpx/tmp/abOut.txt")
+	if errT != nil {
+		Pl("failed to create target file: %v", errT)
+		return
+	}
+
+	defer file2T.Close()
+
+	bufT := bufio.NewWriter(file2T)
+
+	errT = EncryptStreamByTXDEF(fileT, "", bufT)
+
+	if errT != nil {
+		Pl("failed to encrypt: %v", errT)
+		return
+	}
+
+	bufT.Flush()
+
+}
+
+func Test006(t *testing.T) {
+	fileT, errT := os.Open("/tmpx/tmp/abOut.txt")
+	if errT != nil {
+		Pl("failed to open source file: %v", errT)
+		return
+	}
+
+	defer fileT.Close()
+
+	file2T, errT := os.Create("/tmpx/tmp/abOutDec.txt")
+	if errT != nil {
+		Pl("failed to create target file: %v", errT)
+		return
+	}
+
+	defer file2T.Close()
+
+	bufT := bufio.NewWriter(file2T)
+
+	errT = DecryptStreamByTXDEF(fileT, "", bufT)
+
+	if errT != nil {
+		Pl("failed to encrypt: %v", errT)
+		return
+	}
+
+	bufT.Flush()
 
 }

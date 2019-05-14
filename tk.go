@@ -2951,6 +2951,207 @@ func EncryptDataByTXDEF(srcDataA []byte, codeA string) []byte {
 	return bufB
 }
 
+const TXDEF_BUFFER_LEN = 1000
+
+func EncryptStreamByTXDEF(readerA io.Reader, codeA string, writerA io.Writer) error {
+	if readerA == nil {
+		return Errf("reader nil")
+	}
+
+	if writerA == nil {
+		return Errf("writer nil")
+	}
+
+	codeT := codeA
+	if codeT == "" {
+		codeT = "topxeq"
+	}
+
+	codeBytes := []byte(codeT)
+	codeLen := len(codeBytes)
+
+	// if codeLen > TXDEF_BUFFER_LEN {
+	// 	return Errf("code length longer than buffer length")
+	// }
+
+	sumT := int(SumBytes(codeBytes))
+
+	addLenT := int((sumT % 5) + 2)
+	encIndexT := sumT % addLenT
+	// Plvsr(addLenT, encIndexT)
+
+	var idxByte byte
+
+	addBufT := make([]byte, addLenT)
+
+	for i := 0; i < addLenT; i++ {
+		addBufT[i] = GetRandomByte()
+
+		if i == encIndexT {
+			idxByte = addBufT[i]
+		}
+
+	}
+
+	_, errT := writerA.Write(addBufT)
+
+	if errT != nil {
+		return errT
+	}
+
+	bufArrayT := make([]byte, 0, TXDEF_BUFFER_LEN+8)
+
+	bufT := bytes.NewBuffer(bufArrayT)
+
+	bufArrayReaderT := make([]byte, TXDEF_BUFFER_LEN)
+
+	i := 0
+
+	breakFlagT := false
+
+	for {
+		bytesT, errT := readerA.Read(bufArrayReaderT)
+
+		if errT != nil {
+			if errT == io.EOF {
+				breakFlagT = true
+			} else {
+				return errT
+			}
+
+		}
+
+		for j := 0; j < bytesT; j++ {
+			bufT.WriteByte(bufArrayReaderT[j] + codeBytes[i%codeLen] + byte(i+1) + idxByte)
+
+			i++
+
+			if bufT.Len() >= TXDEF_BUFFER_LEN {
+				_, errT := writerA.Write(bufT.Bytes()[:TXDEF_BUFFER_LEN])
+
+				if errT != nil {
+					return errT
+				}
+
+				bufT.Reset()
+			}
+		}
+
+		if breakFlagT {
+			if bufT.Len() > 0 {
+				_, errT := writerA.Write(bufT.Bytes())
+
+				if errT != nil {
+					return errT
+				}
+
+				bufT.Reset()
+			}
+
+			break
+		}
+	}
+
+	return nil
+}
+
+func DecryptStreamByTXDEF(readerA io.Reader, codeA string, writerA io.Writer) error {
+	if readerA == nil {
+		return Errf("reader nil")
+	}
+
+	if writerA == nil {
+		return Errf("writer nil")
+	}
+
+	codeT := codeA
+	if codeT == "" {
+		codeT = "topxeq"
+	}
+
+	codeBytes := []byte(codeT)
+	codeLen := len(codeBytes)
+
+	sumT := int(SumBytes(codeBytes))
+
+	addLenT := int((sumT % 5) + 2)
+	encIndexT := sumT % addLenT
+	// Plvsr(addLenT, encIndexT)
+
+	var idxByte byte
+
+	addBufT := make([]byte, addLenT)
+
+	bytesT, errT := readerA.Read(addBufT)
+
+	if errT != nil {
+		if errT != io.EOF {
+			return errT
+		}
+	}
+
+	if bytesT != addLenT {
+		return Errf("failed to read header")
+	}
+
+	idxByte = addBufT[encIndexT]
+
+	bufArrayT := make([]byte, 0, TXDEF_BUFFER_LEN+8)
+
+	bufT := bytes.NewBuffer(bufArrayT)
+
+	bufArrayReaderT := make([]byte, TXDEF_BUFFER_LEN)
+
+	i := 0
+
+	breakFlagT := false
+
+	for {
+		bytesT, errT := readerA.Read(bufArrayReaderT)
+
+		if errT != nil {
+			if errT == io.EOF {
+				breakFlagT = true
+			} else {
+				return errT
+			}
+
+		}
+
+		for j := 0; j < bytesT; j++ {
+			bufT.WriteByte(bufArrayReaderT[j] - codeBytes[i%codeLen] - byte(i+1) - idxByte)
+
+			i++
+
+			if bufT.Len() >= TXDEF_BUFFER_LEN {
+				_, errT := writerA.Write(bufT.Bytes()[:TXDEF_BUFFER_LEN])
+
+				if errT != nil {
+					return errT
+				}
+
+				bufT.Reset()
+			}
+		}
+
+		if breakFlagT {
+			if bufT.Len() > 0 {
+				_, errT := writerA.Write(bufT.Bytes())
+
+				if errT != nil {
+					return errT
+				}
+
+				bufT.Reset()
+			}
+
+			break
+		}
+	}
+
+	return nil
+}
+
 func DecryptDataByTXDEE(srcDataA []byte, codeA string) []byte {
 	if srcDataA == nil {
 		return nil
