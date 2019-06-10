@@ -1206,6 +1206,18 @@ func GetNowTimeOnlyStringBeijing() string {
 	return fmt.Sprintf("%02d%02d%02d", t.Hour(), t.Minute(), t.Second())
 }
 
+func GetTimeFromUnixTimeStamp(timeStampA int64) time.Time {
+	return time.Unix(timeStampA, 0)
+}
+
+func GetTimeFromUnixTimeStampMid(timeStampStrA string) time.Time {
+	if len(timeStampStrA) < 13 {
+		return time.Time{}
+	}
+
+	return time.Unix(StrToInt64WithDefaultValue(timeStampStrA[:10], 0), StrToInt64WithDefaultValue(timeStampStrA[10:], 0))
+}
+
 func GetTimeStamp(timeA time.Time) string {
 	return Int64ToStr(timeA.Unix())
 }
