@@ -1206,6 +1206,18 @@ func GetNowTimeOnlyStringBeijing() string {
 	return fmt.Sprintf("%02d%02d%02d", t.Hour(), t.Minute(), t.Second())
 }
 
+func GetTimeStamp(timeA time.Time) string {
+	return Int64ToStr(timeA.Unix())
+}
+
+func GetTimeStampMid(timeA time.Time) string {
+	return Int64ToStr(timeA.UnixNano())[:13]
+}
+
+func GetTimeStampNano(timeA time.Time) string {
+	return Int64ToStr(timeA.UnixNano())
+}
+
 func NowToFileName() string {
 	return StringReplace(time.Now().String(), "-", "_", " ", "_", ":", "_", ".", "_", "+", "_", "=", "_")
 }
