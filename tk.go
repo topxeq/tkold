@@ -1884,6 +1884,18 @@ func IfSwitchExists(argsA []string, switchStrA string) bool {
 	return false
 }
 
+// IfSwitchExistsWhole 判断命令行参数中是否存在开关（完整的，），用法：flag := IfSwitchExistsWhole(args, "-restart")
+func IfSwitchExistsWhole(argsA []string, switchStrA string) bool {
+	for _, argT := range argsA {
+		if argT == switchStrA {
+			return true
+		}
+
+	}
+
+	return false
+}
+
 // 各种转换 conversion related
 
 func StrToBool(strA string) bool {
