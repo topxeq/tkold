@@ -1339,6 +1339,16 @@ func DeleteItemInInt64Array(aryA []int64, idxA int64) []int64 {
 	return append(aryA[:idxA], aryA[idxA+1:]...)
 }
 
+func ContainsIn(strA string, subStrsA ...string) bool {
+	for _, v := range subStrsA {
+		if strings.Contains(strA, v) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func ContainsInStringList(strA string, strListA []string) bool {
 	if strListA == nil {
 		return false
