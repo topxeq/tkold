@@ -1293,7 +1293,7 @@ func StrToTimeByFormat(strA string, formatA string) (time.Time, error) {
 		formatA = "2006-01-02 15:04:05"
 	}
 
-	return time.Parse(formatA, strA)
+	return time.ParseInLocation(formatA, strA, time.Local)
 }
 
 // FormatTime default format "2006-01-02 15:04:05"
