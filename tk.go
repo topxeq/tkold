@@ -3604,6 +3604,29 @@ func Pkcs7Padding(ciphertext []byte, blockSize int) []byte {
 	return append(ciphertext, padtext...)
 }
 
+// func Pkcs7Unpad(b []byte, blocksize int) ([]byte, error) {
+// 	if blocksize <= 0 {
+// 		return nil, Errf("ErrInvalidBlockSize")
+// 	}
+// 	if b == nil || len(b) == 0 {
+// 		return nil, Errf("ErrInvalidPKCS7Data")
+// 	}
+// 	if len(b)%blocksize != 0 {
+// 		return nil, Errf("ErrInvalidPKCS7Padding")
+// 	}
+// 	c := b[len(b)-1]
+// 	n := int(c)
+// 	if n == 0 || n > len(b) {
+// 		return nil, Errf("ErrInvalidPKCS7Padding")
+// 	}
+// 	for i := 0; i < n; i++ {
+// 		if b[len(b)-n+i] != c {
+// 			return nil, Errf("ErrInvalidPKCS7Padding")
+// 		}
+// 	}
+// 	return b[:len(b)-n], nil
+// }
+
 func AESEncrypt(src, key []byte) ([]byte, error) {
 	//	key = toMD5(key)
 	keyT := key
@@ -3645,6 +3668,17 @@ func AESEncrypt(src, key []byte) ([]byte, error) {
 	return out, nil
 }
 
+// func Unpad(src []byte) ([]byte, error) {
+// 	length := len(src)
+// 	unpadding := int(src[length-1])
+
+// 	if unpadding > length {
+// 		return nil, errors.New("unpad error. This could happen when incorrect encryption key is used")
+// 	}
+
+// 	return src[:(length - unpadding)], nil
+// }
+
 func AESDecrypt(src, key []byte) ([]byte, error) {
 	//	key = toMD5(key)
 	keyT := key
@@ -3661,11 +3695,11 @@ func AESDecrypt(src, key []byte) ([]byte, error) {
 	//	Printf("Key: %v\n", key)
 	//	Printf("Block size: %v\n", bs)
 	//	src = zeroPadding(src, bs)
-	beforeLen := len(src)
-	src = Pkcs7Padding(src, bs)
-	afterLen := len(src)
-	diffLen := afterLen - beforeLen
-	//	Pl("beforeLen: %v, afterLen: %v, diffLen: %v", beforeLen, afterLen, diffLen)
+	// beforeLen := len(src)
+	// // src = Pkcs7Padding(src, bs)
+	// afterLen := len(src)
+	// diffLen := afterLen - beforeLen
+	// Pl("beforeLen: %v, afterLen: %v, diffLen: %v", beforeLen, afterLen, diffLen)
 	//	Pl("After padding: %v", src)
 	if len(src)%bs != 0 {
 		return nil, errors.New("Need a multiple of the blocksize")
@@ -3691,9 +3725,95 @@ func AESDecrypt(src, key []byte) ([]byte, error) {
 		dst = dst[bs:]
 	}
 
-	out = out[:len(out)-diffLen]
+	outLenT := len(out)
+	unpadLenT := int(out[outLenT-1])
+
+	if unpadLenT < outLenT {
+		for i := 0; i < unpadLenT; i++ {
+			if out[outLenT-1-i] != byte(unpadLenT) {
+				return out, nil
+			}
+		}
+
+		out = out[:outLenT-unpadLenT]
+	}
+
+	// Pl("out len: %v", len(out))
+	// out = out[:len(out)-diffLen]
 	return out, nil
 }
+
+// func AESDecrypt(src, key []byte) ([]byte, error) {
+// 	//	key = toMD5(key)
+// 	keyT := key
+// 	if len(keyT) > 16 {
+// 		keyT = keyT[0:16]
+// 	}
+
+// 	block, err := aes.NewCipher(keyT)
+
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	bs := block.BlockSize()
+// 	//	Printf("Src: %v\n", src)
+// 	//	Printf("Key: %v\n", key)
+// 	//	Printf("Block size: %v\n", bs)
+// 	//	src = zeroPadding(src, bs)
+// 	beforeLen := len(src)
+// 	src = Pkcs7Padding(src, bs)
+// 	// src, errT := Pkcs7Unpad(src, bs)
+// 	// if errT != nil {
+// 	// 	return nil, errT
+// 	// }
+// 	Pl("src: %#v", src)
+// 	afterLen := len(src)
+
+// 	diffLen := afterLen - beforeLen
+// 	lenT := len(src)
+
+// 	if lenT < 1 {
+// 		return nil, errors.New("Zero length")
+// 	}
+
+// 	//	Pl("beforeLen: %v, afterLen: %v, diffLen: %v", beforeLen, afterLen, diffLen)
+// 	//	Pl("After padding: %v", src)
+// 	if lenT%bs != 0 {
+// 		return nil, errors.New("Need a multiple of the blocksize")
+// 	}
+
+// 	out := make([]byte, lenT)
+// 	dst := out
+// 	iv := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+// 	for lenT > 0 {
+// 		//		Pl("EncingXORed: %v", src[:bs])
+// 		block.Decrypt(dst, src[:bs])
+
+// 		//		Pl("Encing: %v\n", src[:bs])
+// 		for j := 0; j < bs; j++ {
+// 			dst[j] ^= iv[j]
+// 		}
+
+// 		for j := 0; j < bs; j++ {
+// 			iv[j] = src[j]
+// 		}
+
+// 		src = src[bs:]
+
+// 		dst = dst[bs:]
+// 	}
+// 	// diffLen := int(src[lenT-1])
+// 	// Pl("diffLen: %v", diffLen)
+// 	out = out[:len(out)-diffLen]
+// 	// out, errT = Pkcs7Unpad(out, bs)
+
+// 	// if errT != nil {
+// 	// 	return nil, errT
+// 	// }
+
+// 	return out, nil
+// }
 
 // URL相关 url related
 
