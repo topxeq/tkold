@@ -3685,15 +3685,17 @@ func AESDecrypt(src, key []byte) ([]byte, error) {
 	if len(keyT) > 16 {
 		keyT = keyT[0:16]
 	}
+
 	block, err := aes.NewCipher(keyT)
 
 	if err != nil {
 		return nil, err
 	}
+
 	bs := block.BlockSize()
 	//	Printf("Src: %v\n", src)
 	//	Printf("Key: %v\n", key)
-	//	Printf("Block size: %v\n", bs)
+	// Pl("Block size: %v", bs)
 	//	src = zeroPadding(src, bs)
 	// beforeLen := len(src)
 	// // src = Pkcs7Padding(src, bs)
@@ -3704,9 +3706,12 @@ func AESDecrypt(src, key []byte) ([]byte, error) {
 	if len(src)%bs != 0 {
 		return nil, errors.New("Need a multiple of the blocksize")
 	}
+
 	out := make([]byte, len(src))
 	dst := out
+
 	iv := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+
 	for len(src) > 0 {
 		//		Pl("EncingXORed: %v", src[:bs])
 		block.Decrypt(dst, src[:bs])
@@ -3725,10 +3730,11 @@ func AESDecrypt(src, key []byte) ([]byte, error) {
 		dst = dst[bs:]
 	}
 
+	// Pl("out 1: %#v", out)
 	outLenT := len(out)
 	unpadLenT := int(out[outLenT-1])
 
-	if unpadLenT < outLenT {
+	if unpadLenT <= outLenT {
 		for i := 0; i < unpadLenT; i++ {
 			if out[outLenT-1-i] != byte(unpadLenT) {
 				return out, nil
