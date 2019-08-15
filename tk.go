@@ -4314,6 +4314,75 @@ func GenerateJSONPResponseWithObject(statusA string, valueA string, objectA stri
 	}
 }
 
+func GenerateJSONPResponseWith2Object(statusA string, valueA string, objectA string, object2A string, reqA *http.Request) string {
+	_, valueOnlyT := reqA.Form["valueonly"]
+	_, objectOnlyT := reqA.Form["objectonly"]
+
+	if objectOnlyT {
+		return objectA
+	} else if valueOnlyT {
+		return valueA
+	} else {
+		mT := make(map[string]string)
+		mT["Status"] = statusA
+		mT["Value"] = valueA
+		mT["Object"] = objectA
+		mT["Object2"] = object2A
+
+		returnValue, ifReturnValue := reqA.Form["returnvalue"]
+
+		if ifReturnValue {
+			mT["ReturnValue"] = returnValue[0]
+		}
+
+		name, ok := reqA.Form["callback"]
+		if ok {
+			if valueOnlyT {
+				return fmt.Sprintf("%v(%v);", name[0], valueA)
+			} else {
+				return fmt.Sprintf("%v(%v);", name[0], ObjectToJSON(mT))
+			}
+		}
+
+		return fmt.Sprintf("%v", ObjectToJSON(mT))
+	}
+}
+
+func GenerateJSONPResponseWith3Object(statusA string, valueA string, objectA string, object2A string, object3A string, reqA *http.Request) string {
+	_, valueOnlyT := reqA.Form["valueonly"]
+	_, objectOnlyT := reqA.Form["objectonly"]
+
+	if objectOnlyT {
+		return objectA
+	} else if valueOnlyT {
+		return valueA
+	} else {
+		mT := make(map[string]string)
+		mT["Status"] = statusA
+		mT["Value"] = valueA
+		mT["Object"] = objectA
+		mT["Object2"] = object2A
+		mT["Object3"] = object3A
+
+		returnValue, ifReturnValue := reqA.Form["returnvalue"]
+
+		if ifReturnValue {
+			mT["ReturnValue"] = returnValue[0]
+		}
+
+		name, ok := reqA.Form["callback"]
+		if ok {
+			if valueOnlyT {
+				return fmt.Sprintf("%v(%v);", name[0], valueA)
+			} else {
+				return fmt.Sprintf("%v(%v);", name[0], ObjectToJSON(mT))
+			}
+		}
+
+		return fmt.Sprintf("%v", ObjectToJSON(mT))
+	}
+}
+
 func GetSuccessValue(strA string) string {
 	rv := JSONToMapStringString(strA)
 	if rv == nil {
