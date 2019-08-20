@@ -2731,6 +2731,16 @@ func JSONToMapStringString(objStrA string) map[string]string {
 	return rMapT
 }
 
+func JSONToStringArray(objStrA string) []string {
+	var rArrayT []string
+	errT := json.Unmarshal([]byte(objStrA), &rArrayT)
+	if errT != nil {
+		return nil
+	}
+
+	return rArrayT
+}
+
 func EncodeStringSimple(strA string) string {
 	lenT := len(strA)
 
