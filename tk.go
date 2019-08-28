@@ -29,8 +29,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/topxeq/gotools/text/encoding/charmap"
-	"github.com/topxeq/gotools/text/encoding/simplifiedchinese"
+	"github.com/topxeq/mahonia"
+	// "github.com/topxeq/gotools/text/encoding/charmap"
+	// "github.com/topxeq/gotools/text/encoding/simplifiedchinese"
 )
 
 // 类型 types structs
@@ -2731,6 +2732,45 @@ func JSONToMapStringString(objStrA string) map[string]string {
 	return rMapT
 }
 
+func SafelyGetStringForKeyWithDefault(mapA map[string]string, keyA string, defaultA string) string {
+	if mapA == nil {
+		return defaultA
+	}
+
+	v, ok := mapA[keyA]
+	if !ok {
+		return defaultA
+	}
+
+	return v
+}
+
+func SafelyGetFloat64ForKeyWithDefault(mapA map[string]string, keyA string, defaultA float64) float64 {
+	if mapA == nil {
+		return defaultA
+	}
+
+	v, ok := mapA[keyA]
+	if !ok {
+		return defaultA
+	}
+
+	return StrToFloat64WithDefaultValue(v, defaultA)
+}
+
+func SafelyGetIntForKeyWithDefault(mapA map[string]string, keyA string, defaultA int) int {
+	if mapA == nil {
+		return defaultA
+	}
+
+	v, ok := mapA[keyA]
+	if !ok {
+		return defaultA
+	}
+
+	return StrToIntWithDefaultValue(v, defaultA)
+}
+
 func JSONToStringArray(objStrA string) []string {
 	var rArrayT []string
 	errT := json.Unmarshal([]byte(objStrA), &rArrayT)
@@ -4599,56 +4639,101 @@ func GetDBResultArray(dbA *sql.DB, sqlA string) ([][]string, error) {
 
 // ConvertToGB18030 转换UTF-8字符串为GB18030编码
 func ConvertToGB18030(srcA string) string {
-	dst := make([]byte, len(srcA)*2)
-	transformer := simplifiedchinese.GB18030.NewEncoder()
-	nDst, _, err := transformer.Transform(dst, []byte(srcA), true)
-	if err != nil {
-		return GenerateErrorStringF("encoding failed")
-	}
-	return string(dst[:nDst])
+	encoderT := mahonia.NewEncoder("GB18030")
+
+	return encoderT.ConvertString(srcA)
+	// dst := make([]byte, len(srcA)*2)
+	// transformer := simplifiedchinese.GB18030.NewEncoder()
+	// nDst, _, err := transformer.Transform(dst, []byte(srcA), true)
+	// if err != nil {
+	// 	return GenerateErrorStringF("encoding failed")
+	// }
+	// return string(dst[:nDst])
 }
 
 // ConvertToGB18030Bytes 转换UTF-8字符串为GB18030编码的字节切片
+// func ConvertToGB18030Bytes(srcA string) []byte {
+// 	dst := make([]byte, len(srcA)*2)
+
+// 	transformer := simplifiedchinese.GB18030.NewEncoder()
+
+// 	nDst, _, err := transformer.Transform(dst, []byte(srcA), true)
+
+// 	if err != nil {
+// 		return nil
+// 	}
+
+// 	return dst[:nDst]
+// }
 func ConvertToGB18030Bytes(srcA string) []byte {
-	dst := make([]byte, len(srcA)*2)
 
-	transformer := simplifiedchinese.GB18030.NewEncoder()
+	encoderT := mahonia.NewEncoder("GB18030")
 
-	nDst, _, err := transformer.Transform(dst, []byte(srcA), true)
+	tmps := encoderT.ConvertString(srcA)
 
-	if err != nil {
-		return nil
-	}
+	// destT := []byte(tmps)
 
-	return dst[:nDst]
+	return []byte(tmps)
 }
 
-// ConvertToUTF8 转换GB18030编码等字符串为UTF-8字符串
+// func ConvertToUTF8(srcA []byte, srcEncA string) string {
+// 	srcEncT := srcEncA
+
+// 	switch srcEncT {
+// 	case "", "GB18030", "gb18030", "GBK", "gbk", "GB2312", "gb2312":
+// 		dst := make([]byte, len(srcA)*2)
+// 		transformer := simplifiedchinese.GB18030.NewDecoder()
+// 		nDst, _, err := transformer.Transform(dst, srcA, true)
+// 		if err != nil {
+// 			return GenerateErrorStringF("encoding failed: %v", err.Error())
+// 		}
+// 		return string(dst[:nDst])
+// 	case "utf-8", "UTF-8":
+// 		return string(srcA)
+// 	case "windows-1252", "windows1252":
+// 		dst := make([]byte, len(srcA)*2)
+// 		transformer := charmap.Windows1252.NewDecoder()
+// 		nDst, _, err := transformer.Transform(dst, srcA, true)
+// 		if err != nil {
+// 			return GenerateErrorStringF("encoding failed: %v", srcEncA)
+// 		}
+// 		return string(dst[:nDst])
+// 	default:
+// 		return GenerateErrorStringF("unknown encoding: %v", srcEncA)
+// 	}
+// }
+// ConvertToUTF8 转换GB18030编码等字符串(字节形式)为UTF-8字符串
 func ConvertToUTF8(srcA []byte, srcEncA string) string {
 	srcEncT := srcEncA
 
-	switch srcEncT {
-	case "", "GB18030", "gb18030", "GBK", "gbk", "GB2312", "gb2312":
-		dst := make([]byte, len(srcA)*2)
-		transformer := simplifiedchinese.GB18030.NewDecoder()
-		nDst, _, err := transformer.Transform(dst, srcA, true)
-		if err != nil {
-			return GenerateErrorStringF("encoding failed: %v", err.Error())
-		}
-		return string(dst[:nDst])
-	case "utf-8", "UTF-8":
-		return string(srcA)
-	case "windows-1252", "windows1252":
-		dst := make([]byte, len(srcA)*2)
-		transformer := charmap.Windows1252.NewDecoder()
-		nDst, _, err := transformer.Transform(dst, srcA, true)
-		if err != nil {
-			return GenerateErrorStringF("encoding failed: %v", srcEncA)
-		}
-		return string(dst[:nDst])
-	default:
-		return GenerateErrorStringF("unknown encoding: %v", srcEncA)
+	if srcEncT == "" {
+		srcEncT = "GB18030"
 	}
+
+	decodeT := mahonia.NewDecoder(srcEncT)
+
+	_, cdataT, errT := decodeT.Translate(srcA, true)
+
+	if errT != nil {
+		return GenerateErrorStringF("encoding failed: %v", errT.Error())
+	}
+
+	return string(cdataT)
+
+}
+
+// ConvertStringToUTF8 转换GB18030编码等字符串为UTF-8字符串
+func ConvertStringToUTF8(srcA string, srcEncA string) string {
+	srcEncT := srcEncA
+
+	if srcEncT == "" {
+		srcEncT = "GB18030"
+	}
+
+	decodeT := mahonia.NewDecoder(srcEncT)
+
+	return decodeT.ConvertString(srcA)
+
 }
 
 // 事件相关 event related
