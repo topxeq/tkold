@@ -249,6 +249,12 @@ func EndsWith(strA string, subStrA string) bool {
 	return strings.HasSuffix(strA, subStrA)
 }
 
+// EndsWithIgnoreCase 检查字符串strA结尾是否是subStrA，不区分大小写
+func EndsWithIgnoreCase(strA string, subStrA string) bool {
+
+	return strings.HasSuffix(strings.ToLower(strA), strings.ToLower(subStrA))
+}
+
 // Trim 仅仅封装了strings.TrimSpace
 func Trim(strA string) string {
 	return strings.TrimSpace(strA)
