@@ -2865,6 +2865,32 @@ func EncodeStringUnderline(strA string) string {
 	return sbuf.String()
 }
 
+func EncodeStringCustom(strA string, paddingA byte) string {
+	if paddingA == 0 {
+		paddingA = '_'
+	}
+
+	lenT := len(strA)
+
+	var sbuf strings.Builder
+
+	tableStrT := "0123456789ABCDEF"
+
+	for i := 0; i < lenT; i++ {
+		v := strA[i]
+
+		if !(((v >= '0') && (v <= '9')) || ((v >= 'a') && (v <= 'z')) || ((v >= 'A') && (v <= 'Z'))) {
+			sbuf.WriteByte(paddingA)
+			sbuf.WriteByte(tableStrT[v>>4])
+			sbuf.WriteByte(tableStrT[v&15])
+		} else {
+			sbuf.WriteByte(strA[i])
+		}
+	}
+
+	return sbuf.String()
+}
+
 func ishex(c byte) bool {
 	switch {
 	case '0' <= c && c <= '9':
@@ -2942,6 +2968,32 @@ func DecodeStringUnderline(s string) string {
 
 	for i := 0; i < lenT; {
 		if s[i] == '_' {
+			if i+2 >= lenT {
+				return s
+			}
+			bufT.WriteByte(unhex(s[i+1])<<4 | unhex(s[i+2]))
+
+			i += 3
+		} else {
+			bufT.WriteByte(s[i])
+			i++
+		}
+	}
+
+	return bufT.String()
+}
+
+func DecodeStringCustom(s string, paddingA byte) string {
+	if paddingA == 0 {
+		paddingA = '_'
+	}
+
+	var bufT strings.Builder
+
+	lenT := len(s)
+
+	for i := 0; i < lenT; {
+		if s[i] == paddingA {
 			if i+2 >= lenT {
 				return s
 			}
