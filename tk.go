@@ -2197,6 +2197,27 @@ func LoadStringFromFile(fileNameA string) string {
 	return string(fileContentT)
 }
 
+// LoadStringFromFileWithDefault 从文件中读取整个内容到字符串中，出现问题时返回默认字符串
+func LoadStringFromFileWithDefault(fileNameA string, defaultA string) string {
+	if !IfFileExists(fileNameA) {
+		return defaultA
+	}
+
+	fileT, errT := os.Open(fileNameA)
+	if errT != nil {
+		return defaultA
+	}
+
+	defer fileT.Close()
+
+	fileContentT, errT := ioutil.ReadAll(fileT)
+	if errT != nil {
+		return defaultA
+	}
+
+	return string(fileContentT)
+}
+
 func LoadStringFromFileE(fileNameA string) (string, error) {
 	if !IfFileExists(fileNameA) {
 		return "", fmt.Errorf("file not exists")
