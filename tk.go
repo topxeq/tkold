@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -2729,6 +2730,19 @@ func LoadSimpleMapFromDir(dirA string) map[string]string {
 }
 
 // 编码解码相关 encode/decode
+
+// EncodeToXMLString 转换字符串XML格式编码的字符串，例如：字符串“<as>\"!sdsdsgfde345344对方对方对法国</as>” 会编码为 “&lt;as&gt;&#34;!sdsdsgfde345344对方对方对法国&lt;/as&gt;”
+func EncodeToXMLString(strA string) string {
+	var bufT strings.Builder
+
+	errT := xml.EscapeText(&bufT, []byte(strA))
+
+	if errT != nil {
+		return strA
+	}
+
+	return bufT.String()
+}
 
 // ObjectToJSON 任意对象转换为JSON字符串
 func ObjectToJSON(objA interface{}) string {
