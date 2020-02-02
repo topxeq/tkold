@@ -1520,6 +1520,11 @@ func Fpl(wA io.Writer, formatA string, argsA ...interface{}) {
 	fmt.Fprintf(wA, formatA+"\n", argsA...)
 }
 
+// Fpr 类似Pr，但向流中写入(Fprintf)
+func Fpr(wA io.Writer, formatA string, argsA ...interface{}) {
+	fmt.Fprintf(wA, formatA, argsA...)
+}
+
 func PlvWithError(vA interface{}, errStrA string) {
 	if errStrA == "" {
 		fmt.Printf("%v\n", vA)
@@ -2177,6 +2182,20 @@ func GenerateFileListRecursively(dirA string, patternA string) []string {
 	return strListT
 }
 
+func GetAvailableFileName(fileNameA string) string {
+	fileNameT := fileNameA
+
+	for i := 1; true; i++ {
+		if !IfFileExists(fileNameT) {
+			break
+		}
+
+		fileNameT = fmt.Sprintf("%s_%d%s", RemoveFileExt(fileNameA), i, filepath.Ext(fileNameA))
+	}
+
+	return fileNameT
+}
+
 // LoadStringFromFile 从文件中读取整个内容到字符串中
 func LoadStringFromFile(fileNameA string) string {
 	if !IfFileExists(fileNameA) {
@@ -2381,6 +2400,38 @@ func LoadStringListFromFile(fileNameA string) ([]string, error) {
 	return stringList, nil
 }
 
+func LoadStringListBuffered(fileNameA string) ([]string, error) {
+	if !IfFileExists(fileNameA) {
+		return nil, Errf("file not exists", fileNameA)
+	}
+
+	fileT, errT := os.Open(fileNameA)
+	if errT != nil {
+		return nil, errT
+	}
+
+	defer fileT.Close()
+
+	bufT := make([]string, 0, 1000)
+
+	readerT := bufio.NewReader(fileT)
+
+	for true {
+		strT, errT := readerT.ReadString('\n')
+		if errT != nil {
+			if errT == io.EOF {
+				bufT = append(bufT, Trim(strT))
+			}
+			break
+		}
+
+		bufT = append(bufT, Trim(strT))
+
+	}
+
+	return bufT, nil
+}
+
 func SaveStringList(strListA []string, fileA string) string {
 	if strListA == nil {
 		return GenerateErrorString("invalid parameter")
@@ -2414,6 +2465,51 @@ func SaveStringListWin(strListA []string, fileA string) string {
 
 	wFile := bufio.NewWriter(file)
 	wFile.WriteString(JoinLinesBySeparator(strListA, "\r\n"))
+	wFile.Flush()
+
+	return ""
+}
+
+func SaveStringListBuffered(strListA []string, fileA string, sepA string, startA int, endA int) string {
+	if strListA == nil {
+		return GenerateErrorString("invalid parameter")
+	}
+
+	if strListA == nil {
+		return GenerateErrorString("empty list")
+	}
+
+	lenT := len(strListA)
+
+	if startA < 0 || endA >= lenT {
+		return GenerateErrorString("invalid range")
+	}
+
+	var errT error
+
+	file, errT := os.Create(fileA)
+	if errT != nil {
+		return GenerateErrorString(errT.Error())
+	}
+
+	defer file.Close()
+
+	wFile := bufio.NewWriter(file)
+
+	for i := startA; i <= endA; i++ {
+		_, errT = wFile.WriteString(strListA[i])
+		if errT != nil {
+			return GenerateErrorString(errT.Error())
+		}
+
+		if i != endA {
+			_, errT = wFile.WriteString(sepA)
+			if errT != nil {
+				return GenerateErrorString(errT.Error())
+			}
+		}
+	}
+
 	wFile.Flush()
 
 	return ""
@@ -4002,6 +4098,20 @@ func UrlDecode(strA string) string {
 		return GenerateErrorString(errT.Error())
 	}
 	return rStrT
+}
+
+// JoinURL concat a base URL and a relative URL
+func JoinURL(urlBaseA string, urlNextA string) string {
+	u, err := url.Parse(urlNextA)
+	if err != nil {
+		return GenerateErrorString(err.Error())
+	}
+
+	base, err := url.Parse(urlBaseA)
+	if err != nil {
+		return GenerateErrorString(err.Error())
+	}
+	return base.ResolveReference(u).String()
 }
 
 // debug related
