@@ -2036,6 +2036,44 @@ func FormatStringSliceSlice(sliceA [][]string, sepA string, lineSepA string) str
 	return bufT.String()
 }
 
+// IntToKMGT convert a number to "3.21K", "1.2G", etc, formatA like "%.2f"
+// if sizeA < 1024, formatA is ignored
+func IntToKMGT(sizeA int, formatA string) string {
+	if formatA == "" {
+		formatA = "%.2f"
+	}
+
+	if sizeA >= 1099511627776 {
+		return fmt.Sprintf(formatA+"T", float64(sizeA)/1099511627776)
+	} else if sizeA >= 1073741824 {
+		return fmt.Sprintf(formatA+"G", float64(sizeA)/1073741824)
+	} else if sizeA >= 1048576 {
+		return fmt.Sprintf(formatA+"M", float64(sizeA)/1048576)
+	} else if sizeA >= 1024 {
+		return fmt.Sprintf(formatA+"K", float64(sizeA)/1024)
+	} else {
+		return fmt.Sprintf("%dB", sizeA)
+	}
+}
+
+// IntToWYZ convert a number to "3.21万", "1.2亿", etc, formatA like "%.2f"
+// if sizeA < 1024, formatA is ignored
+func IntToWYZ(sizeA int, formatA string) string {
+	if formatA == "" {
+		formatA = "%.2f"
+	}
+
+	if sizeA >= 1000000000000 {
+		return fmt.Sprintf(formatA+"兆", float64(sizeA)/1000000000000)
+	} else if sizeA >= 100000000 {
+		return fmt.Sprintf(formatA+"亿", float64(sizeA)/100000000)
+	} else if sizeA >= 10000 {
+		return fmt.Sprintf(formatA+"万", float64(sizeA)/10000)
+	} else {
+		return fmt.Sprintf("%d", sizeA)
+	}
+}
+
 // 日志相关
 
 func SetLogFile(fileNameA string) {
@@ -2470,7 +2508,7 @@ func SaveStringListWin(strListA []string, fileA string) string {
 	return ""
 }
 
-func SaveStringListBuffered(strListA []string, fileA string, sepA string, startA int, endA int) string {
+func SaveStringListBufferedByRange(strListA []string, fileA string, sepA string, startA int, endA int) string {
 	if strListA == nil {
 		return GenerateErrorString("invalid parameter")
 	}
@@ -2515,12 +2553,73 @@ func SaveStringListBuffered(strListA []string, fileA string, sepA string, startA
 	return ""
 }
 
+func SaveStringListBuffered(strListA []string, fileA string, sepA string) string {
+	if strListA == nil {
+		return GenerateErrorString("invalid parameter")
+	}
+
+	if strListA == nil {
+		return GenerateErrorString("empty list")
+	}
+
+	lenT := len(strListA)
+
+	var errT error
+
+	file, errT := os.Create(fileA)
+	if errT != nil {
+		return GenerateErrorString(errT.Error())
+	}
+
+	defer file.Close()
+
+	wFile := bufio.NewWriter(file)
+
+	for i := 0; i < lenT; i++ {
+		_, errT = wFile.WriteString(strListA[i])
+		if errT != nil {
+			return GenerateErrorString(errT.Error())
+		}
+
+		if i != (lenT - 1) {
+			_, errT = wFile.WriteString(sepA)
+			if errT != nil {
+				return GenerateErrorString(errT.Error())
+			}
+		}
+	}
+
+	wFile.Flush()
+
+	return ""
+}
+
+// ReadLineFromBufioReader return result string, error and if reach EOF
+func ReadLineFromBufioReader(readerA *bufio.Reader) (string, bool, error) {
+	if readerA == nil {
+		return "", false, Errf("nil reader")
+	}
+
+	strT, errT := readerA.ReadString('\n')
+
+	if errT != nil {
+		if errT == io.EOF {
+			return strT, true, nil
+		}
+
+		return strT, false, errT
+	}
+
+	return strT, false, nil
+
+}
+
 func RestoreLineEnds(strA string, replacementA string) string {
 	rs := strings.Replace(strA, replacementA, "\n", -1)
 	return rs
 }
 
-// 文件相关 file related
+// 双行列表相关 dual list related
 
 func LoadDualLineList(fileNameA string) ([][]string, string) {
 	rs, err := LoadStringList(fileNameA)
