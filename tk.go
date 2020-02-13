@@ -1651,6 +1651,21 @@ func CheckErrCompact(errA error) {
 	os.Exit(1)
 }
 
+// GetUserInput 获取键盘输入，不太可靠
+func GetUserInput(promptA string) string {
+	if promptA != "" {
+		fmt.Print(promptA)
+	}
+
+	var textT string
+	_, errT := fmt.Scanln(&textT)
+	if errT != nil {
+		return GenerateErrorString(errT.Error())
+	}
+
+	return textT
+}
+
 var stdinBufferedReader *bufio.Reader
 var stdinBufferedScanner *bufio.Scanner
 
@@ -2438,7 +2453,7 @@ func LoadStringListFromFile(fileNameA string) ([]string, error) {
 	return stringList, nil
 }
 
-func LoadStringListBuffered(fileNameA string) ([]string, error) {
+func LoadStringListBuffered(fileNameA string, trimA bool, skipEmptyA bool) ([]string, error) {
 	if !IfFileExists(fileNameA) {
 		return nil, Errf("file not exists", fileNameA)
 	}
@@ -2458,12 +2473,36 @@ func LoadStringListBuffered(fileNameA string) ([]string, error) {
 		strT, errT := readerT.ReadString('\n')
 		if errT != nil {
 			if errT == io.EOF {
-				bufT = append(bufT, Trim(strT))
+				if trimA {
+					strT = Trim(strT)
+				}
+
+				if skipEmptyA {
+					if strT != "" {
+						bufT = append(bufT, strT)
+					}
+				} else {
+					bufT = append(bufT, strT)
+				}
+
+			} else {
+				return bufT, errT
 			}
+
 			break
 		}
 
-		bufT = append(bufT, Trim(strT))
+		if trimA {
+			strT = Trim(strT)
+		}
+
+		if skipEmptyA {
+			if strT != "" {
+				bufT = append(bufT, strT)
+			}
+		} else {
+			bufT = append(bufT, strT)
+		}
 
 	}
 
