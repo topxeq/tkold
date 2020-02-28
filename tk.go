@@ -1202,6 +1202,7 @@ func GetNowTimeStringFormat(formatA string) string {
 	return t.Format(formatA)
 }
 
+// GetNowTimeStringFormal get the time string for now as "2020-02-02 08:09:15"
 func GetNowTimeStringFormal() string {
 	t := time.Now()
 	return fmt.Sprintf("%04d-%02d-%02d %02d:%02d:%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
@@ -3007,6 +3008,16 @@ func JSONToMapStringString(objStrA string) map[string]string {
 	return rMapT
 }
 
+func JSONToObject(objStrA string) interface{} {
+	var rs interface{}
+	errT := json.Unmarshal([]byte(objStrA), &rs)
+	if errT != nil {
+		return nil
+	}
+
+	return rs
+}
+
 func SafelyGetStringForKeyWithDefault(mapA map[string]string, keyA string, defaultA string) string {
 	if mapA == nil {
 		return defaultA
@@ -4418,6 +4429,119 @@ func DownloadPage(urlA string, originalEncodingA string, postDataA url.Values, c
 		return GenerateErrorString(errT.Error())
 	}
 
+}
+
+func GetLastComponentOfUrl(urlA string) string {
+	urlT, errT := url.Parse(urlA)
+	if errT != nil {
+		return GenerateErrorStringF(errT.Error())
+	}
+
+	splitRT := strings.Split(urlT.Path, "/")
+
+	return splitRT[len(splitRT)-1]
+}
+
+func DownloadFile(urlA, dirA, fileNameA string, ifRenameA bool) string {
+
+	var urlT string
+	var fileNameT string = fileNameA
+
+	if !StartsWithIgnoreCase(urlA, "http://") {
+		urlT = "http://" + urlA
+	} else {
+		urlT = urlA
+	}
+
+	respT, errT := http.Get(urlT)
+	if errT != nil {
+		return GenerateErrorStringF("failed to get URL: %v", errT.Error())
+	}
+
+	if respT.StatusCode != 200 {
+		return GenerateErrorStringF("failed to get URL: status code = %v", respT.StatusCode)
+	}
+
+	defer respT.Body.Close()
+
+	if fileNameT == "" {
+		fileNameT = GetLastComponentOfUrl(urlT)
+	}
+
+	if dirA != "" {
+		fileNameT = filepath.Join(dirA, fileNameT)
+	}
+
+	if ifRenameA {
+		fileNameT = GetAvailableFileName(fileNameT)
+	}
+
+	fileT, errT := os.Create(fileNameT)
+	if errT != nil {
+		return GenerateErrorStringF("failed to create file: %v", errT.Error())
+	}
+	defer fileT.Close()
+
+	// if respT.ContentLength == -1 {
+	// 	tmpBuf, _ := ioutil.ReadAll(respT.Body)
+	// 	return GenerateErrorStringF("failed to get http response content length: %v\n%#v", string(tmpBuf), respT)
+	// }
+
+	bufT := make([]byte, 1000000)
+
+	for {
+		n, errT := respT.Body.Read(bufT)
+
+		if n == 0 && errT.Error() == "EOF" {
+			break
+		}
+
+		if (errT != nil) && (errT.Error() != "EOF") {
+			return GenerateErrorStringF("failed to download: %v", errT.Error())
+		}
+
+		fileT.WriteString(string(bufT[:n]))
+	}
+
+	// valid download exe
+	// fi, errT := fileT.Stat()
+	// if errT == nil {
+	// 	if fi.Size() != respT.ContentLength {
+	// 		return GenerateErrorStringF("Downloaded file size error")
+	// 	}
+	// }
+
+	return fileNameT
+}
+
+func DownloadBytes(urlA string) ([]byte, error) {
+
+	var urlT string
+
+	if !StartsWithIgnoreCase(urlA, "http://") {
+		urlT = "http://" + urlA
+	} else {
+		urlT = urlA
+	}
+
+	respT, errT := http.Get(urlT)
+	if errT != nil {
+		return nil, Errf("failed to get URL: %v", errT.Error())
+	}
+
+	if respT.StatusCode != 200 {
+		return nil, Errf("failed to get URL: status code = %v", respT.StatusCode)
+	}
+
+	defer respT.Body.Close()
+
+	bufT, errT := ioutil.ReadAll(respT.Body)
+
+	if errT != nil {
+		return nil, Errf("failed to get http response body: %v", errT)
+	}
+
+	return bufT, nil
 }
 
 // PostRequest : another POST request sender
