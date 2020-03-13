@@ -335,6 +335,15 @@ func GetErrorString(errStrA string) string {
 	return errStrA[8:]
 }
 
+// GetErrorStringSafely 获取出错字符串中的出错原因部分，如果不是出错字符串则返回原串
+func GetErrorStringSafely(errStrA string) string {
+	if StartsWith(errStrA, "TXERROR:") {
+		return errStrA[8:]
+	} else {
+		return errStrA
+	}
+}
+
 // GenerateErrorString 生成一个出错字符串
 func GenerateErrorString(errStrA string) string {
 	return "TXERROR:" + errStrA
@@ -2797,6 +2806,10 @@ func AppendDualLineList(listA [][]string, fileNameA string) string {
 }
 
 // SimpleMap related
+// in a simplemap structure, key/value pairs are in form as KEY=VALUE
+// "=" in keys should be replaced as `EQ`
+// line-ends in values such as "\n" should be replaced as #CR#
+// comments could be used after ####
 
 func LoadSimpleMapFromFile(fileNameA string) map[string]string {
 	if !IfFileExists(fileNameA) {
@@ -2812,6 +2825,7 @@ func LoadSimpleMapFromFile(fileNameA string) map[string]string {
 	mapT := make(map[string]string)
 	for i := range strListT {
 		lineT := strListT[i]
+		lineT = strings.SplitN(lineT, "####", 2)[0]
 		lineListT := strings.SplitN(lineT, "=", 2)
 		if (lineListT == nil) || (len(lineListT) < 2) {
 			continue
@@ -2858,6 +2872,9 @@ func LoadSimpleMapFromString(strA string) map[string]string {
 	mapT := make(map[string]string)
 	for i := range strListT {
 		lineT := strListT[i]
+
+		lineT = strings.SplitN(lineT, "####", 2)[0]
+
 		lineListT := strings.SplitN(lineT, "=", 2)
 		if (lineListT == nil) || (len(lineListT) < 2) {
 			continue
@@ -2878,6 +2895,9 @@ func LoadSimpleMapFromStringE(strA string) (map[string]string, error) {
 	mapT := make(map[string]string)
 	for i := range strListT {
 		lineT := strListT[i]
+
+		lineT = strings.SplitN(lineT, "####", 2)[0]
+
 		lineListT := strings.SplitN(lineT, "=", 2)
 		if (lineListT == nil) || (len(lineListT) < 2) {
 			continue
@@ -2931,6 +2951,9 @@ func AppendSimpleMapFromFile(mapA map[string]string, fileNameA string) string {
 
 	for i := range strListT {
 		lineT := strListT[i]
+
+		lineT = strings.SplitN(lineT, "####", 2)[0]
+
 		lineListT := strings.SplitN(lineT, "=", 2)
 		if (lineListT == nil) || (len(lineListT) < 2) {
 			continue
