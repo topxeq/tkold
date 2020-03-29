@@ -244,6 +244,14 @@ func StartsWithDigit(strA string) bool {
 	}
 }
 
+func Contains(strA string, subStrA string) bool {
+	return strings.Contains(strA, subStrA)
+}
+
+func ContainsIgnoreCase(strA string, subStrA string) bool {
+	return strings.Contains(strings.ToLower(strA), strings.ToLower(subStrA))
+}
+
 // EndsWith 检查字符串strA结尾是否是subStrA
 func EndsWith(strA string, subStrA string) bool {
 
