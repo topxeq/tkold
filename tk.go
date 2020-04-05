@@ -252,6 +252,14 @@ func ContainsIgnoreCase(strA string, subStrA string) bool {
 	return strings.Contains(strings.ToLower(strA), strings.ToLower(subStrA))
 }
 
+func ToLower(strA string) string {
+	return strings.ToLower(strA)
+}
+
+func ToUpper(strA string) string {
+	return strings.ToUpper(strA)
+}
+
 // EndsWith 检查字符串strA结尾是否是subStrA
 func EndsWith(strA string, subStrA string) bool {
 
@@ -1823,6 +1831,36 @@ func GetParameterByIndexWithDefaultValue(argsA []string, idxA int, defaultA stri
 	}
 
 	return defaultA
+}
+
+// GetAllParameters 获取命令行参数中所有非开关参数
+func GetAllParameters(argsA []string) []string {
+	aryT := make([]string, 0, len(argsA))
+
+	for _, argT := range argsA {
+		if StartsWith(argT, "-") {
+			continue
+		}
+
+		aryT = append(aryT, argT)
+	}
+
+	return aryT
+}
+
+// GetAllSwitches 获取命令行参数中所有开关参数
+func GetAllSwitches(argsA []string) []string {
+	aryT := make([]string, 0, len(argsA))
+
+	for _, argT := range argsA {
+		if !StartsWith(argT, "-") {
+			continue
+		}
+
+		aryT = append(aryT, argT)
+	}
+
+	return aryT
 }
 
 // ParseCommandLine 分析命令行字符串，类似os.Args的获取过程
