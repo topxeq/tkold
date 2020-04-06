@@ -3835,6 +3835,8 @@ func DecryptStringByTXDEF(strA, codeA string) string {
 
 	if StartsWith(strA, "740404") {
 		sBufT, errT = hex.DecodeString(strA[6:])
+	} else if StartsWith(strA, "//TXDEF#") {
+		sBufT, errT = hex.DecodeString(strA[8:])
 	} else {
 		sBufT, errT = hex.DecodeString(strA)
 	}
@@ -3882,6 +3884,48 @@ func EncryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
 	}
 
 	errT = ioutil.WriteFile(outputFileT, writeContentT, srcStatT.Mode())
+	if errT != nil {
+		return errT
+	}
+
+	return nil
+}
+
+func EncryptFileByTXDEFWithHeader(fileNameA, codeA, outputFileA string) error {
+	if !IfFileExists(fileNameA) {
+		return Errf("")
+	}
+
+	srcStatT, errT := os.Stat(fileNameA)
+	if errT != nil {
+		return Errf("error os.Stat src %s: %s", fileNameA, errT.Error())
+	}
+
+	codeT := codeA
+	if codeT == "" {
+		codeT = "topxeq"
+	}
+
+	outputFileT := outputFileA
+	if outputFileT == "" {
+		outputFileT = fileNameA + ".txdef"
+	}
+
+	fileContenT, errT := ioutil.ReadFile(fileNameA)
+	if errT != nil {
+		return errT
+	}
+
+	writeContentT := EncryptDataByTXDEF(fileContenT, codeT)
+	if writeContentT == nil {
+		return Errf("encrypt data failed")
+	}
+
+	bufT := []byte("//TXDEF#")
+
+	bufT = append(bufT, writeContentT...)
+
+	errT = ioutil.WriteFile(outputFileT, bufT, srcStatT.Mode())
 	if errT != nil {
 		return errT
 	}
@@ -4030,6 +4074,10 @@ func DecryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
 	fileContenT, errT := ioutil.ReadFile(fileNameA)
 	if errT != nil {
 		return errT
+	}
+
+	if bytes.HasPrefix(fileContenT, []byte("//TXDEF#")) {
+		fileContenT = fileContenT[8:]
 	}
 
 	writeContentT := DecryptDataByTXDEF(fileContenT, codeT)
@@ -4498,6 +4546,22 @@ func DownloadPage(urlA string, originalEncodingA string, postDataA url.Values, c
 		return GenerateErrorString(errT.Error())
 	}
 
+}
+
+func DownloadPageByMap(urlA string, originalEncodingA string, postDataA map[string]string, customHeaders string, timeoutSecsA time.Duration) string {
+	if postDataA == nil {
+		return DownloadPage(urlA, originalEncodingA, nil, customHeaders, timeoutSecsA)
+	}
+
+	postDataT := url.Values{}
+
+	for k, v := range postDataA {
+
+		postDataT.Set(k, v)
+
+	}
+
+	return DownloadPage(urlA, originalEncodingA, postDataT, customHeaders, timeoutSecsA)
 }
 
 func GetLastComponentOfUrl(urlA string) string {
