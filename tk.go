@@ -3842,7 +3842,7 @@ func DecryptStringByTXDEF(strA, codeA string) string {
 	}
 
 	if errT != nil {
-		return GenerateErrorStringF("decrypting failed")
+		return GenerateErrorStringF("decrypting failed: %v", errT)
 	}
 
 	dataDT := DecryptDataByTXDEF(sBufT, codeA)
