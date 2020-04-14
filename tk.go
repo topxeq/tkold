@@ -1499,9 +1499,11 @@ func GetValueOfMSS(mapA map[string]string, keyA string, defaultA string) string 
 
 // 系统相关函数 system related
 
-// Prf 仅仅是封装了fmt.Printf函数
-func Prf(formatA string, argsA ...interface{}) {
+// Prf 仅仅是封装了fmt.Printf函数，但会返回format字符串
+func Prf(formatA string, argsA ...interface{}) string {
 	fmt.Printf(formatA, argsA...)
+
+	return formatA
 }
 
 // Prl 仅仅封装了fmt.Println函数
