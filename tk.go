@@ -1679,6 +1679,16 @@ func CheckErrCompact(errA error) {
 	os.Exit(1)
 }
 
+// GetEnv same as os.Getenv
+func GetEnv(keyA string) string {
+	return os.Getenv(keyA)
+}
+
+// JoinPath same as filepath.Join
+func JoinPath(elemA ...string) string {
+	return filepath.Join(elemA...)
+}
+
 // GetUserInput 获取键盘输入，不太可靠
 func GetUserInput(promptA string) string {
 	if promptA != "" {
