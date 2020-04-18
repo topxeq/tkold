@@ -32,6 +32,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/json-iterator/go"
 	"github.com/topxeq/mahonia"
 	// "github.com/topxeq/gotools/text/encoding/charmap"
 	// "github.com/topxeq/gotools/text/encoding/simplifiedchinese"
@@ -3060,6 +3061,133 @@ func EncodeToXMLString(strA string) string {
 	}
 
 	return bufT.String()
+}
+
+// ToJSON use fast method
+func ToJSON(objA interface{}) (string, error) {
+	// var json = jsoniter.ConfigCompatibleWithStandardLibrary
+	// var json = jsoniter.ConfigFastest
+	rs, errT := jsoniter.Marshal(&objA)
+
+	// if errT != nil {
+	// 	return GenerateErrorString(errT.Error())
+	// }
+
+	return string(rs), errT
+}
+
+// ToJSONIndent use fast method
+func ToJSONIndent(objA interface{}) (string, error) {
+	// var json = jsoniter.ConfigCompatibleWithStandardLibrary
+	// var json = jsoniter.ConfigFastest
+	rs, errT := jsoniter.MarshalIndent(objA, "", "  ")
+
+	// if errT != nil {
+	// 	return GenerateErrorString(errT.Error())
+	// }
+
+	return string(rs), errT
+}
+
+// FromJson fast JSON decode
+func FromJSON(jsonA string) (interface{}, error) {
+	var rs interface{}
+
+	errT := jsoniter.Unmarshal([]byte(jsonA), &rs)
+
+	if errT != nil {
+		return nil, errT
+	}
+
+	return rs, nil
+}
+
+// GetJSONNode return jsoniter.Any type as interface{}
+func GetJSONNode(jsonA string, pathA ...interface{}) interface{} {
+	aryT := make([]interface{}, 0, len(pathA))
+
+	var typeT reflect.Type
+	for _, v := range pathA {
+		typeT = reflect.TypeOf(v)
+
+		if typeT.Kind() == reflect.Int64 {
+			aryT = append(aryT, int(v.(int64)))
+		} else if typeT.Kind() == reflect.String && v.(string) == "*" {
+			aryT = append(aryT, int32('*'))
+		} else {
+			aryT = append(aryT, v)
+		}
+	}
+
+	rs := jsoniter.Get([]byte(jsonA), aryT...)
+
+	return rs.GetInterface()
+}
+
+// GetJSONSubNode return jsoniter.Any type as interface{}
+func GetJSONSubNode(jsonNodeA jsoniter.Any, pathA ...interface{}) interface{} {
+	aryT := make([]interface{}, 0, len(pathA))
+
+	var typeT reflect.Type
+	for _, v := range pathA {
+		typeT = reflect.TypeOf(v)
+
+		if typeT.Kind() == reflect.Int64 {
+			aryT = append(aryT, int(v.(int64)))
+		} else if typeT.Kind() == reflect.String && v.(string) == "*" {
+			aryT = append(aryT, int32('*'))
+		} else {
+			aryT = append(aryT, v)
+		}
+	}
+
+	rs := jsonNodeA.Get(aryT...)
+
+	return rs.GetInterface()
+}
+
+// GetJSONNodeAny return jsoniter.Any type
+// func Get(data []byte, path ...interface{}) Any takes interface{} as path. If string, it will lookup json map. If int, it will lookup json array. If '*', it will map to each element of array or each key of map.
+func GetJSONNodeAny(jsonA string, pathA ...interface{}) jsoniter.Any {
+	aryT := make([]interface{}, 0, len(pathA))
+
+	var typeT reflect.Type
+	for _, v := range pathA {
+		typeT = reflect.TypeOf(v)
+
+		if typeT.Kind() == reflect.Int64 {
+			aryT = append(aryT, int(v.(int64)))
+		} else if typeT.Kind() == reflect.String && v.(string) == "*" {
+			aryT = append(aryT, int32('*'))
+		} else {
+			aryT = append(aryT, v)
+		}
+	}
+
+	rs := jsoniter.Get([]byte(jsonA), aryT...)
+
+	return rs
+}
+
+func GetJSONSubNodeAny(jsonNodeA jsoniter.Any, pathA ...interface{}) jsoniter.Any {
+	aryT := make([]interface{}, 0, len(pathA))
+
+	var typeT reflect.Type
+	for _, v := range pathA {
+		typeT = reflect.TypeOf(v)
+
+		if typeT.Kind() == reflect.Int64 {
+			aryT = append(aryT, int(v.(int64)))
+		} else if typeT.Kind() == reflect.String && v.(string) == "*" {
+			aryT = append(aryT, int32('*'))
+		} else {
+			aryT = append(aryT, v)
+		}
+	}
+
+	rs := jsonNodeA.Get(aryT...)
+
+	return rs
 }
 
 // ObjectToJSON 任意对象转换为JSON字符串
