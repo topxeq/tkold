@@ -447,6 +447,34 @@ func JoinLinesBySeparator(strListA []string, sepA string) string {
 	return strings.Join(strListA, sepA)
 }
 
+// StartsWithBOM if a UTF-8 string starts with BOM
+func StartsWithBOM(strA string) bool {
+	bom := []byte{0xEF, 0xBB, 0xBF}
+
+	if StartsWith(strA, string(bom)) {
+		return true
+	}
+
+	return false
+
+}
+
+// RemoveBOM if a UTF-8 string starts with BOM, remove it
+func RemoveBOM(strA string) string {
+	bufT := []byte(strA)
+
+	if len(bufT) < 3 {
+		return strA
+	}
+
+	if bufT[0] == 0xEF && bufT[1] == 0xBB && bufT[2] == 0xBF {
+		bufT = bufT[3:]
+	}
+
+	return string(bufT)
+
+}
+
 // EnsureValidFileNameX 确保文件名合理并且长度合适
 func EnsureValidFileNameX(fileNameA string) string {
 	rs := EncodeStringSimple(fileNameA)
