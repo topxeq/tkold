@@ -32,7 +32,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/topxeq/mahonia"
 	// "github.com/topxeq/gotools/text/encoding/charmap"
 	// "github.com/topxeq/gotools/text/encoding/simplifiedchinese"
@@ -3539,6 +3539,29 @@ func HexToBytes(strA string) []byte {
 	}
 
 	return buf
+}
+
+// HexToInt return -1 if failed
+func HexToInt(strA string) int {
+	buf, err := hex.DecodeString(strA)
+	if err != nil {
+		return -1
+	}
+
+	lenT := len(buf)
+
+	m := 1
+
+	rs := 0
+
+	for i := lenT - 1; i >= 0; i-- {
+		rs += int(buf[i]) * m
+
+		m *= 256
+	}
+
+	return rs
+
 }
 
 func GetRandomByte() byte {
