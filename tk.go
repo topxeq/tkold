@@ -1628,6 +1628,14 @@ func PlErr(errA error) {
 	Pl("Error: %v", errA.Error())
 }
 
+func PlErrString(strA string) {
+	if !IsErrorString(strA) {
+		return
+	}
+
+	Pl("Error: %v", GetErrorString(strA))
+}
+
 func PlErrWithPrefix(prefixA string, errA error) {
 	if errA == nil {
 		return
