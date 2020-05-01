@@ -29,6 +29,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 	"unsafe"
 
@@ -1530,6 +1531,11 @@ func GetValueOfMSS(mapA map[string]string, keyA string, defaultA string) string 
 
 // 系统相关函数 system related
 
+// Exit
+func Exit(c int) {
+	os.Exit(c)
+}
+
 // Prf 仅仅是封装了fmt.Printf函数，但会返回format字符串
 func Prf(formatA string, argsA ...interface{}) string {
 	fmt.Printf(formatA, argsA...)
@@ -1539,6 +1545,11 @@ func Prf(formatA string, argsA ...interface{}) string {
 
 // Prl 仅仅封装了fmt.Println函数
 func Prl(a ...interface{}) {
+	fmt.Println(a...)
+}
+
+// Pln 仅仅封装了fmt.Println函数
+func Pln(a ...interface{}) {
 	fmt.Println(a...)
 }
 
@@ -1844,6 +1855,28 @@ func EnsureMakeDirsE(pathA string) error {
 			return fmt.Errorf("a file with same name exists")
 		}
 	}
+}
+
+func GetCurrentThreadID() int {
+	var user32 *syscall.DLL
+	var GetCurrentThreadId *syscall.Proc
+	var err error
+
+	user32, err = syscall.LoadDLL("Kernel32.dll")
+	if err != nil {
+		fmt.Printf("syscall.LoadDLL fail: %v\n", err.Error())
+		return 0
+	}
+	GetCurrentThreadId, err = user32.FindProc("GetCurrentThreadId")
+	if err != nil {
+		fmt.Printf("user32.FindProc fail: %v\n", err.Error())
+		return 0
+	}
+
+	var pid uintptr
+	pid, _, err = GetCurrentThreadId.Call()
+
+	return int(pid)
 }
 
 // 命令行分析
@@ -2467,6 +2500,42 @@ func LoadBytes(fileNameA string, numA int) []byte {
 	}
 
 	return bufT
+}
+
+// LoadBytesFromFileE LoadBytes, numA < 0 indicates read all
+func LoadBytesFromFileE(fileNameA string, numA int) ([]byte, error) {
+	if !IfFileExists(fileNameA) {
+		return nil, Errf("file not exists")
+	}
+
+	fileT, errT := os.Open(fileNameA)
+	if errT != nil {
+		return nil, errT
+	}
+
+	defer fileT.Close()
+
+	if numA <= 0 {
+		fileContentT, errT := ioutil.ReadAll(fileT)
+		if errT != nil {
+			return nil, errT
+		}
+
+		return fileContentT, nil
+	}
+
+	bufT := make([]byte, numA)
+
+	nnT, errT := fileT.Read(bufT)
+	if errT != nil {
+		return nil, errT
+	}
+
+	if nnT != len(bufT) {
+		return nil, Errf("read bytes not identical")
+	}
+
+	return bufT, nil
 }
 
 // SaveStringToFile 保存字符串到文件
@@ -5571,6 +5640,13 @@ func CreateSimpleEvent(typeA string, valueA string) *SimpleEvent {
 }
 
 // Misc Related
+
+//
+func SetValue(p interface{}, v interface{}) {
+	srcRef := reflect.ValueOf(v)
+	vp := reflect.ValueOf(p)
+	vp.Elem().Set(srcRef)
+}
 
 // ParseHexColor inspired by gg
 func ParseHexColor(x string) (r, g, b, a int) {
