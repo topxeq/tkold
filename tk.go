@@ -1536,6 +1536,16 @@ func Exit(c int) {
 	os.Exit(c)
 }
 
+// RunWinFileWithSystemDefault run a program or open a file with default program in Windows
+func RunWinFileWithSystemDefault(fileA string) string {
+	cmd := exec.Command("cmd", "/C", "start", "", fileA)
+	err := cmd.Start()
+	if err != nil {
+		return err.Error()
+	}
+	return ""
+}
+
 // Prf 仅仅是封装了fmt.Printf函数，但会返回format字符串
 func Prf(formatA string, argsA ...interface{}) string {
 	fmt.Printf(formatA, argsA...)
@@ -1752,6 +1762,42 @@ func GetUserInput(promptA string) string {
 	}
 
 	return textT
+}
+
+// GetInputf like GetInput, but allows using printf for prompt string
+func GetInputf(formatA string, aA ...interface{}) string {
+	fmt.Printf(formatA, aA...)
+
+	// var stdinBufferedReaderT *bufio.Reader
+	var stdinBufferedScannerT *bufio.Scanner
+
+	stdinBufferedScannerT = bufio.NewScanner(os.Stdin)
+
+	if stdinBufferedScannerT.Scan() {
+		rStrT := stdinBufferedScannerT.Text()
+
+		errT := stdinBufferedScannerT.Err()
+		if errT != nil {
+			if errT == io.EOF {
+				return GenerateErrorStringF("EOF", rStrT)
+			}
+
+			return GenerateErrorStringF(errT.Error())
+		}
+
+		return rStrT
+	}
+
+	errT := stdinBufferedScannerT.Err()
+	if errT != nil {
+		if errT == io.EOF {
+			return GenerateErrorStringF("EOF", stdinBufferedScanner.Text())
+		}
+
+		return GenerateErrorStringF(errT.Error())
+	}
+
+	return GenerateErrorStringF("EOF")
 }
 
 var stdinBufferedReader *bufio.Reader
@@ -2343,9 +2389,14 @@ func AddLastSubString(strA string, subStrA string) string {
 	return strA
 }
 
-func GenerateFileListRecursively(dirA string, patternA string) []string {
+func GenerateFileListRecursively(dirA string, patternA string, verboseA bool) []string {
 	strListT := make([]string, 0, 100)
+
 	errT := filepath.Walk(dirA, func(path string, f os.FileInfo, err error) error {
+		if verboseA {
+			Pln(path)
+		}
+
 		if f == nil {
 			return err
 		}
@@ -2362,6 +2413,51 @@ func GenerateFileListRecursively(dirA string, patternA string) []string {
 			}
 		} else {
 			// Pl("matching failed: %v", errTI.Error())
+		}
+
+		return nil
+	})
+
+	if errT != nil {
+		Pl("Search directory failed: %v", errT.Error())
+		return nil
+	}
+
+	return strListT
+}
+
+func GenerateFileListRecursivelyWithExclusive(dirA string, patternA string, exclusivePatternA string, verboseA bool) []string {
+	strListT := make([]string, 0, 100)
+
+	errT := filepath.Walk(dirA, func(path string, f os.FileInfo, err error) error {
+		if verboseA {
+			Pln(path)
+		}
+
+		if f == nil {
+			return err
+		}
+
+		if f.IsDir() {
+			return nil
+		}
+
+		matchedT, errTI := filepath.Match(patternA, filepath.Base(path))
+		if errTI == nil {
+			if matchedT {
+				if exclusivePatternA != "" {
+					matched2T, err2TI := filepath.Match(exclusivePatternA, filepath.Base(path))
+					if err2TI == nil {
+						if matched2T {
+							return nil
+						}
+					}
+				}
+
+				strListT = append(strListT, path)
+			}
+		} else {
+			Pl("matching failed: %v", errTI.Error())
 		}
 
 		return nil
@@ -3141,7 +3237,7 @@ func LoadSimpleMapFromDir(dirA string) map[string]string {
 	}
 
 	mapT := make(map[string]string)
-	files := GenerateFileListRecursively(dirA, "*.txt")
+	files := GenerateFileListRecursively(dirA, "*.txt", false)
 	if files == nil {
 		return nil
 	}
