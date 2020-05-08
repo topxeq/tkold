@@ -29,7 +29,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 	"unsafe"
 
@@ -1903,27 +1902,27 @@ func EnsureMakeDirsE(pathA string) error {
 	}
 }
 
-func GetCurrentThreadID() int {
-	var user32 *syscall.DLL
-	var GetCurrentThreadId *syscall.Proc
-	var err error
+// func GetCurrentThreadID() int {
+// 	var user32 *syscall.DLL
+// 	var GetCurrentThreadId *syscall.Proc
+// 	var err error
 
-	user32, err = syscall.LoadDLL("Kernel32.dll")
-	if err != nil {
-		fmt.Printf("syscall.LoadDLL fail: %v\n", err.Error())
-		return 0
-	}
-	GetCurrentThreadId, err = user32.FindProc("GetCurrentThreadId")
-	if err != nil {
-		fmt.Printf("user32.FindProc fail: %v\n", err.Error())
-		return 0
-	}
+// 	user32, err = syscall.LoadDLL("Kernel32.dll")
+// 	if err != nil {
+// 		fmt.Printf("syscall.LoadDLL fail: %v\n", err.Error())
+// 		return 0
+// 	}
+// 	GetCurrentThreadId, err = user32.FindProc("GetCurrentThreadId")
+// 	if err != nil {
+// 		fmt.Printf("user32.FindProc fail: %v\n", err.Error())
+// 		return 0
+// 	}
 
-	var pid uintptr
-	pid, _, err = GetCurrentThreadId.Call()
+// 	var pid uintptr
+// 	pid, _, err = GetCurrentThreadId.Call()
 
-	return int(pid)
-}
+// 	return int(pid)
+// }
 
 // 命令行分析
 
