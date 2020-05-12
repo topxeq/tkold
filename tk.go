@@ -1530,6 +1530,22 @@ func GetValueOfMSS(mapA map[string]string, keyA string, defaultA string) string 
 
 // 系统相关函数 system related
 
+// GetCurrentThreadID get goroutineid
+func GetCurrentThreadID() string {
+	var buf [64]byte
+
+	n := runtime.Stack(buf[:], false)
+
+	idField := strings.Fields(strings.TrimPrefix(string(buf[:n]), "goroutine "))[0]
+
+	id, errT := strconv.Atoi(idField)
+	if errT != nil {
+		return GenerateErrorStringF("failed to get goroutine id: %v", errT)
+	}
+
+	return IntToStr(id)
+}
+
 // Exit
 func Exit(c int) {
 	os.Exit(c)
