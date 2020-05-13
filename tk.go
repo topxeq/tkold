@@ -918,6 +918,32 @@ func RegFindFirst(strA, patternA string, groupA int) string {
 	return GenerateErrorString("no group")
 }
 
+// RegFindFirstIndex the first match location
+func RegFindFirstIndex(strA, patternA string) (int, int) {
+	regexpT, errT := regexp.Compile(patternA)
+
+	if errT != nil {
+		return -1, -1
+	}
+
+	rT := regexpT.FindStringIndex(strA)
+	if rT == nil {
+		return -1, -1
+	}
+
+	return rT[0], rT[1]
+}
+
+func RegStartsWith(strA, patternA string) bool {
+	startT, _ := RegFindFirstIndex(strA, patternA)
+
+	if startT == 0 {
+		return true
+	}
+
+	return false
+}
+
 func RegMatch(strA, patternA string) bool {
 	regexpT, errT := regexp.Compile(patternA)
 
