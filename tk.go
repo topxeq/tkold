@@ -32,6 +32,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/beevik/etree"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/topxeq/mahonia"
 	// "github.com/topxeq/gotools/text/encoding/charmap"
@@ -2433,7 +2434,13 @@ func AddLastSubString(strA string, subStrA string) string {
 func GenerateFileListInDir(dirA string, patternA string, verboseA bool) []string {
 	strListT := make([]string, 0, 100)
 
-	errT := filepath.Walk(dirA, func(path string, f os.FileInfo, err error) error {
+	pathT, errT := filepath.Abs(dirA)
+
+	if errT != nil {
+		return nil
+	}
+
+	errT = filepath.Walk(pathT, func(path string, f os.FileInfo, err error) error {
 		if verboseA {
 			Pln(path)
 		}
@@ -2442,7 +2449,7 @@ func GenerateFileListInDir(dirA string, patternA string, verboseA bool) []string
 			return err
 		}
 
-		if f.IsDir() {
+		if f.IsDir() && path != "." && path != pathT {
 			return filepath.SkipDir
 		}
 
@@ -5787,6 +5794,142 @@ func ConvertStringToUTF8(srcA string, srcEncA string) string {
 
 	return decodeT.ConvertString(srcA)
 
+}
+
+// XML related
+
+func ReshapeXML(xmlA string) string {
+	var errT error
+
+	treeT := etree.NewDocument()
+
+	if treeT == nil {
+		return GenerateErrorStringF("create XML tree failed")
+	}
+
+	errT = treeT.ReadFromString(xmlA)
+
+	if errT != nil {
+		return GenerateErrorStringF("invalid XML: %v", errT)
+	}
+
+	treeT.Indent(2)
+
+	outputT, errT := treeT.WriteToString()
+
+	if errT != nil {
+		return GenerateErrorStringF("failed to reshape XML: %v", errT)
+	}
+
+	return outputT
+
+}
+
+func FlattenXML(xmlA string, nodeA string) string {
+	var errT error
+
+	treeT := etree.NewDocument()
+
+	if treeT == nil {
+		return GenerateErrorStringF("create XML tree failed")
+	}
+
+	errT = treeT.ReadFromString(xmlA)
+
+	if errT != nil {
+		return GenerateErrorStringF("invalid XML: %v", errT)
+	}
+
+	rootNodeT := treeT.FindElement("//" + nodeA)
+
+	if rootNodeT == nil {
+		return GenerateErrorStringF("node not found: %v", nodeA)
+	}
+
+	nodesT := rootNodeT.ChildElements()
+
+	var bufT strings.Builder
+
+	for i, v := range nodesT {
+		if i > 0 {
+			bufT.WriteString("\n")
+		}
+
+		bufT.WriteString(Spr("%v: %v", v.Tag, v.Text()))
+	}
+
+	return bufT.String()
+
+}
+
+func GetMSSFromXML(xmlA string, nodeA string) (map[string]string, error) {
+	var errT error
+
+	treeT := etree.NewDocument()
+
+	if treeT == nil {
+		return nil, Errf("create XML tree failed")
+	}
+
+	errT = treeT.ReadFromString(xmlA)
+
+	if errT != nil {
+		return nil, Errf("invalid XML: %v", errT)
+	}
+
+	rootNodeT := treeT.FindElement("//" + nodeA)
+
+	if rootNodeT == nil {
+		return nil, Errf("node not found: %v", nodeA)
+	}
+
+	nodesT := rootNodeT.ChildElements()
+
+	mapT := make(map[string]string, len(nodesT))
+	for _, jv := range nodesT {
+		mapT[jv.Tag] = jv.Text()
+	}
+
+	return mapT, nil
+}
+
+func GetMSSArrayFromXML(xmlA string, nodeA string) ([]map[string]string, error) {
+	var errT error
+
+	treeT := etree.NewDocument()
+
+	if treeT == nil {
+		return nil, Errf("create XML tree failed")
+	}
+
+	errT = treeT.ReadFromString(xmlA)
+
+	if errT != nil {
+		return nil, Errf("invalid XML: %v", errT)
+	}
+
+	rootNodeT := treeT.FindElement("//" + nodeA)
+
+	if rootNodeT == nil {
+		return nil, Errf("node not found: %v", nodeA)
+	}
+
+	nodesT := rootNodeT.ChildElements()
+
+	aryT := make([]map[string]string, 0)
+
+	for _, v := range nodesT {
+		internalNodesT := v.ChildElements()
+
+		mapT := make(map[string]string, len(internalNodesT))
+		for _, jv := range internalNodesT {
+			mapT[jv.Tag] = jv.Text()
+		}
+
+		aryT = append(aryT, mapT)
+	}
+
+	return aryT, nil
 }
 
 // 事件相关 event related
