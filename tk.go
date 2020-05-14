@@ -2430,6 +2430,43 @@ func AddLastSubString(strA string, subStrA string) string {
 	return strA
 }
 
+func GenerateFileListInDir(dirA string, patternA string, verboseA bool) []string {
+	strListT := make([]string, 0, 100)
+
+	errT := filepath.Walk(dirA, func(path string, f os.FileInfo, err error) error {
+		if verboseA {
+			Pln(path)
+		}
+
+		if f == nil {
+			return err
+		}
+
+		if f.IsDir() {
+			return filepath.SkipDir
+		}
+
+		matchedT, errTI := filepath.Match(patternA, filepath.Base(path))
+		if errTI == nil {
+			if matchedT {
+				strListT = append(strListT, path)
+			}
+		}
+
+		return nil
+	})
+
+	if errT != nil {
+		if verboseA {
+			Pl("Search directory failed: %v", errT.Error())
+		}
+
+		return nil
+	}
+
+	return strListT
+}
+
 func GenerateFileListRecursively(dirA string, patternA string, verboseA bool) []string {
 	strListT := make([]string, 0, 100)
 
