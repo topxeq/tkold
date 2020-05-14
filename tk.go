@@ -15,6 +15,7 @@ import (
 	"io/ioutil"
 	"math/big"
 	"math/rand"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -32,9 +33,12 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/atotto/clipboard"
 	"github.com/beevik/etree"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/melbahja/goph"
 	"github.com/topxeq/mahonia"
+	"golang.org/x/crypto/ssh"
 	// "github.com/topxeq/gotools/text/encoding/charmap"
 	// "github.com/topxeq/gotools/text/encoding/simplifiedchinese"
 )
@@ -165,6 +169,10 @@ var TimeFormatMS = "2006-01-02 15:04:05.000"
 var TimeFormatCompact = "20060102150405"
 var TimeFormatCompact2 = "2006/01/02 15:04:05"
 var GlobalEnvSetG *TXCollection = nil
+
+var variableG = make(map[string]interface{})
+
+var varMutexG sync.Mutex
 
 // 全局环境集合相关 global environment related
 
@@ -5958,11 +5966,205 @@ func CreateSimpleEvent(typeA string, valueA string) *SimpleEvent {
 
 // Misc Related
 
-//
+// SetValue set a value to a pointer
 func SetValue(p interface{}, v interface{}) {
+	// tk.Pl("%#v", reflect.TypeOf(p).Kind())
+	// p = v
+
 	srcRef := reflect.ValueOf(v)
 	vp := reflect.ValueOf(p)
 	vp.Elem().Set(srcRef)
+}
+
+// GetValue get a value from a pointer
+func GetValue(p interface{}) interface{} {
+	vp := reflect.Indirect(reflect.ValueOf(p))
+	return vp.Interface()
+}
+
+func GetVar(nameA string) interface{} {
+	varMutexG.Lock()
+	rs, ok := variableG[nameA]
+	varMutexG.Unlock()
+
+	if !ok {
+		GenerateErrorString("no key")
+	}
+	return rs
+}
+
+func SetVar(nameA string, valueA interface{}) {
+	varMutexG.Lock()
+	variableG[nameA] = valueA
+	varMutexG.Unlock()
+}
+
+func CheckErrorFunc(errA error, funcA func()) {
+	if errA != nil {
+		PlErr(errA)
+
+		if funcA != nil {
+			funcA()
+		}
+
+		os.Exit(1)
+	}
+
+}
+
+func CheckError(errA error, funcsA ...(func())) {
+	if errA != nil {
+		PlErr(errA)
+
+		if funcsA != nil {
+			for _, v := range funcsA {
+				v()
+			}
+		}
+
+		os.Exit(1)
+	}
+
+}
+
+func CheckErrorString(strA string, funcA func()) {
+	if IsErrorString(strA) {
+		PlErrString(strA)
+
+		if funcA != nil {
+			funcA()
+		}
+
+		os.Exit(1)
+	}
+
+}
+
+func TypeOfValue(vA interface{}) string {
+	return fmt.Sprintf("%T", vA)
+}
+
+func TypeOfValueReflect(vA interface{}) string {
+	rs := reflect.TypeOf(vA)
+	return rs.String()
+}
+
+func KindOfValueReflect(vA interface{}) string {
+	rs := reflect.TypeOf(vA)
+	return rs.Kind().String()
+}
+
+func GetClipText() string {
+	textT, errT := clipboard.ReadAll()
+	if errT != nil {
+		return GenerateErrorStringF("could not get text from clipboard: %v", errT.Error())
+	}
+
+	return textT
+}
+
+func SetClipText(textA string) {
+	clipboard.WriteAll(textA)
+}
+
+func NewSSHClient(hostA string, portA int, userA string, passA string) (*goph.Client, error) {
+	authT := goph.Password(passA)
+
+	clientT := &goph.Client{
+		Addr: hostA,
+		Port: portA,
+		User: userA,
+		Auth: authT,
+	}
+
+	errT := goph.Conn(clientT, &ssh.ClientConfig{
+		User:    clientT.User,
+		Auth:    clientT.Auth,
+		Timeout: 20 * time.Second,
+		HostKeyCallback: func(host string, remote net.Addr, key ssh.PublicKey) error {
+			return nil
+			// hostFound, err := goph.CheckKnownHost(host, remote, key, "")
+
+			// if hostFound && err != nil {
+			// 	return err
+			// }
+
+			// if hostFound && err == nil {
+			// 	return nil
+			// }
+
+			// return goph.AddKnownHost(host, remote, key, "")
+		},
+	})
+
+	// clientT, errT := goph.NewConn(userA, hostA, authT, func(host string, remote net.Addr, key ssh.PublicKey) error {
+
+	// 	hostFound, err := goph.CheckKnownHost(host, remote, key, "")
+
+	// 	if hostFound && err != nil {
+	// 		return err
+	// 	}
+
+	// 	if hostFound && err == nil {
+	// 		return nil
+	// 	}
+
+	// 	return goph.AddKnownHost(host, remote, key, "")
+	// })
+
+	return clientT, errT
+}
+
+// RemoveItemsInArray
+func RemoveItemsInArray(aryA []interface{}, startA int, endA int) []interface{} {
+	if startA < 0 || startA >= len(aryA) {
+		// Pl("Runtime error: %v", "index out of range")
+		return nil
+	}
+
+	if endA < 0 || endA >= len(aryA) {
+		// Pl("Runtime error: %v", "index out of range")
+		return nil
+	}
+
+	return append(aryA[:startA], aryA[endA+1:]...)
+	// if idxT == 0 {
+	// 	return ayrA[idxT + 1:]
+	// }
+
+	// if idxT == len(aryA) - 1 {
+	// 	return ayrA[0:len(aryA) - 1]
+	// }
+
+	// return append(aryA[:idxA], aryA[idxA+1:]...)
+
+}
+
+func BitXor(p interface{}, v interface{}) interface{} {
+	switch p.(type) {
+	case int:
+		return p.(int) ^ v.(int)
+	case int64:
+		return p.(int64) ^ v.(int64)
+	case int32:
+		return p.(int32) ^ v.(int32)
+	case int16:
+		return p.(int16) ^ v.(int16)
+	case int8:
+		return p.(int8) ^ v.(int8)
+	case uint64:
+		return p.(uint64) ^ v.(uint64)
+	case uint32:
+		return p.(uint32) ^ v.(uint32)
+	case uint16:
+		return p.(uint16) ^ v.(uint16)
+	case uint8:
+		return p.(uint8) ^ v.(uint8)
+	case uint:
+		return p.(uint) ^ v.(uint)
+	}
+
+	return 0
 }
 
 // ParseHexColor inspired by gg
