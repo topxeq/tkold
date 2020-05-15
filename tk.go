@@ -907,6 +907,15 @@ func RegFindAll(strA, patternA string, groupA int) []string {
 	return nil
 }
 
+func RegFindAllGroups(strA, patternA string) [][]string {
+	regexpT, errT := regexp.Compile(patternA)
+	if errT != nil {
+		return nil
+	}
+
+	return regexpT.FindAllStringSubmatch(strA, -1)
+}
+
 // RegFindFirst returns error string if no match or no matching group
 func RegFindFirst(strA, patternA string, groupA int) string {
 	regexpT, errT := regexp.Compile(patternA)
