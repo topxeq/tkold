@@ -33,14 +33,13 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/melbahja/goph"
+	"golang.org/x/crypto/ssh"
+
 	"github.com/atotto/clipboard"
 	"github.com/beevik/etree"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/melbahja/goph"
 	"github.com/topxeq/mahonia"
-	"golang.org/x/crypto/ssh"
-	// "github.com/topxeq/gotools/text/encoding/charmap"
-	// "github.com/topxeq/gotools/text/encoding/simplifiedchinese"
 )
 
 // 类型 types structs
@@ -382,6 +381,10 @@ func GenerateErrorStringF(formatA string, argsA ...interface{}) string {
 	return fmt.Sprintf("TXERROR:"+formatA, argsA...)
 }
 
+func ErrStrF(formatA string, argsA ...interface{}) string {
+	return fmt.Sprintf("TXERROR:"+formatA, argsA...)
+}
+
 // ErrorStringToError convert errorstring to error, if not, return nil
 func ErrorStringToError(strA string) error {
 	if IsErrorString(strA) {
@@ -389,6 +392,14 @@ func ErrorStringToError(strA string) error {
 	}
 
 	return nil
+}
+
+func ErrToStr(errA error) string {
+	return fmt.Sprintf("TXERROR:%v", errA.Error())
+}
+
+func ErrToStrF(formatA string, errA error) string {
+	return fmt.Sprintf("TXERROR:"+formatA, errA.Error())
 }
 
 func Replace(strA, findA, replaceA string) string {
@@ -1290,6 +1301,7 @@ func GetNowDateString() string {
 }
 
 // GetNowTimeString GetNowTimeString
+// "20060102150405"
 func GetNowTimeString() string {
 	t := time.Now()
 	return fmt.Sprintf("%04d%02d%02d%02d%02d%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
@@ -1574,6 +1586,138 @@ func GetValueOfMSS(mapA map[string]string, keyA string, defaultA string) string 
 
 // 系统相关函数 system related
 
+// EnsureBasePath make sure a base path for application is exists, otherwise create it
+// first look for c:\nameA(Windows) or /nameA(Mac&Linux), then the application path
+// if nameA contains ".", "/", "\\", will use it as basepath instead
+func EnsureBasePath(nameA string) (string, error) {
+	var basePathT string
+
+	if ContainsIn(nameA, ".", "/", "\\") {
+		baseT, errT := filepath.Abs(nameA)
+		if errT != nil {
+			return "", errT
+		}
+
+		basePathT = baseT
+	} else {
+		if strings.HasPrefix(runtime.GOOS, "win") {
+			basePathT = "c:\\" + nameA
+		} else {
+			basePathT = "/" + nameA
+		}
+
+		errT := EnsureMakeDirsE(basePathT)
+
+		if (errT != nil) || (!IfFileExists(basePathT)) {
+			basePathT = GetApplicationPath()
+		}
+
+	}
+
+	// filePathT := filepath.Join(basePathT, "basePathT.txt")
+
+	// errT = SaveStringToFileE("test", filePathT)
+
+	// if (errT != nil) || (!IfFileExists(filePathT)) {
+	// 	return "", Errf("init base path failed")
+	// }
+
+	// errT = RemoveFile(filePathT)
+
+	// if (errT != nil) || (IfFileExists(filePathT)) {
+	// 	return "", Errf("init base path failed: failed to remove tmp file")
+	// }
+
+	return basePathT, nil
+}
+
+func CreateTempFile(dirA string, patternA string) (string, error) {
+	content := []byte("")
+	tmpfile, err := ioutil.TempFile(dirA, patternA)
+	if err != nil {
+		return "", err
+	}
+
+	defer tmpfile.Close()
+
+	rs := tmpfile.Name()
+
+	// defer os.Remove(tmpfile.Name()) // clean up
+
+	if _, err := tmpfile.Write(content); err != nil {
+		return rs, err
+	}
+
+	if err := tmpfile.Close(); err != nil {
+		return rs, err
+	}
+
+	return rs, nil
+}
+
+//
+func CopyFile(src, dst string, forceA bool, bufferSizeA int) error {
+
+	srcFileStat, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	mode := srcFileStat.Mode()
+
+	if !mode.IsRegular() {
+		return fmt.Errorf("%s is not a regular file", src)
+	}
+
+	if mode.IsDir() {
+		fmt.Errorf("%s is a folder", src)
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+
+	defer source.Close()
+
+	if !forceA {
+		_, err = os.Stat(dst)
+		if err != nil {
+			return fmt.Errorf("file %s already exists", dst)
+		}
+	}
+
+	destination, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+
+	defer destination.Close()
+
+	if bufferSizeA <= 0 {
+		bufferSizeA = 1000000
+	}
+
+	buf := make([]byte, bufferSizeA)
+	for {
+		n, err := source.Read(buf)
+
+		if err != nil && err != io.EOF {
+			return err
+		}
+
+		if n == 0 {
+			break
+		}
+
+		if _, err := destination.Write(buf[:n]); err != nil {
+			return err
+		}
+	}
+
+	return err
+}
+
 // GetCurrentThreadID get goroutineid
 func GetCurrentThreadID() string {
 	var buf [64]byte
@@ -1603,6 +1747,70 @@ func RunWinFileWithSystemDefault(fileA string) string {
 		return err.Error()
 	}
 	return ""
+}
+
+// SystemCmd run system command, such as "cmd /c dir", "cmd /k copy a.txt b.txt".
+func SystemCmd(cmdA string, argsA ...string) string {
+	var out bytes.Buffer
+
+	cmd := exec.Command(cmdA, argsA...)
+
+	cmd.Stdout = &out
+	errT := cmd.Run()
+	if errT != nil {
+		return GenerateErrorStringF("failed: %v", errT)
+	}
+
+	return out.String()
+}
+
+// NewSSHClient create SSH client with fewer settings
+func NewSSHClient(hostA string, portA int, userA string, passA string) (*goph.Client, error) {
+	authT := goph.Password(passA)
+
+	clientT := &goph.Client{
+		Addr: hostA,
+		Port: portA,
+		User: userA,
+		Auth: authT,
+	}
+
+	errT := goph.Conn(clientT, &ssh.ClientConfig{
+		User:    clientT.User,
+		Auth:    clientT.Auth,
+		Timeout: 20 * time.Second,
+		HostKeyCallback: func(host string, remote net.Addr, key ssh.PublicKey) error {
+			return nil
+			// hostFound, err := goph.CheckKnownHost(host, remote, key, "")
+
+			// if hostFound && err != nil {
+			// 	return err
+			// }
+
+			// if hostFound && err == nil {
+			// 	return nil
+			// }
+
+			// return goph.AddKnownHost(host, remote, key, "")
+		},
+	})
+
+	// clientT, errT := goph.NewConn(userA, hostA, authT, func(host string, remote net.Addr, key ssh.PublicKey) error {
+
+	// 	hostFound, err := goph.CheckKnownHost(host, remote, key, "")
+
+	// 	if hostFound && err != nil {
+	// 		return err
+	// 	}
+
+	// 	if hostFound && err == nil {
+	// 		return nil
+	// 	}
+
+	// 	return goph.AddKnownHost(host, remote, key, "")
+	// })
+
+	return clientT, errT
 }
 
 // Prf 仅仅是封装了fmt.Printf函数，但会返回format字符串
@@ -2446,6 +2654,24 @@ func AddLastSubString(strA string, subStrA string) string {
 		return strA + subStrA
 	}
 	return strA
+}
+
+func RemoveFile(filePathT string) error {
+	if IsDirectory(filePathT) {
+		return Errf("%v is a directory", filePathT)
+	}
+
+	errT := os.Remove(filePathT)
+
+	if errT != nil {
+		return errT
+	}
+
+	if IfFileExists(filePathT) {
+		return Errf("failed to remove file: %v", filePathT)
+	}
+
+	return nil
 }
 
 func GenerateFileListInDir(dirA string, patternA string, verboseA bool) []string {
@@ -6074,54 +6300,6 @@ func GetClipText() string {
 
 func SetClipText(textA string) {
 	clipboard.WriteAll(textA)
-}
-
-func NewSSHClient(hostA string, portA int, userA string, passA string) (*goph.Client, error) {
-	authT := goph.Password(passA)
-
-	clientT := &goph.Client{
-		Addr: hostA,
-		Port: portA,
-		User: userA,
-		Auth: authT,
-	}
-
-	errT := goph.Conn(clientT, &ssh.ClientConfig{
-		User:    clientT.User,
-		Auth:    clientT.Auth,
-		Timeout: 20 * time.Second,
-		HostKeyCallback: func(host string, remote net.Addr, key ssh.PublicKey) error {
-			return nil
-			// hostFound, err := goph.CheckKnownHost(host, remote, key, "")
-
-			// if hostFound && err != nil {
-			// 	return err
-			// }
-
-			// if hostFound && err == nil {
-			// 	return nil
-			// }
-
-			// return goph.AddKnownHost(host, remote, key, "")
-		},
-	})
-
-	// clientT, errT := goph.NewConn(userA, hostA, authT, func(host string, remote net.Addr, key ssh.PublicKey) error {
-
-	// 	hostFound, err := goph.CheckKnownHost(host, remote, key, "")
-
-	// 	if hostFound && err != nil {
-	// 		return err
-	// 	}
-
-	// 	if hostFound && err == nil {
-	// 		return nil
-	// 	}
-
-	// 	return goph.AddKnownHost(host, remote, key, "")
-	// })
-
-	return clientT, errT
 }
 
 // RemoveItemsInArray
