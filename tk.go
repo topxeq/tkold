@@ -304,7 +304,7 @@ func InStrings(strA string, argsA ...string) bool {
 }
 
 func IsValidEmail(strA string) bool {
-	return RegMatch(strA, `[a-zA-Z0-9]+?[a-zA-Z0-9\.\-_]*?@[a-zA-Z0-9]+?\.[a-zA-Z0-9\.\-_]*?`)
+	return RegMatch(strA, `[a-zA-Z0-9]+?[a-zA-Z0-9\.\-_]*?@[a-zA-Z0-9]+?(\.[a-zA-Z0-9\.\-_]*)+`)
 }
 
 func GetSliceMaxLen(strA string, maxBytesA int) string {
