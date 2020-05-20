@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
 	"math/big"
 	"math/rand"
 	"net"
@@ -300,6 +301,10 @@ func InStrings(strA string, argsA ...string) bool {
 	}
 
 	return false
+}
+
+func IsValidEmail(strA string) bool {
+	return RegMatch(strA, `[a-zA-Z0-9]+?[a-zA-Z0-9\.\-_]*?@[a-zA-Z0-9]+?\.[a-zA-Z0-9\.\-_]*?`)
 }
 
 func GetSliceMaxLen(strA string, maxBytesA int) string {
@@ -6200,6 +6205,15 @@ func CreateSimpleEvent(typeA string, valueA string) *SimpleEvent {
 }
 
 // Misc Related
+
+func IsFloat64NearlyEqual(a, b float64) bool {
+
+	if math.Abs(a-b) < 0.000001 {
+		return true
+	}
+
+	return false
+}
 
 // SetValue set a value to a pointer
 func SetValue(p interface{}, v interface{}) {
