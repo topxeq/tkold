@@ -1591,6 +1591,11 @@ func GetValueOfMSS(mapA map[string]string, keyA string, defaultA string) string 
 
 // 系统相关函数 system related
 
+// GetOSArgs return os.Args
+func GetOSArgs() []string {
+	return os.Args
+}
+
 // EnsureBasePath make sure a base path for application is exists, otherwise create it
 // first look for c:\nameA(Windows) or /nameA(Mac&Linux), then the application path
 // if nameA contains ".", "/", "\\", will use it as basepath instead
@@ -2248,6 +2253,10 @@ func GetAllParameters(argsA []string) []string {
 	}
 
 	return aryT
+}
+
+func GetAllOSParameters() []string {
+		return GetAllParameters(os.Args)
 }
 
 // GetAllSwitches 获取命令行参数中所有开关参数
