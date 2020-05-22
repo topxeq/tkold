@@ -31,11 +31,13 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 	"unsafe"
 
 	"github.com/melbahja/goph"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/atotto/clipboard"
 	"github.com/beevik/etree"
@@ -2113,6 +2115,17 @@ func GetInputBufferedScan() string {
 	return GenerateErrorStringF("EOF")
 }
 
+func GetInputPasswordf(formatA string, aA ...interface{}) string {
+	fmt.Printf(formatA, aA...)
+
+	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		return ErrStrF("failed to get password: %v", err)
+	}
+
+	return string(bytePassword)
+}
+
 func SleepSeconds(secA int) {
 	time.Sleep(time.Duration(secA) * time.Second)
 }
@@ -2256,7 +2269,7 @@ func GetAllParameters(argsA []string) []string {
 }
 
 func GetAllOSParameters() []string {
-		return GetAllParameters(os.Args)
+	return GetAllParameters(os.Args)
 }
 
 // GetAllSwitches 获取命令行参数中所有开关参数
