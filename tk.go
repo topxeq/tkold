@@ -6298,12 +6298,14 @@ func CheckError(errA error, funcsA ...(func())) {
 
 }
 
-func CheckErrorString(strA string, funcA func()) {
+func CheckErrorString(strA string, funcsA ...(func())) {
 	if IsErrorString(strA) {
 		PlErrString(strA)
 
-		if funcA != nil {
-			funcA()
+		if funcsA != nil {
+			for _, v := range funcsA {
+				v()
+			}
 		}
 
 		os.Exit(1)
