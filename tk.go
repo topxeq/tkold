@@ -3809,6 +3809,31 @@ func SafelyGetStringForKeyWithDefault(mapA map[string]string, keyA string, defau
 	return v
 }
 
+func GetMSIStringWithDefault(mapA map[string]interface{}, keyA string, defaultA string) (result string) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = defaultA
+			return
+		}
+	}()
+
+	if mapA == nil {
+		result = defaultA
+		return
+	}
+
+	v, ok := mapA[keyA]
+	if !ok {
+		result = defaultA
+		return
+	}
+
+	result = v.(string)
+	return
+}
+
 func SafelyGetFloat64ForKeyWithDefault(mapA map[string]string, keyA string, defaultA float64) float64 {
 	if mapA == nil {
 		return defaultA
