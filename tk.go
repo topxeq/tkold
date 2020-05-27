@@ -3623,13 +3623,23 @@ func EncodeToXMLString(strA string) string {
 func ToJSON(objA interface{}) (string, error) {
 	// var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	// var json = jsoniter.ConfigFastest
-	rs, errT := jsoniter.Marshal(&objA)
+	rs, errT := jsoniter.Marshal(objA)
 
 	// if errT != nil {
 	// 	return GenerateErrorString(errT.Error())
 	// }
 
 	return string(rs), errT
+}
+
+func ToJSONWithDefault(objA interface{}, defaultA string) string {
+	rs, errT := jsoniter.Marshal(objA)
+
+	if errT != nil {
+		return defaultA
+	}
+
+	return string(rs)
 }
 
 // ToJSONIndent use fast method
@@ -3645,6 +3655,16 @@ func ToJSONIndent(objA interface{}) (string, error) {
 	return string(rs), errT
 }
 
+func ToJSONIndentWithDefault(objA interface{}, defaultA string) string {
+	rs, errT := jsoniter.MarshalIndent(objA, "", "  ")
+
+	if errT != nil {
+		return defaultA
+	}
+
+	return string(rs)
+}
+
 // FromJson fast JSON decode
 func FromJSON(jsonA string) (interface{}, error) {
 	var rs interface{}
@@ -3656,6 +3676,18 @@ func FromJSON(jsonA string) (interface{}, error) {
 	}
 
 	return rs, nil
+}
+
+func FromJSONWithDefault(jsonA string, defaultA interface{}) interface{} {
+	var rs interface{}
+
+	errT := jsoniter.Unmarshal([]byte(jsonA), &rs)
+
+	if errT != nil {
+		return defaultA
+	}
+
+	return rs
 }
 
 // GetJSONNode return jsoniter.Any type as interface{}
@@ -5651,7 +5683,7 @@ func GetFormValueWithDefaultValue(reqA *http.Request, keyA string, defaultA stri
 	}
 }
 
-func GenerateJSONPResponse(statusA string, valueA string, reqA *http.Request) string {
+func GenerateJSONPResponse(statusA string, valueA string, reqA *http.Request, argsA ...string) string {
 	_, valueOnlyT := reqA.Form["valueonly"]
 
 	if valueOnlyT {
@@ -5666,6 +5698,14 @@ func GenerateJSONPResponse(statusA string, valueA string, reqA *http.Request) st
 		mT := make(map[string]string)
 		mT["Status"] = statusA
 		mT["Value"] = valueA
+
+		if argsA != nil {
+			lenT := len(argsA) / 2
+
+			for i := 0; i < lenT; i++ {
+				mT[argsA[i*2]] = argsA[i*2+1]
+			}
+		}
 
 		returnValue, ifReturnValue := reqA.Form["returnvalue"]
 
