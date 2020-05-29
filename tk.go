@@ -19,6 +19,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/cookiejar"
+	"net/smtp"
 	"net/url"
 	"os"
 	"os/exec"
@@ -6609,3 +6610,75 @@ func deepCopyStruct(original reflect.Value) reflect.Value {
 func deepCopyChan(original reflect.Value) reflect.Value {
 	return reflect.MakeChan(original.Type(), original.Cap())
 }
+
+type plainAuth struct {
+	identity, username, password string
+	host                         string
+}
+
+type ServerInfo struct {
+	Name string   // SMTP server name
+	TLS  bool     // using TLS, with valid certificate for Name
+	Auth []string // advertised authentication mechanisms
+}
+
+func PlainAuth(identity, username, password, host string) smtp.Auth {
+	return &plainAuth{identity, username, password, host}
+}
+
+func isLocalhost(name string) bool {
+	return name == "localhost" || name == "127.0.0.1" || name == "::1"
+}
+
+func (a *plainAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	// Must have TLS, or else localhost server.
+	// Note: If TLS is not true, then we can't trust ANYTHING in ServerInfo.
+	// In particular, it doesn't matter if the server advertises PLAIN auth.
+	// That might just be the attacker saying
+	// "it's ok, you can trust me with your password."
+	// if !server.TLS && !isLocalhost(server.Name) {
+	// 	return "", nil, errors.New("unencrypted connection")
+	// }
+	if server.Name != a.host {
+		return "", nil, errors.New("wrong host name")
+	}
+	resp := []byte(a.identity + "\x00" + a.username + "\x00" + a.password)
+	return "PLAIN", resp, nil
+}
+
+func (a *plainAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	if more {
+		// We've already sent everything.
+		return nil, errors.New("unexpected server challenge")
+	}
+	return nil, nil
+}
+
+// type UnencryptedAuth struct {
+// 	smtp.Auth
+// }
+
+// func (a *UnencryptedAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+// 	// if !server.TLS && !isLocalhost(server.Name) {
+// 	// 	return "", nil, errors.New("unencrypted connection")
+// 	// }
+// 	if server.Name != a.Auth.host {
+// 		return "", nil, errors.New("wrong host name")
+// 	}
+
+// 	resp := []byte(a.identity + "\x00" + a.username + "\x00" + a.password)
+// 	return "PLAIN", resp, nil
+// }
+
+// func UnencryptedSMTPAuth(userA, passwordA, hostA string) UnencryptedAuth {
+// 	authT := UnencryptedAuth{
+// 		smtp.PlainAuth(
+// 			"",
+// 			userA,
+// 			passwordA,
+// 			hostA,
+// 		),
+// 	}
+
+// 	return authT
+// }
