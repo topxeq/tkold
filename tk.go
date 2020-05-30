@@ -6708,32 +6708,3 @@ func (a *LoginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 	}
 	return nil, nil
 }
-
-// type UnencryptedAuth struct {
-// 	smtp.Auth
-// }
-
-// func (a *UnencryptedAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
-// 	// if !server.TLS && !isLocalhost(server.Name) {
-// 	// 	return "", nil, errors.New("unencrypted connection")
-// 	// }
-// 	if server.Name != a.Auth.host {
-// 		return "", nil, errors.New("wrong host name")
-// 	}
-
-// 	resp := []byte(a.identity + "\x00" + a.username + "\x00" + a.password)
-// 	return "PLAIN", resp, nil
-// }
-
-// func UnencryptedSMTPAuth(userA, passwordA, hostA string) UnencryptedAuth {
-// 	authT := UnencryptedAuth{
-// 		smtp.PlainAuth(
-// 			"",
-// 			userA,
-// 			passwordA,
-// 			hostA,
-// 		),
-// 	}
-
-// 	return authT
-// }
