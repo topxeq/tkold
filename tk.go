@@ -152,7 +152,7 @@ type TXResult struct {
 	Value  string
 }
 
-func TXResultFromString(strA string) (*TXResult, error) {
+func TXResultFromStringE(strA string) (*TXResult, error) {
 	p := new(TXResult)
 
 	errT := json.Unmarshal([]byte(strA), p)
@@ -164,9 +164,21 @@ func TXResultFromString(strA string) (*TXResult, error) {
 	return p, nil
 }
 
+func TXResultFromString(strA string) *TXResult {
+	p := new(TXResult)
+
+	errT := json.Unmarshal([]byte(strA), p)
+
+	if errT != nil {
+		return nil
+	}
+
+	return p
+}
+
 // 全局变量 global variables
 
-var logFileG = "c:\\txtk.log"
+var logFileG = "c:\\tk.log"
 var TimeFormat = "2006-01-02 15:04:05"
 var TimeFormatMS = "2006-01-02 15:04:05.000"
 var TimeFormatCompact = "20060102150405"
@@ -6611,7 +6623,7 @@ func deepCopyChan(original reflect.Value) reflect.Value {
 	return reflect.MakeChan(original.Type(), original.Cap())
 }
 
-type plainAuth struct {
+type PlainAuth struct {
 	identity, username, password string
 	host                         string
 }
@@ -6622,15 +6634,16 @@ type ServerInfo struct {
 	Auth []string // advertised authentication mechanisms
 }
 
-func PlainAuth(identity, username, password, host string) smtp.Auth {
-	return &plainAuth{identity, username, password, host}
+// PlainAuth get plain auth
+func GetPlainAuth(identity, username, password, host string) smtp.Auth {
+	return &PlainAuth{identity, username, password, host}
 }
 
 func isLocalhost(name string) bool {
 	return name == "localhost" || name == "127.0.0.1" || name == "::1"
 }
 
-func (a *plainAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+func (a *PlainAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
 	// Must have TLS, or else localhost server.
 	// Note: If TLS is not true, then we can't trust ANYTHING in ServerInfo.
 	// In particular, it doesn't matter if the server advertises PLAIN auth.
@@ -6646,10 +6659,52 @@ func (a *plainAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
 	return "PLAIN", resp, nil
 }
 
-func (a *plainAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+func (a *PlainAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	command := string(fromServer)
+	command = strings.TrimSpace(command)
+	command = strings.TrimSuffix(command, ":")
+	command = strings.ToLower(command)
+
 	if more {
-		// We've already sent everything.
-		return nil, errors.New("unexpected server challenge")
+		if command == "username" {
+			return []byte(fmt.Sprintf("%s", a.username)), nil
+		} else if command == "password" {
+			return []byte(fmt.Sprintf("%s", a.password)), nil
+		} else {
+			// We've already sent everything.
+			return nil, fmt.Errorf("unexpected server challenge: %s", command)
+		}
+	}
+	return nil, nil
+}
+
+type LoginAuth struct {
+	username, password string
+}
+
+func GetLoginAuth(username, password string) smtp.Auth {
+	return &LoginAuth{username, password}
+}
+
+func (a *LoginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	return "LOGIN", nil, nil
+}
+
+func (a *LoginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	command := string(fromServer)
+	command = strings.TrimSpace(command)
+	command = strings.TrimSuffix(command, ":")
+	command = strings.ToLower(command)
+
+	if more {
+		if command == "username" {
+			return []byte(fmt.Sprintf("%s", a.username)), nil
+		} else if command == "password" {
+			return []byte(fmt.Sprintf("%s", a.password)), nil
+		} else {
+			// We've already sent everything.
+			return nil, fmt.Errorf("unexpected server challenge: %s", command)
+		}
 	}
 	return nil, nil
 }
