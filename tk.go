@@ -4003,6 +4003,32 @@ func EncodeStringCustom(strA string, paddingA byte) string {
 	return sbuf.String()
 }
 
+func EncodeStringCustomEx(strA string, paddingA byte) string {
+	if paddingA == 0 {
+		paddingA = '_'
+	}
+
+	lenT := len(strA)
+
+	var sbuf strings.Builder
+
+	tableStrT := "0123456789ABCDEF"
+
+	for i := 0; i < lenT; i++ {
+		v := strA[i]
+
+		if !(((v >= '0') && (v <= '9')) || ((v >= 'a') && (v <= 'z'))) {
+			sbuf.WriteByte(paddingA)
+			sbuf.WriteByte(tableStrT[v>>4])
+			sbuf.WriteByte(tableStrT[v&15])
+		} else {
+			sbuf.WriteByte(strA[i])
+		}
+	}
+
+	return sbuf.String()
+}
+
 func ishex(c byte) bool {
 	switch {
 	case '0' <= c && c <= '9':
