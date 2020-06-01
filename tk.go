@@ -1880,6 +1880,11 @@ func Pl(formatA string, argsA ...interface{}) {
 	fmt.Printf(formatA+"\n", argsA...)
 }
 
+// PlNow 类似Pl，但前面会加有当前时间标记
+func PlNow(formatA string, argsA ...interface{}) {
+	fmt.Printf(fmt.Sprintf("[%v] "+formatA+"\n", time.Now().Format(TimeFormatCompact2)), argsA...)
+}
+
 // PlVerbose 类似Pl，但仅在verboseA为true时才输出
 func PlVerbose(verboseA bool, formatA string, argsA ...interface{}) {
 	if verboseA {
