@@ -3708,6 +3708,18 @@ func FromJSONWithDefault(jsonA string, defaultA interface{}) interface{} {
 	return rs
 }
 
+func MSSFromJSON(jsonA string) (map[string]string, error) {
+	var rs map[string]string
+
+	errT := jsoniter.Unmarshal([]byte(jsonA), &rs)
+
+	if errT != nil {
+		return nil, errT
+	}
+
+	return rs, nil
+}
+
 // GetJSONNode return jsoniter.Any type as interface{}
 func GetJSONNode(jsonA string, pathA ...interface{}) interface{} {
 	aryT := make([]interface{}, 0, len(pathA))
