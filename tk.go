@@ -1759,9 +1759,13 @@ func GetCurrentThreadID() string {
 	return IntToStr(id)
 }
 
-// Exit
-func Exit(c int) {
-	os.Exit(c)
+// Exit usage: Exit() or Exit(number)
+func Exit(c ...int) {
+	if c == nil || len(c) < 1 {
+		os.Exit(0)
+	}
+
+	os.Exit(c[0])
 }
 
 // RunWinFileWithSystemDefault run a program or open a file with default program in Windows
@@ -3718,6 +3722,37 @@ func MSSFromJSON(jsonA string) (map[string]string, error) {
 	}
 
 	return rs, nil
+}
+
+func LoadMSSFromJSONFile(filePathA string) (map[string]string, error) {
+	fcT, errT := LoadStringFromFileE(filePathA)
+
+	if errT != nil {
+		return nil, errT
+	}
+
+	var rs map[string]string
+
+	errT = jsoniter.Unmarshal([]byte(fcT), &rs)
+
+	if errT != nil {
+		return nil, errT
+	}
+
+	return rs, nil
+}
+
+func SaveMSSToJSONFile(mapA map[string]string, filePathA string) error {
+	rs1, errT := ToJSONIndent(mapA)
+
+	if errT != nil {
+		return errT
+	}
+
+	rs := SaveStringToFileE(rs1, filePathA)
+
+	return rs
+
 }
 
 // GetJSONNode return jsoniter.Any type as interface{}
