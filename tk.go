@@ -2741,7 +2741,8 @@ func GenerateFileListInDir(dirA string, patternA string, verboseA bool) []string
 			return err
 		}
 
-		if f.IsDir() && path != "." && path != pathT {
+		if f.IsDir() { // && path != "." && path != pathT {
+			// if f.IsDir() && path != "." && path != pathT {
 			return filepath.SkipDir
 		}
 
