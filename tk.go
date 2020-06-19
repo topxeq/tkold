@@ -3289,6 +3289,75 @@ func SaveStringListBuffered(strListA []string, fileA string, sepA string) string
 	return ""
 }
 
+func LoadStringListRemoveEmpty(fileNameA string) []string {
+	if !IfFileExists(fileNameA) {
+		return nil
+	}
+
+	fileT, err := os.Open(fileNameA)
+	if err != nil {
+		return nil
+	}
+
+	defer fileT.Close()
+
+	fileContentT, err := ioutil.ReadAll(fileT)
+	if err != nil {
+		return nil
+	}
+
+	stringList := SplitLinesRemoveEmpty(string(fileContentT))
+
+	return stringList
+}
+
+func LoadStringListAsMap(fileNameA string) map[string]int {
+	rs, errStr := LoadStringList(fileNameA)
+
+	if errStr != "" || rs == nil {
+		return nil
+	}
+
+	rs1 := make(map[string]int, 0)
+	for _, v := range rs {
+		rs1[v] = 1
+	}
+
+	return rs1
+}
+
+func LoadStringListAsMapRemoveEmpty(fileNameA string) map[string]int {
+	rs, errStr := LoadStringList(fileNameA)
+
+	if errStr != "" || rs == nil {
+		return nil
+	}
+
+	rs1 := make(map[string]int, 0)
+	for _, v := range rs {
+		if Trim(v) == "" {
+			continue
+		}
+
+		rs1[v] = 1
+	}
+
+	return rs1
+}
+
+func LoadJSONMapStringFloat64ArrayFromFile(fileNameA string) map[string][]float64 {
+	if !IfFileExists(fileNameA) {
+		return nil
+	}
+
+	strT := LoadStringFromFile(fileNameA)
+	if IsErrorString(strT) {
+		return nil
+	}
+
+	return JSONToMapStringFloat64Array(strT)
+}
+
 // ReadLineFromBufioReader return result string, error and if reach EOF
 func ReadLineFromBufioReader(readerA *bufio.Reader) (string, bool, error) {
 	if readerA == nil {
@@ -3867,6 +3936,16 @@ func ObjectToJSONIndent(objA interface{}) string {
 	}
 
 	return string(bufferT)
+}
+
+func JSONToMapStringFloat64Array(objStrA string) map[string][]float64 {
+	var rMapT map[string][]float64
+	errT := json.Unmarshal([]byte(objStrA), &rMapT)
+	if errT != nil {
+		return nil
+	}
+
+	return rMapT
 }
 
 func JSONToMapStringString(objStrA string) map[string]string {
@@ -5965,6 +6044,18 @@ func Float32ArrayToFloat64Array(aryA []float32) []float64 {
 	return rs
 }
 
+func GenerateRandomFloats(sizeA int) []float64 {
+	bufT := make([]float64, sizeA)
+
+	Randomize()
+
+	for i := 0; i < sizeA; i++ {
+		bufT[i] = rand.Float64()
+	}
+
+	return bufT
+}
+
 func CalCosineSimilarityBetweenFloatsBig(f1, f2 []float64) float64 {
 	if f1 == nil || f2 == nil {
 		return -1
@@ -6499,8 +6590,40 @@ func GetClipText() string {
 	return textT
 }
 
+func GetClipboardTextWithDefault(defaultA string) string {
+	textT, errT := clipboard.ReadAll()
+	if errT != nil {
+		return defaultA
+	} else {
+		return textT
+	}
+
+}
+
+func GetClipboardTextDefaultEmpty() string {
+	textT, errT := clipboard.ReadAll()
+	if errT != nil {
+		return ""
+	} else {
+		return textT
+	}
+
+}
+
 func SetClipText(textA string) {
 	clipboard.WriteAll(textA)
+}
+
+func GetTextFromFileOrClipboard(fileT string, defaultA string) string {
+	if IsEmptyTrim(fileT) {
+		return GetClipboardTextWithDefault(defaultA)
+	}
+
+	if !IfFileExists(fileT) {
+		return GetClipboardTextWithDefault(defaultA)
+	}
+
+	return LoadStringFromFileWithDefault(fileT, defaultA)
 }
 
 // RemoveItemsInArray
