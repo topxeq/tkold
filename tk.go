@@ -6,6 +6,7 @@ import (
 	"crypto/aes"
 	"crypto/md5"
 	"database/sql"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"encoding/xml"
@@ -3703,6 +3704,14 @@ func LoadSimpleMapFromDir(dirA string) map[string]string {
 }
 
 // 编码解码相关 encode/decode
+
+func EncodeToBase64(bufA []byte) string {
+	return base64.StdEncoding.EncodeToString(bufA)
+}
+
+func DecodeFromBase64(strA string) ([]byte, error) {
+	return base64.StdEncoding.DecodeString(strA)
+}
 
 // EncodeToXMLString 转换字符串XML格式编码的字符串，例如：字符串“<as>\"!sdsdsgfde345344对方对方对法国</as>” 会编码为 “&lt;as&gt;&#34;!sdsdsgfde345344对方对方对法国&lt;/as&gt;”
 func EncodeToXMLString(strA string) string {
