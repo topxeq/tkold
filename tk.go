@@ -3809,6 +3809,47 @@ func MSSFromJSON(jsonA string) (map[string]string, error) {
 	return rs, nil
 }
 
+func LoadJSONFromFile(filePathA string, bufA interface{}) error {
+	fcT, errT := LoadBytesFromFileE(filePathA, -1)
+
+	if errT != nil {
+		return errT
+	}
+
+	errT = jsoniter.Unmarshal(fcT, bufA)
+
+	if errT != nil {
+		return errT
+	}
+
+	return nil
+
+}
+
+func SaveJSONToFile(objA interface{}, filePathA string) error {
+	rs, errT := jsoniter.Marshal(objA)
+
+	if errT != nil {
+		return errT
+	}
+
+	errT = SaveStringToFileE(string(rs), filePathA)
+
+	return errT
+}
+
+func SaveJSONIndentToFile(objA interface{}, filePathA string) error {
+	rs, errT := jsoniter.MarshalIndent(objA, "", "  ")
+
+	if errT != nil {
+		return errT
+	}
+
+	errT = SaveStringToFileE(string(rs), filePathA)
+
+	return errT
+}
+
 func LoadMSSFromJSONFile(filePathA string) (map[string]string, error) {
 	fcT, errT := LoadStringFromFileE(filePathA)
 
