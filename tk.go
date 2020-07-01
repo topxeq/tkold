@@ -1214,6 +1214,30 @@ func GetRandomizeStringArrayCopy(aryA []string) []string {
 	return rs
 }
 
+func GetRandomizeSubStringArrayCopy(aryA []string, subCountA int) []string {
+	Randomize()
+
+	lenT := len(aryA)
+
+	if subCountA > lenT {
+		return nil
+	}
+
+	aryT := aryA[0:lenT]
+
+	rs := make([]string, subCountA)
+
+	for i := 0; i < subCountA; i++ {
+		idxT := GetRandomIntLessThan(len(aryT))
+
+		rs[i] = aryT[idxT]
+
+		aryT = DeleteItemInStringArray(aryT, idxT)
+	}
+
+	return rs
+}
+
 // GetRandomizeIntArrayCopy 获得一个随机化顺序后的int数组
 func GetRandomizeIntArrayCopy(aryA []int) []int {
 	Randomize()
