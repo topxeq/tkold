@@ -1467,8 +1467,49 @@ func IsYesterday(dateStrA string, formatA string) bool {
 
 // 切片、数组相关 slice related and array related
 
+func GetRandomItem(aryA []interface{}) interface{} {
+	if aryA == nil {
+		return nil
+	}
+
+	lenT := len(aryA)
+
+	return aryA[GetRandomIntLessThan(lenT)]
+}
+
+func PickRandomItem(aryA []interface{}) interface{} {
+	if aryA == nil {
+		return nil
+	}
+
+	lenT := len(aryA)
+
+	idxT := GetRandomIntLessThan(lenT)
+
+	itemT := aryA[idxT]
+
+	DeleteItemInArray(aryA, idxT)
+
+	return itemT
+}
+
+func GetRandomStringItem(aryA []string) string {
+	if aryA == nil {
+		return ErrStrF("nil input")
+	}
+
+	lenT := len(aryA)
+
+	return aryA[GetRandomIntLessThan(lenT)]
+}
+
 // DeleteItemInStringArray 删除字符串切片中的某一项
 func DeleteItemInStringArray(aryA []string, idxA int) []string {
+	return append(aryA[:idxA], aryA[idxA+1:]...)
+}
+
+// DeleteItemInArray 删除切片中的某一项
+func DeleteItemInArray(aryA []interface{}, idxA int) []interface{} {
 	return append(aryA[:idxA], aryA[idxA+1:]...)
 }
 
@@ -2383,10 +2424,36 @@ func ParseCommandLine(commandA string) ([]string, error) {
 
 // GetSwitchWithDefaultValue 获取命令行参数中的开关，用法：tmps := tk.GetSwitchWithDefaultValue(args, "-verbose=", "false")
 func GetSwitchWithDefaultValue(argsA []string, switchStrA string, defaultA string) string {
+	if argsA == nil {
+		return defaultA
+	}
+
 	tmpStrT := ""
 	for _, argT := range argsA {
 		if StartsWith(argT, switchStrA) {
 			tmpStrT = argT[len(switchStrA):]
+			if StartsWith(tmpStrT, "\"") && EndsWith(tmpStrT, "\"") {
+				return tmpStrT[1 : len(tmpStrT)-1]
+			}
+
+			return tmpStrT
+		}
+
+	}
+
+	return defaultA
+
+}
+
+func GetSwitchI(argsA []interface{}, switchStrA string, defaultA string) string {
+	if argsA == nil {
+		return defaultA
+	}
+
+	tmpStrT := ""
+	for _, argT := range argsA {
+		if StartsWith(argT.(string), switchStrA) {
+			tmpStrT = argT.(string)[len(switchStrA):]
 			if StartsWith(tmpStrT, "\"") && EndsWith(tmpStrT, "\"") {
 				return tmpStrT[1 : len(tmpStrT)-1]
 			}
@@ -2429,6 +2496,17 @@ func IfSwitchExists(argsA []string, switchStrA string) bool {
 func IfSwitchExistsWhole(argsA []string, switchStrA string) bool {
 	for _, argT := range argsA {
 		if argT == switchStrA {
+			return true
+		}
+
+	}
+
+	return false
+}
+
+func IfSwitchExistsWholeI(argsA []interface{}, switchStrA string) bool {
+	for _, argT := range argsA {
+		if argT.(string) == switchStrA {
 			return true
 		}
 
@@ -2480,6 +2558,15 @@ func StrToInt(strA string) (int, error) {
 	nT, errT := strconv.ParseInt(strA, 10, 0)
 
 	return int(nT), errT
+}
+
+func ToIntI(valueA interface{}, defaultA int) int {
+	nT, errT := strconv.ParseInt(fmt.Sprintf("%d", valueA), 10, 0)
+	if errT != nil {
+		return defaultA
+	}
+
+	return int(nT)
 }
 
 func StrToInt64WithDefaultValue(strA string, defaultA int64) int64 {
