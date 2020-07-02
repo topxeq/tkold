@@ -1529,21 +1529,40 @@ func GetRandomStringItem(aryA []string) string {
 
 // DeleteItemInStringArray 删除字符串切片中的某一项
 func DeleteItemInStringArray(aryA []string, idxA int) []string {
-	return append(aryA[:idxA], aryA[idxA+1:]...)
+	rs := make([]string, 0, len(aryA)-1)
+	rs = append(rs, aryA[:idxA]...)
+	rs = append(rs, aryA[idxA+1:]...)
+	return rs
 }
 
 // DeleteItemInArray 删除切片中的某一项
 func DeleteItemInArray(aryA []interface{}, idxA int) []interface{} {
-	return append(aryA[:idxA], aryA[idxA+1:]...)
+	rs := make([]interface{}, 0, len(aryA)-1)
+	rs = append(rs, aryA[:idxA]...)
+	rs = append(rs, aryA[idxA+1:]...)
+	return rs
 }
 
 // DeleteItemInIntArray 删除字符串切片中的某一项
 func DeleteItemInIntArray(aryA []int, idxA int) []int {
-	return append(aryA[:idxA], aryA[idxA+1:]...)
+	rs := make([]int, 0, len(aryA)-1)
+	rs = append(rs, aryA[:idxA]...)
+	rs = append(rs, aryA[idxA+1:]...)
+	return rs
 }
 
 func DeleteItemInInt64Array(aryA []int64, idxA int64) []int64 {
-	return append(aryA[:idxA], aryA[idxA+1:]...)
+	rs := make([]int64, 0, len(aryA)-1)
+	rs = append(rs, aryA[:idxA]...)
+	rs = append(rs, aryA[idxA+1:]...)
+	return rs
+}
+
+func DeleteItemInFloat64Array(aryA []float64, idxA int64) []float64 {
+	rs := make([]float64, 0, len(aryA)-1)
+	rs = append(rs, aryA[:idxA]...)
+	rs = append(rs, aryA[idxA+1:]...)
+	return rs
 }
 
 func ContainsIn(strA string, subStrsA ...string) bool {
@@ -6788,18 +6807,144 @@ func GetTextFromFileOrClipboard(fileT string, defaultA string) string {
 }
 
 // RemoveItemsInArray
-func RemoveItemsInArray(aryA []interface{}, startA int, endA int) []interface{} {
-	if startA < 0 || startA >= len(aryA) {
-		// Pl("Runtime error: %v", "index out of range")
-		return nil
+func RemoveItemsInArray(aryA interface{}, startA int, endA int) interface{} {
+
+	aryT, ok := aryA.([]interface{})
+
+	if ok {
+		if startA < 0 || startA >= len(aryT) {
+			// Pl("Runtime error: %v", "index out of range")
+			return nil
+		}
+
+		if endA < 0 || endA >= len(aryT) {
+			// Pl("Runtime error: %v", "index out of range")
+			return nil
+		}
+
+		rs := make([]interface{}, 0, len(aryT)-(endA+1-startA))
+
+		rs = append(rs, aryT[:startA]...)
+		rs = append(rs, aryT[endA+1:]...)
+
+		return rs
 	}
 
-	if endA < 0 || endA >= len(aryA) {
-		// Pl("Runtime error: %v", "index out of range")
-		return nil
+	aryST, ok := aryA.([]string)
+
+	if ok {
+		if startA < 0 || startA >= len(aryST) {
+			return nil
+		}
+
+		if endA < 0 || endA >= len(aryST) {
+			return nil
+		}
+
+		rs := make([]string, 0, len(aryST)-(endA+1-startA))
+
+		rs = append(rs, aryST[:startA]...)
+		rs = append(rs, aryST[endA+1:]...)
+
+		return rs
 	}
 
-	return append(aryA[:startA], aryA[endA+1:]...)
+	aryIT, ok := aryA.([]int)
+
+	if ok {
+		if startA < 0 || startA >= len(aryIT) {
+			return nil
+		}
+
+		if endA < 0 || endA >= len(aryIT) {
+			return nil
+		}
+
+		rs := make([]int, 0, len(aryIT)-(endA+1-startA))
+
+		rs = append(rs, aryIT[:startA]...)
+		rs = append(rs, aryIT[endA+1:]...)
+
+		return rs
+	}
+
+	aryI64T, ok := aryA.([]int64)
+
+	if ok {
+		if startA < 0 || startA >= len(aryI64T) {
+			return nil
+		}
+
+		if endA < 0 || endA >= len(aryI64T) {
+			return nil
+		}
+
+		rs := make([]int64, 0, len(aryI64T)-(endA+1-startA))
+
+		rs = append(rs, aryI64T[:startA]...)
+		rs = append(rs, aryI64T[endA+1:]...)
+
+		return rs
+	}
+
+	aryFT, ok := aryA.([]float64)
+
+	if ok {
+		if startA < 0 || startA >= len(aryFT) {
+			return nil
+		}
+
+		if endA < 0 || endA >= len(aryFT) {
+			return nil
+		}
+
+		rs := make([]float64, 0, len(aryFT)-(endA+1-startA))
+
+		rs = append(rs, aryFT[:startA]...)
+		rs = append(rs, aryFT[endA+1:]...)
+
+		return rs
+	}
+
+	aryBT, ok := aryA.([]bool)
+
+	if ok {
+		if startA < 0 || startA >= len(aryBT) {
+			return nil
+		}
+
+		if endA < 0 || endA >= len(aryBT) {
+			return nil
+		}
+
+		rs := make([]bool, 0, len(aryBT)-(endA+1-startA))
+
+		rs = append(rs, aryBT[:startA]...)
+		rs = append(rs, aryBT[endA+1:]...)
+
+		return rs
+	}
+
+	aryByT, ok := aryA.([]byte)
+
+	if ok {
+		if startA < 0 || startA >= len(aryByT) {
+			return nil
+		}
+
+		if endA < 0 || endA >= len(aryByT) {
+			return nil
+		}
+
+		rs := make([]byte, 0, len(aryByT)-(endA+1-startA))
+
+		rs = append(rs, aryByT[:startA]...)
+		rs = append(rs, aryByT[endA+1:]...)
+
+		return rs
+	}
+
+	return nil
 	// if idxT == 0 {
 	// 	return ayrA[idxT + 1:]
 	// }
