@@ -378,6 +378,10 @@ func IsErrorString(errStrA string) bool {
 	return StartsWith(errStrA, "TXERROR:")
 }
 
+func IsErrStr(errStrA string) bool {
+	return StartsWith(errStrA, "TXERROR:")
+}
+
 // GetErrorString 获取出错字符串中的出错原因部分
 func GetErrorString(errStrA string) string {
 	return errStrA[8:]
@@ -392,8 +396,20 @@ func GetErrorStringSafely(errStrA string) string {
 	}
 }
 
+func GetErrStr(errStrA string) string {
+	if StartsWith(errStrA, "TXERROR:") {
+		return errStrA[8:]
+	} else {
+		return errStrA
+	}
+}
+
 // GenerateErrorString 生成一个出错字符串
 func GenerateErrorString(errStrA string) string {
+	return "TXERROR:" + errStrA
+}
+
+func ErrStr(errStrA string) string {
 	return "TXERROR:" + errStrA
 }
 
@@ -408,6 +424,14 @@ func ErrStrF(formatA string, argsA ...interface{}) string {
 
 // ErrorStringToError convert errorstring to error, if not, return nil
 func ErrorStringToError(strA string) error {
+	if IsErrorString(strA) {
+		return fmt.Errorf("%v", GetErrorString(strA))
+	}
+
+	return nil
+}
+
+func ErrStrToErr(strA string) error {
 	if IsErrorString(strA) {
 		return fmt.Errorf("%v", GetErrorString(strA))
 	}
@@ -455,12 +479,15 @@ func SplitLines(strA string) []string {
 func SplitLinesRemoveEmpty(strA string) []string {
 	if !strings.Contains(strA, "\n") {
 		if strings.Contains(strA, "\r") {
-			strT := RegReplace(strA, "\\r\\s*?\\r", "\r")
+			strT := RegReplace(strA, "\\r\\s*\\r", "\r")
 			return strings.Split(strT, "\r")
 		}
 	}
+
 	strT := Replace(strA, "\r", "")
-	strT = RegReplace(strT, "\\n\\s*?\\n", "\n")
+	strT = RegReplace(strT, "\\n\\s*\\n", "\n")
+	strT = RegReplace(strT, `^\s*\n`, "")
+	strT = RegReplace(strT, `\n\s*$`, "")
 	return strings.Split(strT, "\n")
 }
 
@@ -2360,6 +2387,10 @@ func GetParameterByIndexWithDefaultValue(argsA []string, idxA int, defaultA stri
 	return defaultA
 }
 
+func GetParameter(argsA []string, idxA int) string {
+	return GetParameterByIndexWithDefaultValue(argsA, idxA, ErrStrF("failed"))
+}
+
 // GetAllParameters 获取命令行参数中所有非开关参数
 func GetAllParameters(argsA []string) []string {
 	aryT := make([]string, 0, len(argsA))
@@ -2486,6 +2517,27 @@ func GetSwitchWithDefaultValue(argsA []string, switchStrA string, defaultA strin
 
 	return defaultA
 
+}
+
+func GetSwitch(argsA []string, switchStrA string) string {
+	if argsA == nil {
+		return ErrStr("nil input")
+	}
+
+	tmpStrT := ""
+	for _, argT := range argsA {
+		if StartsWith(argT, switchStrA) {
+			tmpStrT = argT[len(switchStrA):]
+			if StartsWith(tmpStrT, "\"") && EndsWith(tmpStrT, "\"") {
+				return tmpStrT[1 : len(tmpStrT)-1]
+			}
+
+			return tmpStrT
+		}
+
+	}
+
+	return ErrStr("not exists")
 }
 
 func GetSwitchI(argsA []interface{}, switchStrA string, defaultA string) string {
@@ -6661,6 +6713,10 @@ func CreateSimpleEvent(typeA string, valueA string) *SimpleEvent {
 }
 
 // Misc Related
+
+func Pass() {
+
+}
 
 func IsFloat64NearlyEqual(a, b float64) bool {
 
