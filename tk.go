@@ -2132,12 +2132,22 @@ func CheckErr(prefixA string, errA error) {
 	os.Exit(1)
 }
 
-func CheckErrf(formatA string, errA error) {
+func CheckErrf(formatA string, errA error, argsA ...interface{}) {
 	if errA == nil {
 		return
 	}
 
-	Pl(formatA, errA.Error())
+	Pl(formatA, append([]interface{}{errA}, argsA...))
+
+	os.Exit(1)
+}
+
+func CheckErrStrf(formatA string, errStrA string, argsA ...interface{}) {
+	if !IsErrStr(errStrA) {
+		return
+	}
+
+	Pl(formatA, append([]interface{}{GetErrStr(errStrA)}, argsA...))
 
 	os.Exit(1)
 }
