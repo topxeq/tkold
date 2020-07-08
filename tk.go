@@ -1807,7 +1807,7 @@ func CopyFile(src, dst string, forceA bool, bufferSizeA int) error {
 	}
 
 	if mode.IsDir() {
-		fmt.Errorf("%s is a folder", src)
+		return fmt.Errorf("%s is a folder", src)
 	}
 
 	source, err := os.Open(src)
