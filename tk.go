@@ -2587,6 +2587,10 @@ func GetSwitchWithDefaultInt64Value(argsA []string, switchStrA string, defaultA 
 
 // IfSwitchExists 判断命令行参数中是否存在开关，用法：flag := IfSwitchExists(args, "-restart")
 func IfSwitchExists(argsA []string, switchStrA string) bool {
+	if argsA == nil {
+		return false
+	}
+
 	for _, argT := range argsA {
 		if StartsWith(argT, switchStrA) {
 			return true
@@ -2599,6 +2603,10 @@ func IfSwitchExists(argsA []string, switchStrA string) bool {
 
 // IfSwitchExistsWhole 判断命令行参数中是否存在开关（完整的，），用法：flag := IfSwitchExistsWhole(args, "-restart")
 func IfSwitchExistsWhole(argsA []string, switchStrA string) bool {
+	if argsA == nil {
+		return false
+	}
+
 	for _, argT := range argsA {
 		if argT == switchStrA {
 			return true
@@ -3144,8 +3152,8 @@ func LoadStringFromFileB(fileNameA string) (string, bool) {
 	return string(fileContentT), true
 }
 
-// LoadBytes LoadBytes, numA < 0 indicates read all
-func LoadBytes(fileNameA string, numA int) []byte {
+// LoadBytes LoadBytes, no numA or numA < 0 indicates read all
+func LoadBytes(fileNameA string, numA ...int) []byte {
 	if !IfFileExists(fileNameA) {
 		return nil
 	}
@@ -3157,7 +3165,7 @@ func LoadBytes(fileNameA string, numA int) []byte {
 
 	defer fileT.Close()
 
-	if numA <= 0 {
+	if numA == nil || len(numA) < 1 || numA[0] <= 0 {
 		fileContentT, err := ioutil.ReadAll(fileT)
 		if err != nil {
 			return nil
@@ -3166,7 +3174,7 @@ func LoadBytes(fileNameA string, numA int) []byte {
 		return fileContentT
 	}
 
-	bufT := make([]byte, numA)
+	bufT := make([]byte, numA[0])
 	nn, err := fileT.Read(bufT)
 	if (err != nil) || (nn != len(bufT)) {
 		return nil
@@ -3175,8 +3183,8 @@ func LoadBytes(fileNameA string, numA int) []byte {
 	return bufT
 }
 
-// LoadBytesFromFileE LoadBytes, numA < 0 indicates read all
-func LoadBytesFromFileE(fileNameA string, numA int) ([]byte, error) {
+// LoadBytesFromFileE LoadBytes, no numA or numA[0] < 0 indicates read all
+func LoadBytesFromFileE(fileNameA string, numA ...int) ([]byte, error) {
 	if !IfFileExists(fileNameA) {
 		return nil, Errf("file not exists")
 	}
@@ -3188,7 +3196,7 @@ func LoadBytesFromFileE(fileNameA string, numA int) ([]byte, error) {
 
 	defer fileT.Close()
 
-	if numA <= 0 {
+	if numA == nil || len(numA) < 1 || numA[0] <= 0 {
 		fileContentT, errT := ioutil.ReadAll(fileT)
 		if errT != nil {
 			return nil, errT
@@ -3197,7 +3205,7 @@ func LoadBytesFromFileE(fileNameA string, numA int) ([]byte, error) {
 		return fileContentT, nil
 	}
 
-	bufT := make([]byte, numA)
+	bufT := make([]byte, numA[0])
 
 	nnT, errT := fileT.Read(bufT)
 	if errT != nil {
