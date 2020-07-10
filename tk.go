@@ -1470,6 +1470,34 @@ func GetTimeStringDiffMS(str1A, str2A, formatA string, defaultA int64) int64 {
 	return int64(diffT / 1000000)
 }
 
+// return: 1 if str1A > str2A, -1 if str1A < str2A, 0: equal, error if invalid format
+func CompareTimeString(str1A, str2A, formatA string) (int, error) {
+	formatT := Trim(formatA)
+	if formatT == "" {
+		formatT = TimeFormat
+	}
+
+	t1, err := time.Parse(formatT, str1A)
+	if err != nil {
+		return 0, Errf("invalid format for time1")
+	}
+
+	t2, err := time.Parse(formatT, str2A)
+	if err != nil {
+		return 0, Errf("invalid format for time2")
+	}
+
+	diffT := t2.Sub(t1)
+
+	if diffT > 0 {
+		return -1, nil
+	} else if diffT < 0 {
+		return 1, nil
+	}
+
+	return 0, nil
+}
+
 func StrToTime(strA string, defaultA time.Time) time.Time {
 	t, err := time.Parse(TimeFormat, strA)
 	if err != nil {
@@ -3901,6 +3929,75 @@ func LoadSimpleMapFromDir(dirA string) map[string]string {
 	}
 
 	return mapT
+}
+
+// GetLinesFromFile at least will return []string{}, avoid nil result
+func GetLinesFromFile(fileNameA string, startA int, endA int, optionsA ...string) ([]string, error) {
+	failForRangeT := false
+
+	if !IsNilOrEmpty(optionsA) {
+		if IfSwitchExistsWhole(optionsA, "-index") {
+			startA++
+			endA++
+		}
+
+		if IfSwitchExistsWhole(optionsA, "-range") {
+			failForRangeT = true
+		}
+	}
+
+	if failForRangeT {
+		if startA < 1 {
+			return []string{}, Errf("invalid start index: %v", startA)
+		}
+	}
+
+	f, errT := os.Open(fileNameA)
+	if errT != nil {
+		return []string{}, Errf("failed to open file: %v", errT)
+	}
+
+	defer f.Close()
+
+	r := bufio.NewReader(f)
+
+	i := 0
+
+	var bufT = make([]string, 0, endA-startA+2)
+
+	for true {
+		line, errT := r.ReadString('\n')
+
+		i++
+
+		// pl("process %v", i)
+
+		if i < startA {
+			continue
+		}
+
+		if i > endA {
+			break
+		}
+
+		if errT != nil {
+			if errT == io.EOF {
+				if failForRangeT {
+					return bufT, Errf("invalid end index: %v", endA)
+				}
+
+				break
+			}
+
+			return bufT, Errf("failed to read content: %v, line: %v", errT, line)
+		}
+
+		// pl("%v", line)
+		bufT = append(bufT, strings.TrimRight(line, "\r\n"))
+
+	}
+
+	return bufT, nil
 }
 
 // 编码解码相关 encode/decode
@@ -6734,6 +6831,28 @@ func CreateSimpleEvent(typeA string, valueA string) *SimpleEvent {
 
 func Pass() {
 
+}
+
+func IsNilOrEmpty(v interface{}) bool {
+	if v == nil {
+		return true
+	}
+
+	switch v.(type) {
+	case nil:
+		return true
+	case string:
+		if v.(string) == "" {
+			return true
+		}
+	case []string:
+		if len(v.([]string)) < 1 {
+			return true
+		}
+
+	}
+
+	return false
 }
 
 func IsFloat64NearlyEqual(a, b float64) bool {
