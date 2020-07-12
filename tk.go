@@ -37,9 +37,11 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/aarzilli/sandblast"
 	"github.com/melbahja/goph"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/net/html"
 
 	"github.com/atotto/clipboard"
 	"github.com/beevik/etree"
@@ -2540,6 +2542,10 @@ func GetSwitchWithDefaultValue(argsA []string, switchStrA string, defaultA strin
 		return defaultA
 	}
 
+	if len(argsA) < 1 {
+		return defaultA
+	}
+
 	tmpStrT := ""
 	for _, argT := range argsA {
 		if StartsWith(argT, switchStrA) {
@@ -2562,6 +2568,10 @@ func GetSwitch(argsA []string, switchStrA string) string {
 		return ErrStr("nil input")
 	}
 
+	if len(argsA) < 1 {
+		return ErrStr("not exists")
+	}
+
 	tmpStrT := ""
 	for _, argT := range argsA {
 		if StartsWith(argT, switchStrA) {
@@ -2580,6 +2590,10 @@ func GetSwitch(argsA []string, switchStrA string) string {
 
 func GetSwitchI(argsA []interface{}, switchStrA string, defaultA string) string {
 	if argsA == nil {
+		return defaultA
+	}
+
+	if len(argsA) < 1 {
 		return defaultA
 	}
 
@@ -2619,6 +2633,10 @@ func IfSwitchExists(argsA []string, switchStrA string) bool {
 		return false
 	}
 
+	if len(argsA) < 1 {
+		return false
+	}
+
 	for _, argT := range argsA {
 		if StartsWith(argT, switchStrA) {
 			return true
@@ -2635,6 +2653,10 @@ func IfSwitchExistsWhole(argsA []string, switchStrA string) bool {
 		return false
 	}
 
+	if len(argsA) < 1 {
+		return false
+	}
+
 	for _, argT := range argsA {
 		if argT == switchStrA {
 			return true
@@ -2646,6 +2668,14 @@ func IfSwitchExistsWhole(argsA []string, switchStrA string) bool {
 }
 
 func IfSwitchExistsWholeI(argsA []interface{}, switchStrA string) bool {
+	if argsA == nil {
+		return false
+	}
+
+	if len(argsA) < 1 {
+		return false
+	}
+
 	for _, argT := range argsA {
 		if argT.(string) == switchStrA {
 			return true
@@ -2685,10 +2715,16 @@ func Int64ToStr(intA int64) string {
 }
 
 // StrToIntWithDefaultValue 字符串转整数，如果有问题则返回默认数值
-func StrToIntWithDefaultValue(strA string, defaultA int) int {
+func StrToIntWithDefaultValue(strA string, defaultA ...int) int {
+	defaultT := -1
+
+	if (defaultA != nil) && (len(defaultA) > 0) {
+		defaultT = defaultA[0]
+	}
+
 	nT, errT := strconv.ParseInt(strA, 10, 0)
 	if errT != nil {
-		return defaultA
+		return defaultT
 	}
 
 	return int(nT)
@@ -3082,6 +3118,14 @@ func GenerateFileListRecursivelyWithExclusive(dirA string, patternA string, excl
 	}
 
 	return strListT
+}
+
+func Ls(dirA string) []string {
+	return GenerateFileListInDir(dirA, "*", false)
+}
+
+func Lsr(dirA string) []string {
+	return GenerateFileListRecursivelyWithExclusive(dirA, "*", "", false)
 }
 
 func GetAvailableFileName(fileNameA string) string {
@@ -6825,6 +6869,120 @@ func CreateSimpleEvent(typeA string, valueA string) *SimpleEvent {
 	p.Value = valueA
 
 	return p
+}
+
+// HTML related
+
+func RemoveHtmlTags(strA string) string {
+	reT := regexp.MustCompile("<[^>].*?>")
+	rStrT := reT.ReplaceAllString(strA, "")
+
+	rStrT = Replace(rStrT, "\r\n", "\n")
+	reT2 := regexp.MustCompile("^\\s*?$")
+	rStrT2 := reT2.ReplaceAllString(rStrT, "")
+	rStrT2 = Replace(rStrT2, "\n\n", "\n")
+
+	return rStrT2
+}
+
+func RemoveHtmlTagsX(strA string, optionsA ...string) string {
+	if Trim(strA) == "" {
+		return strA
+	}
+
+	rStrT := RegReplace(strA, "<script[^>]*?>[\\S\\s]*?</script>", "")
+
+	rStrT = RegReplace(rStrT, "<[^>]*?>", "")
+
+	rStrT = strings.Replace(rStrT, "&nbsp;", " ", -1)
+	rStrT = strings.Replace(rStrT, "&middot;", "·", -1)
+	rStrT = Trim(rStrT)
+
+	if IfSwitchExistsWhole(optionsA, "-removeWhiteSpace") {
+		rStrT = strings.Replace(rStrT, "\r", "", -1)
+		rStrT = strings.Replace(rStrT, "\n", "", -1)
+		rStrT = RegReplace(rStrT, "\\s+", " ")
+	}
+
+	if IfSwitchExistsWhole(optionsA, "-replaceComma") {
+		rStrT = strings.Replace(rStrT, ",", "`", -1)
+	}
+
+	return rStrT
+}
+
+func HTMLToText(htmlA string, optionsA ...string) (result string) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			result = htmlA
+			return
+		}
+	}()
+
+	if Trim(htmlA) == "" {
+		result = ""
+		return
+	}
+
+	typeT := GetSwitchWithDefaultValue(optionsA, "-type=", "")
+
+	if typeT == "tx" {
+		rs := RegReplace(htmlA, "(?i:[\\S\\s]*?<body[^>]*?>([\\s\\S]*?)</body>[\\S\\s]*)", "$1")
+		rs = RegReplace(rs, "(?i:<script[^>]*?>[\\s\\S]*?</script>)", "")
+		for RegContains(rs, "<[^>]*?>([\\s\\S]*?)</[^>]*?>") {
+			rs = RegReplace(rs, "<[^>]*?>([\\s\\S]*?)</[^>]*?>", "$1")
+		}
+		result = RegReplace(rs, "<[^>]*?>", "")
+		return
+	}
+
+	docT, errT := html.Parse(strings.NewReader(htmlA))
+	if errT != nil {
+		result = htmlA
+		return
+	} else {
+		_, textT, simplified, flattened, cleaned, errT := sandblast.ExtractEx(docT, sandblast.KeepLinks)
+		if errT != nil {
+			result = htmlA
+			return
+		} else {
+			switch typeT {
+			case "", "text":
+				result = textT
+				return
+			case "simple", "s":
+				result = simplified.DebugString()
+				return
+			case "flatten", "f":
+				result = flattened.DebugString()
+				return
+			case "cleaned", "c":
+				result = cleaned.DebugString()
+				return
+			case "beautified", "b":
+				result = RemoveHtmlTags(cleaned.DebugString())
+				return
+			case "x":
+				reT := regexp.MustCompile("<[^>]*?>\\[\\d*?\\]")
+				var tmpRT string
+				if flattened == nil {
+					tmpRT = reT.ReplaceAllString(textT, "")
+				} else {
+					tmpRT = reT.ReplaceAllString(flattened.DebugString(), "")
+				}
+				reT = regexp.MustCompile("<[^>]*?>\\[(.*?)\\([^)]*?\\)\\]")
+				tmpRT = reT.ReplaceAllString(tmpRT, "$1")
+				reT = regexp.MustCompile("^\\s*?(\\S)")
+				tmpRT = reT.ReplaceAllString(tmpRT, "$1")
+				result = tmpRT
+				return
+			default:
+				result = textT
+				return
+			}
+		}
+	}
 }
 
 // Misc Related
