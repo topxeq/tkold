@@ -191,6 +191,7 @@ var GlobalEnvSetG *TXCollection = nil
 var variableG = make(map[string]interface{})
 
 var varMutexG sync.Mutex
+var fileVarMutexG sync.Mutex
 
 // 全局环境集合相关 global environment related
 
@@ -7053,6 +7054,27 @@ func SetVar(nameA string, valueA interface{}) {
 	varMutexG.Lock()
 	variableG[nameA] = valueA
 	varMutexG.Unlock()
+}
+
+func GetFileVar(fileNameA string) interface{} {
+	var rs interface{}
+	fileVarMutexG.Lock()
+	errT := LoadJSONFromFile(fileNameA, &rs)
+	fileVarMutexG.Unlock()
+
+	if errT != nil {
+		return errT
+	}
+
+	return rs
+}
+
+func SetFileVar(fileNameA string, valueA interface{}) error {
+	fileVarMutexG.Lock()
+	errT := SaveJSONIndentToFile(valueA, fileNameA)
+	fileVarMutexG.Unlock()
+
+	return errT
 }
 
 func CheckErrorFunc(errA error, funcA func()) {
