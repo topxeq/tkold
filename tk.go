@@ -7016,6 +7016,20 @@ func Pass() {
 
 }
 
+func IsNil(v interface{}) bool {
+	if v == nil {
+		return true
+	}
+
+	tmps := fmt.Sprintf("%v", v)
+
+	if tmps == "<nil>" {
+		return true
+	}
+
+	return false
+}
+
 func IsNilOrEmpty(v interface{}) bool {
 	if v == nil {
 		return true
@@ -7030,6 +7044,12 @@ func IsNilOrEmpty(v interface{}) bool {
 		}
 	case []string:
 		if len(v.([]string)) < 1 {
+			return true
+		}
+	default:
+		tmps := fmt.Sprintf("%v", v)
+
+		if tmps == "<nil>" {
 			return true
 		}
 
