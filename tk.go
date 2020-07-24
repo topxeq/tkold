@@ -6809,6 +6809,30 @@ func GetMSSFromXML(xmlA string, nodeA string) (map[string]string, error) {
 	return mapT, nil
 }
 
+func GetNodeStringFromXML(xmlA string, nodeA string) (string, error) {
+	var errT error
+
+	treeT := etree.NewDocument()
+
+	if treeT == nil {
+		return "", Errf("create XML tree failed")
+	}
+
+	errT = treeT.ReadFromString(xmlA)
+
+	if errT != nil {
+		return "", Errf("invalid XML: %v", errT)
+	}
+
+	stringNodeT := treeT.FindElement("//" + nodeA)
+
+	if stringNodeT == nil {
+		return "", Errf("node not found: %v", nodeA)
+	}
+
+	return stringNodeT.Text(), nil
+}
+
 func GetMSSArrayFromXML(xmlA string, nodeA string) ([]map[string]string, error) {
 	var errT error
 
