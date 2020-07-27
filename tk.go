@@ -2168,7 +2168,7 @@ func CheckErrf(formatA string, errA error, argsA ...interface{}) {
 		return
 	}
 
-	Pl(formatA, append([]interface{}{errA}, argsA...))
+	Pl(formatA, append([]interface{}{errA}, argsA...)...)
 
 	os.Exit(1)
 }
@@ -2178,7 +2178,7 @@ func CheckErrStrf(formatA string, errStrA string, argsA ...interface{}) {
 		return
 	}
 
-	Pl(formatA, append([]interface{}{GetErrStr(errStrA)}, argsA...))
+	Pl(formatA, append([]interface{}{GetErrStr(errStrA)}, argsA...)...)
 
 	os.Exit(1)
 }
