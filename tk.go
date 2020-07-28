@@ -2163,12 +2163,27 @@ func CheckErr(prefixA string, errA error) {
 	os.Exit(1)
 }
 
-func CheckErrf(formatA string, errA error, argsA ...interface{}) {
-	if errA == nil {
+func CheckErrf(formatA string, argsA ...interface{}) {
+	var errT error = nil
+
+	if argsA == nil {
 		return
 	}
 
-	Pl(formatA, append([]interface{}{errA}, argsA...)...)
+	for _, v := range argsA {
+		tmpV, ok := v.(error)
+		if !ok {
+			continue
+		}
+
+		errT = tmpV
+	}
+
+	if errT == nil {
+		return
+	}
+
+	Pl(formatA, argsA...)
 
 	os.Exit(1)
 }
