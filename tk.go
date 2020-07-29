@@ -5813,7 +5813,7 @@ func GetDebug() string {
 
 // http/web service related
 
-func DownloadPageUTF8(urlA string, postDataA url.Values, customHeaders string, timeoutSecsA time.Duration) string {
+func DownloadPageUTF8(urlA string, postDataA url.Values, customHeaders string, timeoutSecsA time.Duration, optsA ...string) string {
 	client := &http.Client{
 		//CheckRedirect: redirectPolicyFunc,
 		Timeout: time.Second * timeoutSecsA,
@@ -5862,6 +5862,10 @@ func DownloadPageUTF8(urlA string, postDataA url.Values, customHeaders string, t
 	if errT == nil {
 		defer respT.Body.Close()
 		if respT.StatusCode != 200 {
+			if IfSwitchExistsWhole(optsA, "-detail") {
+				return GenerateErrorStringF("response status: %v (%v)", respT.StatusCode, respT)
+			}
+
 			return GenerateErrorStringF("response status: %v", respT.StatusCode)
 		} else {
 			body, errT := ioutil.ReadAll(respT.Body)
