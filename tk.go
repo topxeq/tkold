@@ -2730,6 +2730,10 @@ func Int64ToStr(intA int64) string {
 	return strconv.FormatInt(intA, 10)
 }
 
+func ToStr(v interface{}) string {
+	return fmt.Sprintf("%v", v)
+}
+
 // StrToIntWithDefaultValue 字符串转整数，如果有问题则返回默认数值
 func StrToIntWithDefaultValue(strA string, defaultA ...int) int {
 	defaultT := -1
@@ -3305,6 +3309,26 @@ func LoadBytesFromFileE(fileNameA string, numA ...int) ([]byte, error) {
 	}
 
 	return bufT, nil
+}
+
+func SaveBytesToFile(bytesA []byte, fileA string) string {
+	file, err := os.Create(fileA)
+	if err != nil {
+		return GenerateErrorString(err.Error())
+	}
+
+	defer file.Close()
+
+	wFile := bufio.NewWriter(file)
+	_, err = wFile.Write(bytesA)
+
+	if err != nil {
+		return GenerateErrorString(err.Error())
+	}
+
+	wFile.Flush()
+
+	return ""
 }
 
 // SaveStringToFile 保存字符串到文件
