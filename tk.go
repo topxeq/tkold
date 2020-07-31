@@ -5846,15 +5846,27 @@ func DownloadPageUTF8(urlA string, postDataA url.Values, customHeaders string, t
 			if len(aryT) < 2 {
 				continue
 			}
-			req.Header.Add(aryT[0], Replace(aryT[1], "`", ":"))
+			req.Header.Add(aryT[0], Trim(Replace(aryT[1], "`", ":")))
 			//TXPl("%s=%s", aryT[0], aryT[1])
+		}
+
+		if IfSwitchExistsWhole(optsA, "-verbose") {
+			Pl("REQ: %v", req)
 		}
 
 		respT, errT = client.Do(req)
 	} else {
+		if IfSwitchExistsWhole(optsA, "-verbose") {
+			Pl("URL: %v", urlT)
+		}
+
 		if postDataA == nil {
 			respT, errT = client.Get(urlT)
 		} else {
+			if IfSwitchExistsWhole(optsA, "-verbose") {
+				Pl("POST data: %v", postDataA)
+			}
+
 			respT, errT = client.PostForm(urlT, postDataA)
 		}
 	}
