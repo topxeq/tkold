@@ -5875,7 +5875,7 @@ func DownloadPageUTF8(urlA string, postDataA url.Values, customHeaders string, t
 		defer respT.Body.Close()
 		if respT.StatusCode != 200 {
 			if IfSwitchExistsWhole(optsA, "-detail") {
-				return GenerateErrorStringF("response status: %v (%v)", respT.StatusCode, respT)
+				Pl("response status: %v (%v)", respT.StatusCode, respT)
 			}
 
 			return GenerateErrorStringF("response status: %v", respT.StatusCode)
@@ -6121,8 +6121,8 @@ func PostRequest(urlA, reqBodyA string, timeoutSecsA time.Duration) (string, err
 	return string(body), nil
 }
 
-// PostRequestX : PostRequest with custom headers
-func PostRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA time.Duration) (string, error) {
+// PostRequestX : Post Request with custom headers
+func PostRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA time.Duration, optsA ...string) (string, error) {
 
 	req, err := http.NewRequest("POST", urlA, strings.NewReader(reqBodyA))
 
@@ -6142,6 +6142,14 @@ func PostRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA tim
 		// Pl("%s=%s", aryT[0], aryT[1])
 	}
 
+	if IfSwitchExistsWhole(optsA, "-verbose") {
+		Pl("POST data: %v", reqBodyA)
+	}
+
+	if IfSwitchExistsWhole(optsA, "-verbose") {
+		Pl("REQ: %v", req)
+	}
+
 	client := &http.Client{
 		//CheckRedirect: redirectPolicyFunc,
 		Timeout: time.Second * timeoutSecsA,
@@ -6153,6 +6161,63 @@ func PostRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA tim
 	}
 
 	defer resp.Body.Close()
+
+	if IfSwitchExistsWhole(optsA, "-detail") {
+		Pl("response status: %v (%v)", resp.StatusCode, resp)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
+}
+
+// PutRequestX : Put Request with custom headers
+func PutRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA time.Duration, optsA ...string) (string, error) {
+
+	req, err := http.NewRequest("PUT", urlA, strings.NewReader(reqBodyA))
+
+	if err != nil {
+		return "", err
+	}
+
+	headersT := SplitLines(customHeadersA)
+
+	for i := 0; i < len(headersT); i++ {
+		lineT := headersT[i]
+		aryT := strings.Split(lineT, ":")
+		if len(aryT) < 2 {
+			continue
+		}
+		req.Header.Add(aryT[0], Replace(aryT[1], "`", ":"))
+		// Pl("%s=%s", aryT[0], aryT[1])
+	}
+
+	if IfSwitchExistsWhole(optsA, "-verbose") {
+		Pl("PUT data: %v", reqBodyA)
+	}
+
+	if IfSwitchExistsWhole(optsA, "-verbose") {
+		Pl("REQ: %v", req)
+	}
+
+	client := &http.Client{
+		//CheckRedirect: redirectPolicyFunc,
+		Timeout: time.Second * timeoutSecsA,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+
+	if IfSwitchExistsWhole(optsA, "-detail") {
+		Pl("response status: %v (%v)", resp.StatusCode, resp)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -6203,6 +6268,60 @@ func PostRequestBytesX(urlA string, reqBodyA []byte, customHeadersA string, time
 	}
 
 	return body, nil
+}
+
+// RequestX : Network(http) Request with custom headers
+func RequestX(urlA, methodA, reqBodyA string, customHeadersA string, timeoutSecsA time.Duration, optsA ...string) (string, error) {
+
+	// methodA: GET, POST, PUT, etc
+	req, err := http.NewRequest(methodA, urlA, strings.NewReader(reqBodyA))
+
+	if err != nil {
+		return "", err
+	}
+
+	headersT := SplitLines(customHeadersA)
+
+	for i := 0; i < len(headersT); i++ {
+		lineT := headersT[i]
+		aryT := strings.Split(lineT, ":")
+		if len(aryT) < 2 {
+			continue
+		}
+		req.Header.Add(aryT[0], Replace(aryT[1], "`", ":"))
+		// Pl("%s=%s", aryT[0], aryT[1])
+	}
+
+	if IfSwitchExistsWhole(optsA, "-verbose") {
+		Pl("REQUEST data: %v", reqBodyA)
+	}
+
+	if IfSwitchExistsWhole(optsA, "-verbose") {
+		Pl("REQ: %v", req)
+	}
+
+	client := &http.Client{
+		//CheckRedirect: redirectPolicyFunc,
+		Timeout: time.Second * timeoutSecsA,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+
+	if IfSwitchExistsWhole(optsA, "-detail") {
+		Pl("response status: %v (%v)", resp.StatusCode, resp)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
 }
 
 // PostRequestBytesX : PostRequest with custom headers
