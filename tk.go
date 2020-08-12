@@ -2114,6 +2114,10 @@ func Plv(argsA ...interface{}) {
 	fmt.Printf("%#v\n", argsA...)
 }
 
+func Plvx(argsA interface{}) {
+	fmt.Printf("[TYPE] %T [VALUE] %v [ITYPE] %#v\n", argsA, argsA, argsA)
+}
+
 // Plvs output several variables, seperated by sepA
 func Plvs(sepA string, argsA ...interface{}) {
 	lenT := len(argsA)
