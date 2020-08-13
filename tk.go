@@ -47,6 +47,7 @@ import (
 	"github.com/beevik/etree"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/topxeq/mahonia"
+	"github.com/topxeq/socks"
 )
 
 // 类型 types structs
@@ -7816,4 +7817,83 @@ func (a *LoginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 		}
 	}
 	return nil, nil
+}
+
+// sock5 related
+
+func StartSocksServer(optionsA ...string) error {
+	ipT := GetSwitchWithDefaultValue(optionsA, "-ip=", "0.0.0.0")
+	portT := GetSwitchWithDefaultValue(optionsA, "-port=", "7480")
+	passwordT := GetSwitchWithDefaultValue(optionsA, "-password=", "acb123!@#")
+	verboseT := IfSwitchExistsWhole(optionsA, "-verbose")
+
+	lenT := len(passwordT)
+
+	if lenT < 16 {
+		passwordT = passwordT + strings.Repeat("z", 16-lenT)
+	} else if lenT > 16 {
+		passwordT = passwordT[0:16]
+	}
+
+	remote, err := net.Listen("tcp", fmt.Sprintf("%s:%s", ipT, portT))
+
+	if err != nil {
+		return err
+	}
+
+	if verboseT {
+		Pl("Start server on %v:%v", ipT, portT)
+	}
+
+	for {
+		conn, err := remote.Accept()
+		if err != nil {
+			return Errf("accept err: %v", err)
+		} else {
+			if verboseT {
+				Pl("Client connected: %v", conn.RemoteAddr())
+			}
+			socks.OpenRemoteTunnel(conn, passwordT)
+		}
+	}
+
+}
+
+func StartSocksClient(optionsA ...string) error {
+	remoteIpT := GetSwitchWithDefaultValue(optionsA, "-remoteIp=", "0.0.0.0")
+	remotePortT := GetSwitchWithDefaultValue(optionsA, "-remotePort=", "7480")
+	localIpT := GetSwitchWithDefaultValue(optionsA, "-localIp=", "0.0.0.0")
+	localPortT := GetSwitchWithDefaultValue(optionsA, "-localPort=", "7481")
+	passwordT := GetSwitchWithDefaultValue(optionsA, "-password=", "acb123!@#")
+	verboseT := IfSwitchExistsWhole(optionsA, "-verbose")
+
+	lenT := len(passwordT)
+
+	if lenT < 16 {
+		passwordT = passwordT + strings.Repeat("z", 16-lenT)
+	} else if lenT > 16 {
+		passwordT = passwordT[0:16]
+	}
+
+	local, err := net.Listen("tcp", fmt.Sprintf("%s:%s", localIpT, localPortT))
+	if err != nil {
+		return err
+	}
+
+	if verboseT {
+		Pl("Start socks proxy on %v:%v, remote server: %v: %v", localIpT, localPortT, remoteIpT, remotePortT)
+	}
+
+	for {
+		conn, err := local.Accept()
+		if err != nil {
+			return Errf("accept err: %v", err)
+		} else {
+			if verboseT {
+				Pl("Client connected: %v", conn.RemoteAddr())
+			}
+			socks.OpenLocalTunnel(conn, fmt.Sprintf("%s:%s", remoteIpT, remotePortT), passwordT)
+		}
+	}
+
 }
