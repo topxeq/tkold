@@ -37,6 +37,8 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/topxeq/regexpx"
+
 	"github.com/aarzilli/sandblast"
 	"github.com/melbahja/goph"
 	"golang.org/x/crypto/ssh"
@@ -948,8 +950,40 @@ func RegReplace(strA, patternA, replaceA string) string {
 	return regexpT.ReplaceAllString(strA, replaceA)
 }
 
+func RegReplaceX(strA, patternA, replaceA string) string {
+	regexpT, errT := regexpx.Compile(patternA)
+
+	if errT != nil {
+		return strA
+	}
+
+	return regexpT.ReplaceAllString(strA, replaceA)
+}
+
 func RegFindAll(strA, patternA string, groupA int) []string {
 	regexpT, errT := regexp.Compile(patternA)
+	if errT != nil {
+		return nil
+	}
+
+	rT := regexpT.FindAllStringSubmatch(strA, -1)
+	if rT == nil {
+		return nil
+	}
+
+	if groupA < len(rT[0]) {
+		rAryT := make([]string, 0, len(rT[0]))
+		for i := range rT {
+			rAryT = append(rAryT, rT[i][groupA])
+		}
+		return rAryT
+	}
+
+	return nil
+}
+
+func RegFindAllX(strA, patternA string, groupA int) []string {
+	regexpT, errT := regexpx.Compile(patternA)
 	if errT != nil {
 		return nil
 	}
@@ -979,9 +1013,37 @@ func RegFindAllGroups(strA, patternA string) [][]string {
 	return regexpT.FindAllStringSubmatch(strA, -1)
 }
 
+func RegFindAllGroupsX(strA, patternA string) [][]string {
+	regexpT, errT := regexpx.Compile(patternA)
+	if errT != nil {
+		return nil
+	}
+
+	return regexpT.FindAllStringSubmatch(strA, -1)
+}
+
 // RegFindFirst returns error string if no match or no matching group
 func RegFindFirst(strA, patternA string, groupA int) string {
 	regexpT, errT := regexp.Compile(patternA)
+
+	if errT != nil {
+		return GenerateErrorStringF("invalid pattern")
+	}
+
+	rT := regexpT.FindStringSubmatch(strA)
+	if rT == nil {
+		return GenerateErrorString("no match")
+	}
+
+	if groupA < len(rT) {
+		return rT[groupA]
+	}
+
+	return GenerateErrorString("no group")
+}
+
+func RegFindFirstX(strA, patternA string, groupA int) string {
+	regexpT, errT := regexpx.Compile(patternA)
 
 	if errT != nil {
 		return GenerateErrorStringF("invalid pattern")
@@ -1015,6 +1077,21 @@ func RegFindFirstIndex(strA, patternA string) (int, int) {
 	return rT[0], rT[1]
 }
 
+func RegFindFirstIndexX(strA, patternA string) (int, int) {
+	regexpT, errT := regexpx.Compile(patternA)
+
+	if errT != nil {
+		return -1, -1
+	}
+
+	rT := regexpT.FindStringIndex(strA)
+	if rT == nil {
+		return -1, -1
+	}
+
+	return rT[0], rT[1]
+}
+
 func RegStartsWith(strA, patternA string) bool {
 	startT, _ := RegFindFirstIndex(strA, patternA)
 
@@ -1025,8 +1102,39 @@ func RegStartsWith(strA, patternA string) bool {
 	return false
 }
 
+func RegStartsWithX(strA, patternA string) bool {
+	startT, _ := RegFindFirstIndexX(strA, patternA)
+
+	if startT == 0 {
+		return true
+	}
+
+	return false
+}
+
 func RegMatch(strA, patternA string) bool {
 	regexpT, errT := regexp.Compile(patternA)
+
+	if errT != nil {
+		return false
+	}
+
+	tmps := regexpT.FindString(strA)
+	if tmps == strA {
+		idxt := regexpT.FindStringIndex(strA)
+
+		if idxt != nil {
+			return true
+		}
+
+		return false
+	}
+
+	return false
+}
+
+func RegMatchX(strA, patternA string) bool {
+	regexpT, errT := regexpx.Compile(patternA)
 
 	if errT != nil {
 		return false
