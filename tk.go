@@ -2847,6 +2847,128 @@ func ToStr(v interface{}) string {
 	return fmt.Sprintf("%v", v)
 }
 
+func ToFloat(v interface{}, defaultA ...float64) (result float64) {
+	var defaultT float64
+
+	if defaultA == nil || len(defaultA) < 1 {
+		defaultT = 0
+	} else {
+		defaultT = defaultA[0]
+	}
+
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = defaultT
+			return
+		}
+	}()
+
+	switch v.(type) {
+	case int:
+		result = float64(v.(int))
+		return
+	case int8:
+		result = float64(v.(int8))
+		return
+	case int16:
+		result = float64(v.(int16))
+		return
+	case int32:
+		result = float64(v.(int32))
+		return
+	case int64:
+		result = float64(v.(int64))
+		return
+	case float64:
+		result = v.(float64)
+		return
+	case float32:
+		result = float64(v.(float32))
+		return
+	case string:
+		nT, errT := strconv.ParseFloat(v.(string), 64)
+		if errT != nil {
+			result = defaultT
+			return
+		}
+
+		result = nT
+		return
+	default:
+		nT, errT := strconv.ParseFloat(fmt.Sprintf("%v", v), 64)
+		if errT != nil {
+			result = defaultT
+			return
+		}
+
+		result = nT
+		return
+	}
+}
+
+func ToInt(v interface{}, defaultA ...int) (result int) {
+	var defaultT int
+
+	if defaultA == nil || len(defaultA) < 1 {
+		defaultT = 0
+	} else {
+		defaultT = defaultA[0]
+	}
+
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = defaultT
+			return
+		}
+	}()
+
+	switch v.(type) {
+	case int:
+		result = v.(int)
+		return
+	case int8:
+		result = int(v.(int8))
+		return
+	case int16:
+		result = int(v.(int16))
+		return
+	case int32:
+		result = int(v.(int32))
+		return
+	case int64:
+		result = int(v.(int64))
+		return
+	case float64:
+		result = int(v.(float64))
+		return
+	case float32:
+		result = int(v.(float32))
+		return
+	case string:
+		nT, errT := strconv.ParseInt(v.(string), 10, 0)
+		if errT != nil {
+			result = defaultT
+			return
+		}
+
+		result = int(nT)
+		return
+	default:
+		nT, errT := strconv.ParseInt(fmt.Sprintf("%v", v), 10, 0)
+		if errT != nil {
+			result = defaultT
+			return
+		}
+
+		result = int(nT)
+		return
+	}
+}
+
 // StrToIntWithDefaultValue 字符串转整数，如果有问题则返回默认数值
 func StrToIntWithDefaultValue(strA string, defaultA ...int) int {
 	defaultT := -1
