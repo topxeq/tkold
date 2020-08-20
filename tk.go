@@ -2429,6 +2429,10 @@ func GetInputPasswordf(formatA string, aA ...interface{}) string {
 	return string(bytePassword)
 }
 
+func Sleep(secA float64) {
+	time.Sleep(time.Duration(secA) * time.Second)
+}
+
 func SleepSeconds(secA int) {
 	time.Sleep(time.Duration(secA) * time.Second)
 }
