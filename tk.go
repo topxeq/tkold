@@ -6373,11 +6373,11 @@ func PostRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA tim
 
 	for i := 0; i < len(headersT); i++ {
 		lineT := headersT[i]
-		aryT := strings.Split(lineT, ":")
+		aryT := strings.SplitN(lineT, ":", 2)
 		if len(aryT) < 2 {
 			continue
 		}
-		req.Header.Add(aryT[0], Replace(aryT[1], "`", ":"))
+		req.Header.Add(aryT[0], Replace(aryT[1], "TX_COLONS_XT", ":"))
 		// Pl("%s=%s", aryT[0], aryT[1])
 	}
 
