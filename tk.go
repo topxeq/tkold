@@ -4329,6 +4329,14 @@ func EncodeToBase64(bufA []byte) string {
 	return base64.StdEncoding.EncodeToString(bufA)
 }
 
+func EncodeHTML(strA string) string {
+	return html.EscapeString(strA)
+}
+
+func DecodeHTML(strA string) string {
+	return html.UnescapeString(strA)
+}
+
 func DecodeFromBase64(strA string) ([]byte, error) {
 	return base64.StdEncoding.DecodeString(strA)
 }
