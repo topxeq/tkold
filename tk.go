@@ -38,6 +38,7 @@ import (
 	"unsafe"
 
 	"github.com/topxeq/regexpx"
+	"github.com/topxeq/xmlx"
 
 	"github.com/aarzilli/sandblast"
 	"github.com/melbahja/goph"
@@ -7251,6 +7252,8 @@ func GetNodeStringFromXML(xmlA string, nodeA string) (string, error) {
 		return "", Errf("node not found: %v", nodeA)
 	}
 
+	Pl("xmlnode: %v, %v", stringNodeT, stringNodeT.FullTag())
+
 	return stringNodeT.Text(), nil
 }
 
@@ -7291,6 +7294,244 @@ func GetMSSArrayFromXML(xmlA string, nodeA string) ([]map[string]string, error) 
 	}
 
 	return aryT, nil
+}
+
+// GetXMLNode if no labelsA, return the root node, else return the specific node
+// example: tk.GetXMLNode("... XML content", "envelop", "body", "anode")
+func GetXMLNode(xmlA string, labelsA ...string) (*xmlx.Node, error) {
+	return xmlx.GetXMLNode(xmlA, labelsA...)
+}
+
+// // decode xml to map[string]interface{}
+
+// const (
+// 	attrPrefix = "@"
+// 	textPrefix = "#text"
+// )
+
+// var (
+// 	//ErrInvalidDocument invalid document err
+// 	ErrInvalidDocument = errors.New("invalid document")
+
+// 	//ErrInvalidRoot data at the root level is invalid err
+// 	ErrInvalidRoot = errors.New("data at the root level is invalid")
+// )
+
+// type node struct {
+// 	Parent  *node
+// 	Value   map[string]interface{}
+// 	Attrs   []xml.Attr
+// 	Label   string
+// 	Text    string
+// 	HasMany bool
+// }
+
+// // Decoder instance
+// type XMLDecoder struct {
+// 	r          io.Reader
+// 	attrPrefix string
+// 	textPrefix string
+// }
+
+// // NewXMLDecoder create new decoder instance
+// func NewXMLDecoder(reader io.Reader) *XMLDecoder {
+// 	return NewXMLDecoderWithPrefix(reader, attrPrefix, textPrefix)
+// }
+
+// // NewXMLDecoderWithPrefix create new decoder instance with custom attribute prefix and text prefix
+// func NewXMLDecoderWithPrefix(reader io.Reader, attrPrefix, textPrefix string) *XMLDecoder {
+// 	return &XMLDecoder{r: reader, attrPrefix: attrPrefix, textPrefix: textPrefix}
+// }
+
+// //Decode xml string to map[string]interface{}
+// func (d *XMLDecoder) Decode() (map[string]interface{}, error) {
+// 	decoder := xml.NewDecoder(d.r)
+// 	n := &node{}
+// 	stack := make([]*node, 0)
+
+// 	for {
+// 		token, err := decoder.Token()
+// 		if err != nil && err != io.EOF {
+// 			return nil, err
+// 		}
+
+// 		if token == nil {
+// 			break
+// 		}
+
+// 		switch tok := token.(type) {
+// 		case xml.StartElement:
+// 			{
+// 				n = &node{
+// 					Label:  tok.Name.Local,
+// 					Parent: n,
+// 					Value:  map[string]interface{}{tok.Name.Local: map[string]interface{}{}},
+// 					Attrs:  tok.Attr,
+// 				}
+
+// 				setAttrs(n, &tok, d.attrPrefix)
+// 				stack = append(stack, n)
+
+// 				if n.Parent != nil {
+// 					n.Parent.HasMany = true
+// 				}
+
+// 				Pl("node add: %#v", stack[len(stack)-1])
+
+// 			}
+
+// 		case xml.CharData:
+// 			Pl("CharData: %#v", string(token.(xml.CharData)))
+// 			data := strings.TrimSpace(string(tok))
+// 			if len(stack) > 0 {
+// 				stack[len(stack)-1].Text = data
+// 				Pl("insert")
+// 			} else if len(data) > 0 {
+// 				Pl("insert return")
+// 				return nil, ErrInvalidRoot
+// 			}
+// 			Pl("insert not")
+
+// 		case xml.EndElement:
+// 			{
+// 				length := len(stack)
+// 				stack, n = stack[:length-1], stack[length-1]
+
+// 				if !n.HasMany {
+// 					if len(n.Attrs) > 0 {
+// 						m := n.Value[n.Label].(map[string]interface{})
+// 						m[d.textPrefix] = n.Text
+// 					} else {
+// 						n.Value[n.Label] = n.Text
+// 						Pl("n.Value: %v, n.Label: %v, n.Text: %v", n.Value, n.Label, n.Text)
+// 					}
+// 				}
+
+// 				if len(stack) == 0 {
+// 					return n.Value, nil
+// 				}
+
+// 				setNodeValue(n)
+// 				n = n.Parent
+
+// 				Pl("n = n.Parent")
+// 			}
+// 		case xml.ProcInst:
+// 			{
+// 				tt := token.(xml.ProcInst)
+// 				Pl("tt: %v", string(tt.Inst))
+// 			}
+// 		default:
+// 			Pl("token: %#v, tok: %#v", token, tok)
+// 		}
+
+// 	}
+
+// 	return nil, ErrInvalidDocument
+// }
+
+// func setAttrs(n *node, tok *xml.StartElement, attrPrefix string) {
+// 	if len(tok.Attr) > 0 {
+// 		m := make(map[string]interface{})
+// 		for _, attr := range tok.Attr {
+// 			if len(attr.Name.Space) > 0 {
+// 				m[attrPrefix+attr.Name.Space+":"+attr.Name.Local] = attr.Value
+// 			} else {
+// 				m[attrPrefix+attr.Name.Local] = attr.Value
+// 			}
+// 		}
+// 		n.Value[tok.Name.Local] = m
+// 	}
+// }
+
+// func setNodeValue(n *node) {
+// 	if v, ok := n.Parent.Value[n.Parent.Label]; ok {
+// 		m := v.(map[string]interface{})
+// 		if v, ok = m[n.Label]; ok {
+// 			switch item := v.(type) {
+// 			case string:
+// 				Pl("string item: %v, v: %#v", item, v)
+// 				m[n.Label] = []string{item, n.Value[n.Label].(string)}
+// 			case []string:
+// 				m[n.Label] = append(item, n.Value[n.Label].(string))
+// 			case map[string]interface{}:
+// 				Pl("map[string]interface{} item: %v, v: %#v", item, v)
+// 				vm := getMap(n)
+// 				if vm != nil {
+// 					m[n.Label] = []map[string]interface{}{item, vm}
+// 				}
+// 			case []map[string]interface{}:
+// 				Pl("[]map[string]interface{} item: %v, v: %#v", item, v)
+// 				vm := getMap(n)
+// 				if vm != nil {
+// 					m[n.Label] = append(item, vm)
+// 				}
+// 			default:
+// 				Pl("item: %v, v: %#v", item, v)
+// 			}
+// 		} else {
+// 			m[n.Label] = n.Value[n.Label]
+// 		}
+
+// 	} else {
+// 		n.Parent.Value[n.Parent.Label] = n.Value[n.Label]
+// 	}
+// }
+
+// func getMap(node *node) map[string]interface{} {
+// 	if v, ok := node.Value[node.Label]; ok {
+// 		switch v.(type) {
+// 		case string:
+// 			return map[string]interface{}{node.Label: v}
+// 		case map[string]interface{}:
+// 			return node.Value[node.Label].(map[string]interface{})
+// 		}
+// 	}
+
+// 	return nil
+// }
+
+func FromXML(xmlA string) (interface{}, error) {
+	return GetXMLNode(xmlA)
+	// decoder := NewXMLDecoder(strings.NewReader(xmlA))
+	// result, err := decoder.Decode()
+
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// return result, nil
+}
+
+// func FromXML(xmlA string) (map[string]interface{}, error) {
+// 	result := make(map[string]interface{})
+
+// 	err := xml.Unmarshal([]byte(xmlA), &result)
+
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return result, nil
+// }
+
+func FromXMLWithDefault(xmlA string, defaultA interface{}) interface{} {
+	// decoder := NewXMLDecoder(strings.NewReader(xmlA))
+	// result, err := decoder.Decode()
+
+	// if err != nil {
+	// 	return defaultA
+	// }
+
+	// return result
+
+	result, err := GetXMLNode(xmlA)
+
+	if err != nil {
+		return defaultA
+	}
+
+	return result
 }
 
 // 事件相关 event related
