@@ -8380,3 +8380,128 @@ func StartSocksClient(optionsA ...string) error {
 	}
 
 }
+
+// Transparent proxy related
+
+func copyWR(w io.WriteCloser, r io.Reader) {
+	_, err := io.Copy(w, r)
+	if err != nil {
+		Pl("failed to copy: %v", err)
+	}
+	w.Close()
+}
+
+func forwardConn(lc net.Conn, server string, verboseA bool) {
+	defer lc.Close()
+
+	rc, err := net.Dial("tcp", server)
+	if err != nil {
+		if verboseA {
+			Pl("failed to dial: %v", err)
+		}
+		return
+	}
+
+	if verboseA {
+		Pl("Forwarding connection to %v", server)
+	}
+	go copyWR(rc, lc)
+
+	copyWR(lc, rc)
+
+	if verboseA {
+		Pl("Terminated:  %s -> %s ", lc.RemoteAddr(), server)
+	}
+}
+
+func StartTransparentProxy(local, server string, optionsA ...string) error {
+	verboseT := IfSwitchExistsWhole(optionsA, "-verbose")
+
+	l, err := net.Listen("tcp", local)
+	if err != nil {
+		if verboseT {
+			Pl("failed to listen: %v", err)
+		}
+
+		return Errf("failed to listen: %v", err)
+	}
+
+	defer l.Close()
+
+	if verboseT {
+		Pl("Listening on %v", l.Addr())
+	}
+
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			if verboseT {
+				Pl("failed to accept: %v", err)
+			}
+		}
+
+		if verboseT {
+			Pl("New connection from %v", conn.RemoteAddr())
+		}
+
+		go forwardConn(conn, server, verboseT)
+	}
+}
+
+func StartTransparentProxy2(localA, remoteA string, optionsA ...string) error {
+	verboseT := IfSwitchExistsWhole(optionsA, "-verbose")
+
+	listener, err := net.Listen("tcp", localA)
+	if err != nil {
+		if verboseT {
+			Pl("Failed to setup listener: %v", err)
+		}
+		return Errf("Failed to setup listener: %v", err)
+	}
+
+	defer listener.Close()
+
+	if verboseT {
+		Pl("Listen on: %v:%v", listener.Addr(), "")
+	}
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			if verboseT {
+				Pl("Failed to accept connection: %v", err)
+			}
+			return Errf("ERROR: failed to accept listener: %v", err)
+		}
+
+		// if verboseT {
+		// 	Pl("Accepted connection on %v from %v", conn.LocalAddr(), conn.RemoteAddr())
+		// }
+
+		go func(connA net.Conn, remote1A string) {
+			client, err := net.Dial("tcp", remote1A)
+			if err != nil {
+				if verboseT {
+					Pl("Dial failed: %v", err)
+				}
+				return
+			}
+
+			if verboseT {
+				Pl("Connected on %v from %v", connA.LocalAddr(), conn.RemoteAddr())
+			}
+
+			go func() {
+				defer client.Close()
+				defer conn.Close()
+				io.Copy(client, conn)
+			}()
+			go func() {
+				defer client.Close()
+				defer conn.Close()
+				io.Copy(conn, client)
+			}()
+
+		}(conn, remoteA)
+	}
+}
