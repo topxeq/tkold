@@ -6717,6 +6717,47 @@ func GenerateJSONPResponse(statusA string, valueA string, reqA *http.Request, ar
 	}
 }
 
+func GenerateJSONPResponseMix(statusA string, valueA string, reqA *http.Request, mapA map[string]string) string {
+	_, valueOnlyT := reqA.Form["valueonly"]
+
+	if valueOnlyT {
+		if _, withErrorT := reqA.Form["witherror"]; withErrorT {
+			if statusA != "success" {
+				return GenerateErrorString(valueA)
+			}
+		}
+
+		return valueA
+	} else {
+		mT := make(map[string]string)
+		mT["Status"] = statusA
+		mT["Value"] = valueA
+
+		if mapA != nil {
+			for k, v := range mapA {
+				mT[k] = v
+			}
+		}
+
+		returnValue, ifReturnValue := reqA.Form["returnvalue"]
+
+		if ifReturnValue {
+			mT["ReturnValue"] = returnValue[0]
+		}
+
+		name, ok := reqA.Form["callback"]
+		if ok {
+			if valueOnlyT {
+				return fmt.Sprintf("%v(%v);", name[0], valueA)
+			} else {
+				return fmt.Sprintf("%v(%v);", name[0], ObjectToJSON(mT))
+			}
+		}
+
+		return fmt.Sprintf("%v", ObjectToJSON(mT))
+	}
+}
+
 func GenerateJSONPResponseWithObject(statusA string, valueA string, objectA string, reqA *http.Request) string {
 	_, valueOnlyT := reqA.Form["valueonly"]
 	_, objectOnlyT := reqA.Form["objectonly"]
