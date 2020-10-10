@@ -6026,6 +6026,20 @@ func JoinURL(urlBaseA string, urlNextA string) string {
 	return base.ResolveReference(u).String()
 }
 
+func FormToMap(formA url.Values) map[string]string {
+	mapT := make(map[string]string, 0)
+
+	if formA == nil {
+		return mapT
+	}
+
+	for k, v := range formA {
+		mapT[k] = v[0]
+	}
+
+	return mapT
+}
+
 // debug related
 
 var DebugModeG bool = false
