@@ -49,6 +49,7 @@ import (
 	"github.com/atotto/clipboard"
 	"github.com/beevik/etree"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/satori/go.uuid"
 	"github.com/topxeq/mahonia"
 	"github.com/topxeq/socks"
 )
@@ -7759,6 +7760,11 @@ func IsNilOrEmpty(v interface{}) bool {
 	}
 
 	return false
+}
+
+func GetUUID() string {
+	u1 := uuid.Must(uuid.NewV4())
+	return u1.String()
 }
 
 func IsFloat64NearlyEqual(a, b float64) bool {
