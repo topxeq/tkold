@@ -7776,9 +7776,27 @@ func IsNilOrEmpty(v interface{}) bool {
 	return false
 }
 
-func GetUUID() string {
+func GetUUID1() string {
+	uuidT, errT := uuid.NewV1()
+	if errT != nil {
+		return GenerateErrorStringF("failed to generate UUID: %v", errT)
+	}
+
+	return uuidT.String()
+}
+
+func GetUUID4() string {
 	u1 := uuid.Must(uuid.NewV4())
 	return u1.String()
+}
+
+func GetUUID() string {
+	uuidT, errT := uuid.NewV1()
+	if errT != nil {
+		return GenerateErrorStringF("failed to generate UUID: %v", errT)
+	}
+
+	return uuidT.String()
 }
 
 func IsFloat64NearlyEqual(a, b float64) bool {
