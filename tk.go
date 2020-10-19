@@ -7776,6 +7776,15 @@ func IsNilOrEmpty(v interface{}) bool {
 	return false
 }
 
+func IsError(vA interface{}) bool {
+	_, ok := vA.(error)
+	if ok {
+		return true
+	}
+
+	return false
+}
+
 func GetUUID1() string {
 	uuidT, errT := uuid.NewV1()
 	if errT != nil {
