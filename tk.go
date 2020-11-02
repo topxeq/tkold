@@ -7308,7 +7308,7 @@ func GetNodeStringFromXML(xmlA string, nodeA string) (string, error) {
 		return "", Errf("node not found: %v", nodeA)
 	}
 
-	Pl("xmlnode: %v, %v", stringNodeT, stringNodeT.FullTag())
+	// Pl("xmlnode: %v, %v", stringNodeT, stringNodeT.FullTag())
 
 	return stringNodeT.Text(), nil
 }
