@@ -8151,6 +8151,14 @@ func BitXor(p interface{}, v interface{}) interface{} {
 	return 0
 }
 
+func ToPointerStringArray(aryA []string) *[]string {
+	return &aryA
+}
+
+func ToPointerFloat64Array(aryA []float64) *[]float64 {
+	return &aryA
+}
+
 // ParseHexColor inspired by gg
 func ParseHexColor(x string) (r, g, b, a int) {
 	x = strings.TrimPrefix(x, "#")
