@@ -6224,6 +6224,73 @@ func DownloadPage(urlA string, originalEncodingA string, postDataA url.Values, c
 
 }
 
+// HttpRequest download page with any encoding and convert to UTF-8
+func HttpRequest(urlA string, methodA string, originalEncodingA string, postDataA url.Values, customHeaders string, timeoutSecsA time.Duration, optsA ...string) string {
+	client := &http.Client{
+		Timeout: time.Second * timeoutSecsA,
+	}
+
+	var urlT string
+	if !strings.HasPrefix(strings.ToLower(urlA), "http") {
+		urlT = "http://" + urlA
+	} else {
+		urlT = urlA
+	}
+
+	var respT *http.Response
+	var errT error
+	var req *http.Request
+
+	req, errT = http.NewRequest(methodA, urlT, nil)
+	if postDataA != nil {
+		req.PostForm = postDataA
+	}
+
+	headersT := SplitLines(customHeaders)
+
+	for i := 0; i < len(headersT); i++ {
+		lineT := headersT[i]
+		aryT := strings.Split(lineT, ":")
+		if len(aryT) < 2 {
+			continue
+		}
+		req.Header.Add(aryT[0], Replace(aryT[1], "`", ":"))
+	}
+
+	if IfSwitchExistsWhole(optsA, "-verbose") {
+		Pl("REQ: %v", req)
+	}
+
+	respT, errT = client.Do(req)
+
+	if errT == nil {
+		defer respT.Body.Close()
+
+		if IfSwitchExistsWhole(optsA, "-verbose") {
+			Pl("response status: %v (%v)", respT.StatusCode, respT)
+		}
+
+		if respT.StatusCode != 200 {
+			return GenerateErrorStringF("response status: %v", respT.StatusCode)
+		} else {
+			body, errT := ioutil.ReadAll(respT.Body)
+
+			if errT == nil {
+				if (originalEncodingA == "") || (strings.ToLower(originalEncodingA) == "utf-8") {
+					return string(body)
+				} else {
+					return ConvertToUTF8(body, originalEncodingA)
+				}
+			} else {
+				return GenerateErrorString(errT.Error())
+			}
+		}
+	} else {
+		return GenerateErrorString(errT.Error())
+	}
+
+}
+
 func DownloadPageByMap(urlA string, originalEncodingA string, postDataA map[string]string, customHeaders string, timeoutSecsA time.Duration) string {
 	if postDataA == nil {
 		return DownloadPage(urlA, originalEncodingA, nil, customHeaders, timeoutSecsA)
@@ -6407,9 +6474,6 @@ func PostRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA tim
 
 	if IfSwitchExistsWhole(optsA, "-verbose") {
 		Pl("POST data: %v", reqBodyA)
-	}
-
-	if IfSwitchExistsWhole(optsA, "-verbose") {
 		Pl("REQ: %v", req)
 	}
 
