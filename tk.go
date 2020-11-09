@@ -6241,9 +6241,12 @@ func HttpRequest(urlA string, methodA string, originalEncodingA string, postData
 	var errT error
 	var req *http.Request
 
-	req, errT = http.NewRequest(methodA, urlT, nil)
-	if postDataA != nil {
-		req.PostForm = postDataA
+	if postDataA == nil {
+		req, errT = http.NewRequest(methodA, urlT, nil)
+		// req.PostForm = postDataA
+	} else {
+		req, errT = http.NewRequest(methodA, urlT, strings.NewReader(postDataA.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
 
 	headersT := SplitLines(customHeaders)
