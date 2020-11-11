@@ -4372,6 +4372,8 @@ func ToJSON(objA interface{}) (string, error) {
 func ToJSONX(objA interface{}, optsA ...string) string {
 	var errT error
 
+	ifDefaultT := IfSwitchExists(optsA, "-default=")
+
 	indentT := false
 	if IfSwitchExistsWhole(optsA, "-indent") {
 		indentT = true
@@ -4399,6 +4401,10 @@ func ToJSONX(objA interface{}, optsA ...string) string {
 	}
 
 	if errT != nil {
+		if ifDefaultT {
+			return GetSwitchWithDefaultValue(optsA, "-default=", GenerateErrorString(errT.Error()))
+		}
+
 		return GenerateErrorString(errT.Error())
 	}
 
