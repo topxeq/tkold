@@ -4369,6 +4369,42 @@ func ToJSON(objA interface{}) (string, error) {
 	return string(rs), errT
 }
 
+func ToJSONX(objA interface{}, optsA ...string) string {
+	var errT error
+
+	indentT := false
+	if IfSwitchExistsWhole(optsA, "-indent") {
+		indentT = true
+	}
+
+	var jsonT jsoniter.API
+
+	if optsA == nil || len(optsA) < 1 {
+		jsonT = jsoniter.ConfigDefault
+	} else if IfSwitchExistsWhole(optsA, "-sort") {
+		jsonT = jsoniter.ConfigCompatibleWithStandardLibrary
+	} else if IfSwitchExistsWhole(optsA, "-fast") {
+		jsonT = jsoniter.ConfigFastest
+	} else {
+		jsonT = jsoniter.ConfigDefault
+	}
+
+	var rs []byte
+
+	if indentT {
+		rs, errT = jsonT.MarshalIndent(objA, "", "  ")
+	} else {
+		rs, errT = jsonT.Marshal(objA)
+
+	}
+
+	if errT != nil {
+		return GenerateErrorString(errT.Error())
+	}
+
+	return string(rs)
+}
+
 func ToJSONWithDefault(objA interface{}, defaultA string) string {
 	rs, errT := jsoniter.Marshal(objA)
 
