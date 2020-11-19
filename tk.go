@@ -4858,9 +4858,13 @@ func EncodeStringCustom(strA string, paddingA byte) string {
 	return sbuf.String()
 }
 
-func EncodeStringCustomEx(strA string, paddingA byte) string {
-	if paddingA == 0 {
+func EncodeStringCustomEx(strA string, paddingsA ...byte) string {
+	var paddingA byte
+
+	if paddingsA == nil || len(paddingsA) == 0 {
 		paddingA = '_'
+	} else {
+		paddingA = paddingsA[0]
 	}
 
 	lenT := len(strA)
@@ -4976,9 +4980,13 @@ func DecodeStringUnderline(s string) string {
 	return bufT.String()
 }
 
-func DecodeStringCustom(s string, paddingA byte) string {
-	if paddingA == 0 {
+func DecodeStringCustom(s string, paddingsA ...byte) string {
+	var paddingA byte
+
+	if paddingsA == nil || len(paddingsA) == 0 {
 		paddingA = '_'
+	} else {
+		paddingA = paddingsA[0]
 	}
 
 	var bufT strings.Builder
