@@ -900,6 +900,16 @@ func RegContains(strA, patternA string) bool {
 	return !(regexpT.FindStringIndex(strA) == nil)
 }
 
+func RegContainsX(strA, patternA string) bool {
+	regexpT, errT := regexpx.Compile(patternA)
+
+	if errT != nil {
+		return false
+	}
+
+	return !(regexpT.FindStringIndex(strA) == nil)
+}
+
 func RegFindFirstTX(strA, patternA string, groupA int) *TXString {
 	regexpT, errT := regexp.Compile(patternA)
 
@@ -1863,6 +1873,10 @@ func GetValueOfMSS(mapA map[string]string, keyA string, defaultA string) string 
 // GetOSArgs return os.Args
 func GetOSArgs() []string {
 	return os.Args
+}
+
+func GetOSArgsShort() []string {
+	return os.Args[1:]
 }
 
 // EnsureBasePath make sure a base path for application is exists, otherwise create it
@@ -7016,6 +7030,28 @@ func GetSuccessValue(strA string) string {
 }
 
 // 数学相关 math related
+
+func LimitPrecision(nA interface{}, digitA int) error {
+	switch t := nA.(type) {
+	case *float64:
+		vT := *(nA.(*float64))
+		*(nA.(*float64)) = math.Round(vT*math.Pow10(digitA)) / math.Pow10(digitA)
+	case *[]float64:
+		pT := (nA.(*[]float64))
+
+		lenT := len(*pT)
+
+		for i := 0; i < lenT; i++ {
+			(*pT)[i] = math.Round((*pT)[i]*math.Pow10(digitA)) / math.Pow10(digitA)
+		}
+
+	default:
+		return Errf("%v", "unknown type: %v", t)
+	}
+
+	return nil
+
+}
 
 func Float32ArrayToFloat64Array(aryA []float32) []float64 {
 	if aryA == nil {
