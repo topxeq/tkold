@@ -392,7 +392,11 @@ func IsErrStr(errStrA string) bool {
 
 // GetErrorString 获取出错字符串中的出错原因部分
 func GetErrorString(errStrA string) string {
-	return errStrA[8:]
+	if StartsWith(errStrA, "TXERROR:") {
+		return errStrA[8:]
+	} else {
+		return errStrA
+	}
 }
 
 // GetErrorStringSafely 获取出错字符串中的出错原因部分，如果不是出错字符串则返回原串
@@ -688,6 +692,10 @@ func (p *TXString) IsError() bool {
 	return (p.Err != "")
 }
 
+func (p *TXString) IsErrStr() bool {
+	return IsErrStr(p.string)
+}
+
 func (p *TXString) Print() {
 	Pl("string: %v, error: %v", p.string, p.Err)
 }
@@ -728,12 +736,22 @@ func (p *TXString) RegReplace(patternA string, replacementA string) *TXString {
 	return p
 }
 
+func (p *TXString) RegReplaceX(patternA string, replacementA string) *TXString {
+	p.string = RegReplaceX(p.string, patternA, replacementA)
+
+	return p
+}
+
 func (p *TXString) RegFindAll(patternA string, groupA int) []string {
 	return RegFindAll(p.string, patternA, groupA)
 }
 
 func (p *TXString) RegFindFirst(patternA string, groupA int) string {
 	return RegFindFirst(p.string, patternA, groupA)
+}
+
+func (p *TXString) RegFindFirstX(patternA string, groupA int) string {
+	return RegFindFirstX(p.string, patternA, groupA)
 }
 
 func (p *TXString) List() []string {
@@ -3006,7 +3024,23 @@ func StrToIntWithDefaultValue(strA string, defaultA ...int) int {
 }
 
 // StrToInt 字符串转整数
-func StrToInt(strA string) (int, error) {
+func StrToInt(strA string, defaultA ...int) int {
+	defaultT := -1
+
+	if (defaultA != nil) && (len(defaultA) > 0) {
+		defaultT = defaultA[0]
+	}
+
+	nT, errT := strconv.ParseInt(strA, 10, 0)
+	if errT != nil {
+		return defaultT
+	}
+
+	return int(nT)
+}
+
+// StrToIntE 字符串转整数
+func StrToIntE(strA string) (int, error) {
 	nT, errT := strconv.ParseInt(strA, 10, 0)
 
 	return int(nT), errT
@@ -3019,6 +3053,21 @@ func ToIntI(valueA interface{}, defaultA int) int {
 	}
 
 	return int(nT)
+}
+
+func StrToInt64(strA string, defaultA ...int64) int64 {
+	var defaultT int64 = -1
+
+	if (defaultA != nil) && (len(defaultA) > 0) {
+		defaultT = defaultA[0]
+	}
+
+	nT, errT := strconv.ParseInt(strA, 10, 0)
+	if errT != nil {
+		return defaultT
+	}
+
+	return nT
 }
 
 func StrToInt64WithDefaultValue(strA string, defaultA int64) int64 {
@@ -3048,7 +3097,23 @@ func StrToFloat64WithDefaultValue(strA string, defaultA float64) float64 {
 	return nT
 }
 
-func StrToFloat64(strA string) (float64, error) {
+func StrToFloat64(strA string, defaultA ...float64) float64 {
+	var defaultT float64 = -1
+
+	if (defaultA != nil) && (len(defaultA) > 0) {
+		defaultT = defaultA[0]
+	}
+
+	nT, errT := strconv.ParseFloat(strA, 64)
+
+	if errT != nil {
+		return defaultT
+	}
+
+	return nT
+}
+
+func StrToFloat64E(strA string) (float64, error) {
 	nT, errT := strconv.ParseFloat(strA, 64)
 
 	return nT, errT
