@@ -2730,12 +2730,30 @@ func GetSwitchWithDefaultValue(argsA []string, switchStrA string, defaultA strin
 
 }
 
-func GetSwitch(argsA []string, switchStrA string) string {
+func GetSwitch(argsA []string, switchStrA string, defaultA ...string) string {
+
+	ifDefaultT := true
+	var defaultT string
+
+	if defaultA == nil || len(defaultA) < 1 {
+		ifDefaultT = false
+	}
+
+	if ifDefaultT {
+		defaultT = defaultA[0]
+	}
+
 	if argsA == nil {
+		if ifDefaultT {
+			return defaultT
+		}
 		return ErrStr("nil input")
 	}
 
 	if len(argsA) < 1 {
+		if ifDefaultT {
+			return defaultT
+		}
 		return ErrStr("not exists")
 	}
 
@@ -2752,6 +2770,9 @@ func GetSwitch(argsA []string, switchStrA string) string {
 
 	}
 
+	if ifDefaultT {
+		return defaultT
+	}
 	return ErrStr("not exists")
 }
 
@@ -4568,6 +4589,17 @@ func LoadJSONFromFile(filePathA string, bufA interface{}) error {
 	}
 
 	errT = jsoniter.Unmarshal(fcT, bufA)
+
+	if errT != nil {
+		return errT
+	}
+
+	return nil
+
+}
+
+func LoadJSONFromString(strA string, bufA interface{}) error {
+	errT := jsoniter.Unmarshal([]byte(strA), bufA)
 
 	if errT != nil {
 		return errT
@@ -6947,6 +6979,49 @@ func GenerateJSONPResponseMix(statusA string, valueA string, reqA *http.Request,
 		if mapA != nil {
 			for k, v := range mapA {
 				mT[k] = v
+			}
+		}
+
+		returnValue, ifReturnValue := reqA.Form["returnvalue"]
+
+		if ifReturnValue {
+			mT["ReturnValue"] = returnValue[0]
+		}
+
+		name, ok := reqA.Form["callback"]
+		if ok {
+			if valueOnlyT {
+				return fmt.Sprintf("%v(%v);", name[0], valueA)
+			} else {
+				return fmt.Sprintf("%v(%v);", name[0], ObjectToJSON(mT))
+			}
+		}
+
+		return fmt.Sprintf("%v", ObjectToJSON(mT))
+	}
+}
+
+func GenerateJSONPResponseWithMore(statusA string, valueA string, reqA *http.Request, argsA ...string) string {
+	_, valueOnlyT := reqA.Form["valueonly"]
+
+	if valueOnlyT {
+		if _, withErrorT := reqA.Form["witherror"]; withErrorT {
+			if statusA != "success" {
+				return GenerateErrorString(valueA)
+			}
+		}
+
+		return valueA
+	} else {
+		mT := make(map[string]string)
+		mT["Status"] = statusA
+		mT["Value"] = valueA
+
+		if argsA != nil && len(argsA) > 0 {
+			lenT := len(argsA) / 2
+
+			for i := 0; i < lenT; i++ {
+				mT[argsA[i*2]] = argsA[i*2+1]
 			}
 		}
 
