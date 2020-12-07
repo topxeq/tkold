@@ -49,7 +49,7 @@ import (
 	"github.com/atotto/clipboard"
 	"github.com/beevik/etree"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 	"github.com/topxeq/mahonia"
 	"github.com/topxeq/socks"
 )
@@ -160,6 +160,8 @@ type TXResult struct {
 	Value  string
 }
 
+var invalidTXResultG = TXResult{Status: "fail", Value: "invalid response"}
+
 func TXResultFromStringE(strA string) (*TXResult, error) {
 	p := new(TXResult)
 
@@ -179,6 +181,18 @@ func TXResultFromString(strA string) *TXResult {
 
 	if errT != nil {
 		return nil
+	}
+
+	return p
+}
+
+func TXResultFromStringSafely(strA string) *TXResult {
+	p := new(TXResult)
+
+	errT := json.Unmarshal([]byte(strA), p)
+
+	if errT != nil {
+		return &invalidTXResultG
 	}
 
 	return p
