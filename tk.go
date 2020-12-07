@@ -156,8 +156,12 @@ func (p *TXCollection) GetListString(ifUpA bool, sepA string) string {
 
 // 存放TX格式的网络API返回结果
 type TXResult struct {
-	Status string
-	Value  string
+	Status  string
+	Value   string
+	Object  string
+	Object2 string
+	Object3 string
+	Token   string
 }
 
 var invalidTXResultG = TXResult{Status: "fail", Value: "invalid response"}
