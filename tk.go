@@ -40,7 +40,6 @@ import (
 	"unsafe"
 
 	"github.com/topxeq/regexpx"
-	"github.com/topxeq/tk"
 	"github.com/topxeq/xmlx"
 
 	"github.com/aarzilli/sandblast"
@@ -452,6 +451,10 @@ func GenerateErrorStringF(formatA string, argsA ...interface{}) string {
 }
 
 func ErrStrF(formatA string, argsA ...interface{}) string {
+	return fmt.Sprintf("TXERROR:"+formatA, argsA...)
+}
+
+func ErrStrf(formatA string, argsA ...interface{}) string {
 	return fmt.Sprintf("TXERROR:"+formatA, argsA...)
 }
 
@@ -8124,7 +8127,7 @@ func TableToMSSJSON(tableA [][]string) string {
 		bufT = append(bufT, inBufT)
 	}
 
-	return tk.ToJSONX(bufT, "-default=", "-sort")
+	return ToJSONX(bufT, "-default=", "-sort")
 
 }
 
