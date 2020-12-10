@@ -1,5 +1,7 @@
 package tk
 
+// build 2020121001
+
 import (
 	"bufio"
 	"bytes"
@@ -38,6 +40,7 @@ import (
 	"unsafe"
 
 	"github.com/topxeq/regexpx"
+	"github.com/topxeq/tk"
 	"github.com/topxeq/xmlx"
 
 	"github.com/aarzilli/sandblast"
@@ -8094,6 +8097,35 @@ func IsError(vA interface{}) bool {
 	}
 
 	return false
+}
+
+func TableToMSSJSON(tableA [][]string) string {
+	lenT := len(tableA)
+
+	if lenT < 2 {
+		return ErrStrf("no data")
+	}
+
+	inLenT := len(tableA[0])
+
+	bufT := make([]map[string]string, 0, lenT)
+
+	for i, v := range tableA {
+		if i == 0 {
+			continue
+		}
+
+		inBufT := make(map[string]string, inLenT)
+
+		for j, jv := range v {
+			inBufT[tableA[0][j]] = jv
+		}
+
+		bufT = append(bufT, inBufT)
+	}
+
+	return tk.ToJSONX(bufT, "-default=", "-sort")
+
 }
 
 func GetUUID1() string {
