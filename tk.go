@@ -8105,7 +8105,7 @@ func IsError(vA interface{}) bool {
 func TableToMSSJSON(tableA [][]string) string {
 	lenT := len(tableA)
 
-	if lenT < 2 {
+	if lenT < 1 {
 		return ErrStrf("no data")
 	}
 
