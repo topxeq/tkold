@@ -4815,6 +4815,16 @@ func JSONToMapStringString(objStrA string) map[string]string {
 	return rMapT
 }
 
+func JSONToMapStringStringArray(objStrA string) []map[string]string {
+	var rMapT []map[string]string
+	errT := json.Unmarshal([]byte(objStrA), &rMapT)
+	if errT != nil {
+		return nil
+	}
+
+	return rMapT
+}
+
 func JSONToObject(objStrA string) interface{} {
 	var rs interface{}
 	errT := json.Unmarshal([]byte(objStrA), &rs)
