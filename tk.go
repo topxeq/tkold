@@ -2900,6 +2900,19 @@ func IfSwitchExistsWholeI(argsA []interface{}, switchStrA string) bool {
 
 // 各种转换 conversion related
 
+func NilToEmptyStr(vA interface{}) string {
+	if vA == nil {
+		return ""
+	}
+
+	switch vA.(type) {
+	case string:
+		return vA.(string)
+	default:
+		return fmt.Sprintf("%v", vA)
+	}
+}
+
 func StrToBool(strA string) bool {
 	lowerStr := strings.ToLower(strA)
 	if lowerStr == "yes" || lowerStr == "true" {
