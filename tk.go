@@ -2107,32 +2107,43 @@ func SystemCmd(cmdA string, argsA ...string) string {
 func NewSSHClient(hostA string, portA int, userA string, passA string) (*goph.Client, error) {
 	authT := goph.Password(passA)
 
-	clientT := &goph.Client{
-		Addr: hostA,
-		Port: portA,
-		User: userA,
-		Auth: authT,
-	}
-
-	errT := goph.Conn(clientT, &ssh.ClientConfig{
-		User:    clientT.User,
-		Auth:    clientT.Auth,
-		Timeout: 20 * time.Second,
-		HostKeyCallback: func(host string, remote net.Addr, key ssh.PublicKey) error {
-			return nil
-			// hostFound, err := goph.CheckKnownHost(host, remote, key, "")
-
-			// if hostFound && err != nil {
-			// 	return err
-			// }
-
-			// if hostFound && err == nil {
-			// 	return nil
-			// }
-
-			// return goph.AddKnownHost(host, remote, key, "")
-		},
+	clientT, errT := goph.NewConn(&goph.Config{
+		User:     userA,
+		Addr:     hostA,
+		Port:     uint(portA),
+		Auth:     authT,
+		Timeout:  goph.DefaultTimeout,
+		Callback: ssh.InsecureIgnoreHostKey(),
 	})
+
+	return clientT, errT
+
+	// clientT := &goph.Client{
+	// 	Addr: hostA,
+	// 	Port: portA,
+	// 	User: userA,
+	// 	Auth: authT,
+	// }
+
+	// errT := goph.Conn(clientT, &ssh.ClientConfig{
+	// 	User:    clientT.User,
+	// 	Auth:    clientT.Auth,
+	// 	Timeout: 20 * time.Second,
+	// 	HostKeyCallback: func(host string, remote net.Addr, key ssh.PublicKey) error {
+	// 		return nil
+	// 		// hostFound, err := goph.CheckKnownHost(host, remote, key, "")
+
+	// 		// if hostFound && err != nil {
+	// 		// 	return err
+	// 		// }
+
+	// 		// if hostFound && err == nil {
+	// 		// 	return nil
+	// 		// }
+
+	// 		// return goph.AddKnownHost(host, remote, key, "")
+	// 	},
+	// })
 
 	// clientT, errT := goph.NewConn(userA, hostA, authT, func(host string, remote net.Addr, key ssh.PublicKey) error {
 
