@@ -56,6 +56,26 @@ import (
 	"github.com/topxeq/socks"
 )
 
+var versionG = "0.9a"
+
+type TK struct {
+	Version string
+}
+
+var TKX = &TK{Version: versionG}
+
+func (pA *TK) NewTK() *TK {
+	return &TK{Version: versionG}
+}
+
+var NewTK = TKX.NewTK
+
+func (pA *TK) GetVersion() string {
+	return pA.Version
+}
+
+var GetVersion = TKX.GetVersion
+
 // 类型 types structs
 
 type ExitCallback func()
@@ -66,12 +86,14 @@ type TXCollection struct {
 	Content map[string]int
 }
 
-func CreateTXCollection(sizeA int) *TXCollection {
+func (pA *TK) CreateTXCollection(sizeA int) *TXCollection {
 	rs := &TXCollection{}
 	rs.Content = make(map[string]int, sizeA)
 
 	return rs
 }
+
+var CreateTXCollection = TKX.CreateTXCollection
 
 func (p *TXCollection) InitX(sizeA int) {
 	p.Content = make(map[string]int, sizeA)
@@ -168,31 +190,35 @@ type TXResult struct {
 
 var invalidTXResultG = TXResult{Status: "fail", Value: "invalid response"}
 
-func TXResultFromStringE(strA string) (*TXResult, error) {
-	p := new(TXResult)
+func (pA *TK) TXResultFromStringE(strA string) (*TXResult, error) {
+	pT := new(TXResult)
 
-	errT := json.Unmarshal([]byte(strA), p)
+	errT := json.Unmarshal([]byte(strA), pT)
 
 	if errT != nil {
 		return nil, errT
 	}
 
-	return p, nil
+	return pT, nil
 }
 
-func TXResultFromString(strA string) *TXResult {
-	p := new(TXResult)
+var TXResultFromStringE = TKX.TXResultFromStringE
 
-	errT := json.Unmarshal([]byte(strA), p)
+func (pA *TK) TXResultFromString(strA string) *TXResult {
+	pT := new(TXResult)
+
+	errT := json.Unmarshal([]byte(strA), pT)
 
 	if errT != nil {
 		return nil
 	}
 
-	return p
+	return pT
 }
 
-func TXResultFromStringSafely(strA string) *TXResult {
+var TXResultFromString = TKX.TXResultFromString
+
+func (pA *TK) TXResultFromStringSafely(strA string) *TXResult {
 	p := new(TXResult)
 
 	errT := json.Unmarshal([]byte(strA), p)
@@ -203,6 +229,8 @@ func TXResultFromStringSafely(strA string) *TXResult {
 
 	return p
 }
+
+var TXResultFromStringSafely = TKX.TXResultFromStringSafely
 
 // 全局变量 global variables
 
@@ -220,7 +248,7 @@ var fileVarMutexG sync.Mutex
 
 // 全局环境集合相关 global environment related
 
-func SetGlobalEnv(vA string) {
+func (pA *TK) SetGlobalEnv(vA string) {
 	if GlobalEnvSetG == nil {
 		GlobalEnvSetG = CreateTXCollection(100)
 	}
@@ -228,7 +256,9 @@ func SetGlobalEnv(vA string) {
 	GlobalEnvSetG.AddOrSetExcludeEmpty(vA)
 }
 
-func RemoveGlobalEnv(vA string) {
+var SetGlobalEnv = TKX.SetGlobalEnv
+
+func (pA *TK) RemoveGlobalEnv(vA string) {
 	if GlobalEnvSetG == nil {
 		GlobalEnvSetG = CreateTXCollection(100)
 	}
@@ -236,7 +266,9 @@ func RemoveGlobalEnv(vA string) {
 	GlobalEnvSetG.Remove(vA)
 }
 
-func GetGlobalEnvList() []string {
+var RemoveGlobalEnv = TKX.RemoveGlobalEnv
+
+func (pA *TK) GetGlobalEnvList() []string {
 	if GlobalEnvSetG == nil {
 		GlobalEnvSetG = CreateTXCollection(100)
 	}
@@ -244,7 +276,9 @@ func GetGlobalEnvList() []string {
 	return GlobalEnvSetG.GetList()
 }
 
-func GetGlobalEnvString() string {
+var GetGlobalEnvList = TKX.GetGlobalEnvList
+
+func (pA *TK) GetGlobalEnvString() string {
 	if GlobalEnvSetG == nil {
 		GlobalEnvSetG = CreateTXCollection(100)
 	}
@@ -252,7 +286,9 @@ func GetGlobalEnvString() string {
 	return GlobalEnvSetG.GetListString(true, ",")
 }
 
-func HasGlobalEnv(vA string) bool {
+var GetGlobalEnvString = TKX.GetGlobalEnvString
+
+func (pA *TK) HasGlobalEnv(vA string) bool {
 	if GlobalEnvSetG == nil {
 		GlobalEnvSetG = CreateTXCollection(100)
 	}
@@ -260,24 +296,32 @@ func HasGlobalEnv(vA string) bool {
 	return GlobalEnvSetG.Contains(vA)
 }
 
+var HasGlobalEnv = TKX.HasGlobalEnv
+
 // 字符串相关函数 string related
 
-func IsEmptyTrim(strA string) bool {
+func (pA *TK) IsEmptyTrim(strA string) bool {
 	return (Trim(strA) == "")
 }
 
+var IsEmptyTrim = TKX.IsEmptyTrim
+
 // StartsWith 检查字符串strA开始是否是subStrA
-func StartsWith(strA string, subStrA string) bool {
+func (pA *TK) StartsWith(strA string, subStrA string) bool {
 
 	return strings.HasPrefix(strA, subStrA)
 }
 
-func StartsWithIgnoreCase(strA string, subStrA string) bool {
+var StartsWith = TKX.StartsWith
+
+func (pA *TK) StartsWithIgnoreCase(strA string, subStrA string) bool {
 
 	return strings.HasPrefix(strings.ToLower(strA), strings.ToLower(subStrA))
 }
 
-func StartsWithUpper(wordA string) bool {
+var StartsWithIgnoreCase = TKX.StartsWithIgnoreCase
+
+func (pA *TK) StartsWithUpper(wordA string) bool {
 	if len(wordA) < 1 {
 		return false
 	}
@@ -285,7 +329,9 @@ func StartsWithUpper(wordA string) bool {
 	return (wordA[0] >= 'A') && (wordA[0] <= 'Z')
 }
 
-func StartsWithDigit(strA string) bool {
+var StartsWithUpper = TKX.StartsWithUpper
+
+func (pA *TK) StartsWithDigit(strA string) bool {
 	if len(strA) < 1 {
 		return false
 	}
@@ -300,44 +346,62 @@ func StartsWithDigit(strA string) bool {
 	}
 }
 
-func Contains(strA string, subStrA string) bool {
+var StartsWithDigit = TKX.StartsWithDigit
+
+func (pA *TK) Contains(strA string, subStrA string) bool {
 	return strings.Contains(strA, subStrA)
 }
 
-func ContainsIgnoreCase(strA string, subStrA string) bool {
+var Contains = TKX.Contains
+
+func (pA *TK) ContainsIgnoreCase(strA string, subStrA string) bool {
 	return strings.Contains(strings.ToLower(strA), strings.ToLower(subStrA))
 }
 
-func ToLower(strA string) string {
+var ContainsIgnoreCase = TKX.ContainsIgnoreCase
+
+func (pA *TK) ToLower(strA string) string {
 	return strings.ToLower(strA)
 }
 
-func ToUpper(strA string) string {
+var ToLower = TKX.ToLower
+
+func (pA *TK) ToUpper(strA string) string {
 	return strings.ToUpper(strA)
 }
 
+var ToUpper = TKX.ToUpper
+
 // EndsWith 检查字符串strA结尾是否是subStrA
-func EndsWith(strA string, subStrA string) bool {
+func (pA *TK) EndsWith(strA string, subStrA string) bool {
 
 	return strings.HasSuffix(strA, subStrA)
 }
 
+var EndsWith = TKX.EndsWith
+
 // EndsWithIgnoreCase 检查字符串strA结尾是否是subStrA，不区分大小写
-func EndsWithIgnoreCase(strA string, subStrA string) bool {
+func (pA *TK) EndsWithIgnoreCase(strA string, subStrA string) bool {
 
 	return strings.HasSuffix(strings.ToLower(strA), strings.ToLower(subStrA))
 }
 
+var EndsWithIgnoreCase = TKX.EndsWithIgnoreCase
+
 // Trim 仅仅封装了strings.TrimSpace
-func Trim(strA string) string {
+func (pA *TK) Trim(strA string) string {
 	return strings.TrimSpace(strA)
 }
 
-func TrimCharSet(strA string, charSetA string) string {
+var Trim = TKX.Trim
+
+func (pA *TK) TrimCharSet(strA string, charSetA string) string {
 	return strings.Trim(strA, charSetA)
 }
 
-func InStrings(strA string, argsA ...string) bool {
+var TrimCharSet = TKX.TrimCharSet
+
+func (pA *TK) InStrings(strA string, argsA ...string) bool {
 	for _, arg := range argsA {
 		if strA == arg {
 			return true
@@ -347,11 +411,15 @@ func InStrings(strA string, argsA ...string) bool {
 	return false
 }
 
-func IsValidEmail(strA string) bool {
+var InStrings = TKX.InStrings
+
+func (pA *TK) IsValidEmail(strA string) bool {
 	return RegMatch(strA, `[a-zA-Z0-9]+?[a-zA-Z0-9\.\-_]*?@[a-zA-Z0-9]+?(\.[a-zA-Z0-9\.\-_]*)+`)
 }
 
-func GetSliceMaxLen(strA string, maxBytesA int) string {
+var IsValidEmail = TKX.IsValidEmail
+
+func (pA *TK) GetSliceMaxLen(strA string, maxBytesA int) string {
 	lenT := len(strA)
 
 	if lenT <= maxBytesA {
@@ -361,7 +429,9 @@ func GetSliceMaxLen(strA string, maxBytesA int) string {
 	return strA[:maxBytesA]
 }
 
-func FindFirstDiffIndex(strA string, str2A string) int {
+var GetSliceMaxLen = TKX.GetSliceMaxLen
+
+func (pA *TK) FindFirstDiffIndex(strA string, str2A string) int {
 	lent1 := len(strA)
 	lent2 := len(str2A)
 
@@ -387,7 +457,9 @@ func FindFirstDiffIndex(strA string, str2A string) int {
 
 }
 
-func FindSamePrefix(strA, str2A string) string {
+var FindFirstDiffIndex = TKX.FindFirstDiffIndex
+
+func (pA *TK) FindSamePrefix(strA, str2A string) string {
 	idxT := FindFirstDiffIndex(strA, str2A)
 
 	if idxT < 0 {
@@ -401,26 +473,34 @@ func FindSamePrefix(strA, str2A string) string {
 	return strA[:idxT]
 }
 
+var FindSamePrefix = TKX.FindSamePrefix
+
 // IsErrorString 判断是否表示出错的字符串
-func IsErrorString(errStrA string) bool {
+func (pA *TK) IsErrorString(errStrA string) bool {
 	return StartsWith(errStrA, "TXERROR:")
 }
 
-func IsErrStr(errStrA string) bool {
+var IsErrorString = TKX.IsErrorString
+
+func (pA *TK) IsErrStr(errStrA string) bool {
 	return StartsWith(errStrA, "TXERROR:")
 }
+
+var IsErrStr = TKX.IsErrStr
 
 // GetErrorString 获取出错字符串中的出错原因部分
-func GetErrorString(errStrA string) string {
+func (pA *TK) GetErrorString(errStrA string) string {
 	if StartsWith(errStrA, "TXERROR:") {
 		return errStrA[8:]
 	} else {
 		return errStrA
 	}
 }
+
+var GetErrorString = TKX.GetErrorString
 
 // GetErrorStringSafely 获取出错字符串中的出错原因部分，如果不是出错字符串则返回原串
-func GetErrorStringSafely(errStrA string) string {
+func (pA *TK) GetErrorStringSafely(errStrA string) string {
 	if StartsWith(errStrA, "TXERROR:") {
 		return errStrA[8:]
 	} else {
@@ -428,38 +508,52 @@ func GetErrorStringSafely(errStrA string) string {
 	}
 }
 
-func GetErrStr(errStrA string) string {
+var GetErrorStringSafely = TKX.GetErrorStringSafely
+
+func (pA *TK) GetErrStr(errStrA string) string {
 	if StartsWith(errStrA, "TXERROR:") {
 		return errStrA[8:]
 	} else {
 		return errStrA
 	}
 }
+
+var GetErrStr = TKX.GetErrStr
 
 // GenerateErrorString 生成一个出错字符串
-func GenerateErrorString(errStrA string) string {
+func (pA *TK) GenerateErrorString(errStrA string) string {
 	return "TXERROR:" + errStrA
 }
 
-func ErrStr(errStrA string) string {
+var GenerateErrorString = TKX.GenerateErrorString
+
+func (pA *TK) ErrStr(errStrA string) string {
 	return "TXERROR:" + errStrA
 }
+
+var ErrStr = TKX.ErrStr
 
 // GenerateErrorStringF 生成一个出错字符串，但可以加上格式，类似Printf
-func GenerateErrorStringF(formatA string, argsA ...interface{}) string {
+func (pA *TK) GenerateErrorStringF(formatA string, argsA ...interface{}) string {
 	return fmt.Sprintf("TXERROR:"+formatA, argsA...)
 }
 
-func ErrStrF(formatA string, argsA ...interface{}) string {
+var GenerateErrorStringF = TKX.GenerateErrorStringF
+
+func (pA *TK) ErrStrF(formatA string, argsA ...interface{}) string {
 	return fmt.Sprintf("TXERROR:"+formatA, argsA...)
 }
 
-func ErrStrf(formatA string, argsA ...interface{}) string {
+var ErrStrF = TKX.ErrStrF
+
+func (pA *TK) ErrStrf(formatA string, argsA ...interface{}) string {
 	return fmt.Sprintf("TXERROR:"+formatA, argsA...)
 }
+
+var ErrStrf = TKX.ErrStrf
 
 // ErrorStringToError convert errorstring to error, if not, return nil
-func ErrorStringToError(strA string) error {
+func (pA *TK) ErrorStringToError(strA string) error {
 	if IsErrorString(strA) {
 		return fmt.Errorf("%v", GetErrorString(strA))
 	}
@@ -467,7 +561,9 @@ func ErrorStringToError(strA string) error {
 	return nil
 }
 
-func ErrStrToErr(strA string) error {
+var ErrorStringToError = TKX.ErrorStringToError
+
+func (pA *TK) ErrStrToErr(strA string) error {
 	if IsErrorString(strA) {
 		return fmt.Errorf("%v", GetErrorString(strA))
 	}
@@ -475,19 +571,27 @@ func ErrStrToErr(strA string) error {
 	return nil
 }
 
-func ErrToStr(errA error) string {
+var ErrStrToErr = TKX.ErrStrToErr
+
+func (pA *TK) ErrToStr(errA error) string {
 	return fmt.Sprintf("TXERROR:%v", errA.Error())
 }
 
-func ErrToStrF(formatA string, errA error) string {
+var ErrToStr = TKX.ErrToStr
+
+func (pA *TK) ErrToStrF(formatA string, errA error) string {
 	return fmt.Sprintf("TXERROR:"+formatA, errA.Error())
 }
 
-func Replace(strA, findA, replaceA string) string {
+var ErrToStrF = TKX.ErrToStrF
+
+func (pA *TK) Replace(strA, findA, replaceA string) string {
 	return strings.Replace(strA, findA, replaceA, -1)
 }
 
-func StringReplace(strA string, argsA ...string) string {
+var Replace = TKX.Replace
+
+func (pA *TK) StringReplace(strA string, argsA ...string) string {
 	if len(argsA) < 2 {
 		return strA
 	}
@@ -502,7 +606,9 @@ func StringReplace(strA string, argsA ...string) string {
 	return strT
 }
 
-func SplitLines(strA string) []string {
+var StringReplace = TKX.StringReplace
+
+func (pA *TK) SplitLines(strA string) []string {
 	if !strings.Contains(strA, "\n") {
 		if strings.Contains(strA, "\r") {
 			return strings.Split(strA, "\r")
@@ -512,7 +618,9 @@ func SplitLines(strA string) []string {
 	return strings.Split(strT, "\n")
 }
 
-func SplitLinesRemoveEmpty(strA string) []string {
+var SplitLines = TKX.SplitLines
+
+func (pA *TK) SplitLinesRemoveEmpty(strA string) []string {
 	if !strings.Contains(strA, "\n") {
 		if strings.Contains(strA, "\r") {
 			strT := RegReplace(strA, "\\r\\s*\\r", "\r")
@@ -527,15 +635,21 @@ func SplitLinesRemoveEmpty(strA string) []string {
 	return strings.Split(strT, "\n")
 }
 
-func Split(strA string, sepA string) []string {
+var SplitLinesRemoveEmpty = TKX.SplitLinesRemoveEmpty
+
+func (pA *TK) Split(strA string, sepA string) []string {
 	return strings.Split(strA, sepA)
 }
 
-func SplitN(strA string, sepA string, countA int) []string {
+var Split = TKX.Split
+
+func (pA *TK) SplitN(strA string, sepA string, countA int) []string {
 	return strings.SplitN(strA, sepA, countA)
 }
 
-func JoinLines(strListA []string) string {
+var SplitN = TKX.SplitN
+
+func (pA *TK) JoinLines(strListA []string) string {
 	if strListA == nil {
 		return GenerateErrorString("nil list")
 	}
@@ -543,7 +657,9 @@ func JoinLines(strListA []string) string {
 	return strings.Join(strListA, "\n")
 }
 
-func JoinLinesBySeparator(strListA []string, sepA string) string {
+var JoinLines = TKX.JoinLines
+
+func (pA *TK) JoinLinesBySeparator(strListA []string, sepA string) string {
 	if strListA == nil {
 		return GenerateErrorString("nil list")
 	}
@@ -551,8 +667,10 @@ func JoinLinesBySeparator(strListA []string, sepA string) string {
 	return strings.Join(strListA, sepA)
 }
 
+var JoinLinesBySeparator = TKX.JoinLinesBySeparator
+
 // StartsWithBOM if a UTF-8 string starts with BOM
-func StartsWithBOM(strA string) bool {
+func (pA *TK) StartsWithBOM(strA string) bool {
 	bom := []byte{0xEF, 0xBB, 0xBF}
 
 	if StartsWith(strA, string(bom)) {
@@ -563,8 +681,10 @@ func StartsWithBOM(strA string) bool {
 
 }
 
+var StartsWithBOM = TKX.StartsWithBOM
+
 // RemoveBOM if a UTF-8 string starts with BOM, remove it
-func RemoveBOM(strA string) string {
+func (pA *TK) RemoveBOM(strA string) string {
 	bufT := []byte(strA)
 
 	if len(bufT) < 3 {
@@ -579,8 +699,10 @@ func RemoveBOM(strA string) string {
 
 }
 
+var RemoveBOM = TKX.RemoveBOM
+
 // EnsureValidFileNameX 确保文件名合理并且长度合适
-func EnsureValidFileNameX(fileNameA string) string {
+func (pA *TK) EnsureValidFileNameX(fileNameA string) string {
 	rs := EncodeStringSimple(fileNameA)
 
 	var extT string
@@ -616,6 +738,8 @@ func EnsureValidFileNameX(fileNameA string) string {
 	return tmps
 }
 
+var EnsureValidFileNameX = TKX.EnsureValidFileNameX
+
 // TXString 相关
 
 type TXString struct {
@@ -624,44 +748,60 @@ type TXString struct {
 	Obj interface{}
 }
 
-func CreateString(strA string, errA string) *TXString {
+func (pA *TK) CreateString(strA string, errA string) *TXString {
 	strT := &TXString{}
 	strT.string = strA
 	strT.Err = errA
 	return strT
 }
 
-func CreateStringSimple(strA string) *TXString {
+var CreateString = TKX.CreateString
+
+func (pA *TK) CreateStringSimple(strA string) *TXString {
 	return &TXString{string: strA, Err: ""}
 }
 
-func CreateStringWithObject(strA string, objA interface{}) *TXString {
+var CreateStringSimple = TKX.CreateStringSimple
+
+func (pA *TK) CreateStringWithObject(strA string, objA interface{}) *TXString {
 	return &TXString{string: strA, Err: "", Obj: objA}
 }
 
-func CreateStringEmpty() *TXString {
+var CreateStringWithObject = TKX.CreateStringWithObject
+
+func (pA *TK) CreateStringEmpty() *TXString {
 	return &TXString{string: "", Err: ""}
 }
 
-func CreateStringSuccess() *TXString {
+var CreateStringEmpty = TKX.CreateStringEmpty
+
+func (pA *TK) CreateStringSuccess() *TXString {
 	return &TXString{string: "", Err: ""}
 }
 
-func CreateStringError(errA string) *TXString {
+var CreateStringSuccess = TKX.CreateStringSuccess
+
+func (pA *TK) CreateStringError(errA string) *TXString {
 	return &TXString{string: "", Err: errA}
 }
 
-func CreateStringErrorF(formatA string, argsA ...interface{}) *TXString {
+var CreateStringError = TKX.CreateStringError
+
+func (pA *TK) CreateStringErrorF(formatA string, argsA ...interface{}) *TXString {
 	return &TXString{string: "", Err: fmt.Sprintf(formatA, argsA...)}
 }
 
-func CreateStringErrorFromTXError(errA string) *TXString {
+var CreateStringErrorF = TKX.CreateStringErrorF
+
+func (pA *TK) CreateStringErrorFromTXError(errA string) *TXString {
 	if IsErrorString(errA) {
 		return &TXString{string: "", Err: GetErrorString(errA)}
 	}
 
 	return &TXString{string: errA, Err: ""}
 }
+
+var CreateStringErrorFromTXError = TKX.CreateStringErrorFromTXError
 
 func (p *TXString) String() string {
 	return p.string
@@ -904,15 +1044,19 @@ func (aryM TXStringArray) ContainsIgnoreCase(strA string) bool {
 	return false
 }
 
-func GenerateErrorStringTX(errStrA string) *TXString {
+func (pA *TK) GenerateErrorStringTX(errStrA string) *TXString {
 	return CreateString("", errStrA)
 }
 
-func GenerateErrorStringFTX(formatA string, argsA ...interface{}) *TXString {
+var GenerateErrorStringTX = TKX.GenerateErrorStringTX
+
+func (pA *TK) GenerateErrorStringFTX(formatA string, argsA ...interface{}) *TXString {
 	return CreateString("", fmt.Sprintf(formatA, argsA...))
 }
 
-func LoadStringTX(fileNameA string) *TXString {
+var GenerateErrorStringFTX = TKX.GenerateErrorStringFTX
+
+func (pA *TK) LoadStringTX(fileNameA string) *TXString {
 	if !IfFileExists(fileNameA) {
 		return GenerateErrorStringTX("file not exists")
 	}
@@ -932,7 +1076,9 @@ func LoadStringTX(fileNameA string) *TXString {
 	return CreateStringSimple(string(fileContentT))
 }
 
-func RegContains(strA, patternA string) bool {
+var LoadStringTX = TKX.LoadStringTX
+
+func (pA *TK) RegContains(strA, patternA string) bool {
 	regexpT, errT := regexp.Compile(patternA)
 
 	if errT != nil {
@@ -942,7 +1088,9 @@ func RegContains(strA, patternA string) bool {
 	return !(regexpT.FindStringIndex(strA) == nil)
 }
 
-func RegContainsX(strA, patternA string) bool {
+var RegContains = TKX.RegContains
+
+func (pA *TK) RegContainsX(strA, patternA string) bool {
 	regexpT, errT := regexpx.Compile(patternA)
 
 	if errT != nil {
@@ -952,7 +1100,9 @@ func RegContainsX(strA, patternA string) bool {
 	return !(regexpT.FindStringIndex(strA) == nil)
 }
 
-func RegFindFirstTX(strA, patternA string, groupA int) *TXString {
+var RegContainsX = TKX.RegContainsX
+
+func (pA *TK) RegFindFirstTX(strA, patternA string, groupA int) *TXString {
 	regexpT, errT := regexp.Compile(patternA)
 
 	if errT != nil {
@@ -971,7 +1121,9 @@ func RegFindFirstTX(strA, patternA string, groupA int) *TXString {
 	return CreateStringError("no group")
 }
 
-func LoadDualLineListFromString(strA string) [][]string {
+var RegFindFirstTX = TKX.RegFindFirstTX
+
+func (pA *TK) LoadDualLineListFromString(strA string) [][]string {
 	rs := SplitLines(strA)
 
 	lenT := len(rs) / 2
@@ -992,9 +1144,11 @@ func LoadDualLineListFromString(strA string) [][]string {
 	return bufT
 }
 
+var LoadDualLineListFromString = TKX.LoadDualLineListFromString
+
 // 正则表达式相关 regex related
 
-func RegReplace(strA, patternA, replaceA string) string {
+func (pA *TK) RegReplace(strA, patternA, replaceA string) string {
 	regexpT, errT := regexp.Compile(patternA)
 
 	if errT != nil {
@@ -1004,7 +1158,9 @@ func RegReplace(strA, patternA, replaceA string) string {
 	return regexpT.ReplaceAllString(strA, replaceA)
 }
 
-func RegReplaceX(strA, patternA, replaceA string) string {
+var RegReplace = TKX.RegReplace
+
+func (pA *TK) RegReplaceX(strA, patternA, replaceA string) string {
 	regexpT, errT := regexpx.Compile(patternA)
 
 	if errT != nil {
@@ -1014,7 +1170,9 @@ func RegReplaceX(strA, patternA, replaceA string) string {
 	return regexpT.ReplaceAllString(strA, replaceA)
 }
 
-func RegFindAll(strA, patternA string, groupA int) []string {
+var RegReplaceX = TKX.RegReplaceX
+
+func (pA *TK) RegFindAll(strA, patternA string, groupA int) []string {
 	regexpT, errT := regexp.Compile(patternA)
 	if errT != nil {
 		return nil
@@ -1036,7 +1194,9 @@ func RegFindAll(strA, patternA string, groupA int) []string {
 	return nil
 }
 
-func RegFindAllX(strA, patternA string, groupA int) []string {
+var RegFindAll = TKX.RegFindAll
+
+func (pA *TK) RegFindAllX(strA, patternA string, groupA int) []string {
 	regexpT, errT := regexpx.Compile(patternA)
 	if errT != nil {
 		return nil
@@ -1058,7 +1218,9 @@ func RegFindAllX(strA, patternA string, groupA int) []string {
 	return nil
 }
 
-func RegFindAllGroups(strA, patternA string) [][]string {
+var RegFindAllX = TKX.RegFindAllX
+
+func (pA *TK) RegFindAllGroups(strA, patternA string) [][]string {
 	regexpT, errT := regexp.Compile(patternA)
 	if errT != nil {
 		return nil
@@ -1067,7 +1229,9 @@ func RegFindAllGroups(strA, patternA string) [][]string {
 	return regexpT.FindAllStringSubmatch(strA, -1)
 }
 
-func RegFindAllGroupsX(strA, patternA string) [][]string {
+var RegFindAllGroups = TKX.RegFindAllGroups
+
+func (pA *TK) RegFindAllGroupsX(strA, patternA string) [][]string {
 	regexpT, errT := regexpx.Compile(patternA)
 	if errT != nil {
 		return nil
@@ -1075,9 +1239,11 @@ func RegFindAllGroupsX(strA, patternA string) [][]string {
 
 	return regexpT.FindAllStringSubmatch(strA, -1)
 }
+
+var RegFindAllGroupsX = TKX.RegFindAllGroupsX
 
 // RegFindFirst returns error string if no match or no matching group
-func RegFindFirst(strA, patternA string, groupA int) string {
+func (pA *TK) RegFindFirst(strA, patternA string, groupA int) string {
 	regexpT, errT := regexp.Compile(patternA)
 
 	if errT != nil {
@@ -1096,7 +1262,9 @@ func RegFindFirst(strA, patternA string, groupA int) string {
 	return GenerateErrorString("no group")
 }
 
-func RegFindFirstX(strA, patternA string, groupA int) string {
+var RegFindFirst = TKX.RegFindFirst
+
+func (pA *TK) RegFindFirstX(strA, patternA string, groupA int) string {
 	regexpT, errT := regexpx.Compile(patternA)
 
 	if errT != nil {
@@ -1114,9 +1282,11 @@ func RegFindFirstX(strA, patternA string, groupA int) string {
 
 	return GenerateErrorString("no group")
 }
+
+var RegFindFirstX = TKX.RegFindFirstX
 
 // RegFindFirstIndex the first match location
-func RegFindFirstIndex(strA, patternA string) (int, int) {
+func (pA *TK) RegFindFirstIndex(strA, patternA string) (int, int) {
 	regexpT, errT := regexp.Compile(patternA)
 
 	if errT != nil {
@@ -1131,7 +1301,9 @@ func RegFindFirstIndex(strA, patternA string) (int, int) {
 	return rT[0], rT[1]
 }
 
-func RegFindFirstIndexX(strA, patternA string) (int, int) {
+var RegFindFirstIndex = TKX.RegFindFirstIndex
+
+func (pA *TK) RegFindFirstIndexX(strA, patternA string) (int, int) {
 	regexpT, errT := regexpx.Compile(patternA)
 
 	if errT != nil {
@@ -1146,7 +1318,9 @@ func RegFindFirstIndexX(strA, patternA string) (int, int) {
 	return rT[0], rT[1]
 }
 
-func RegStartsWith(strA, patternA string) bool {
+var RegFindFirstIndexX = TKX.RegFindFirstIndexX
+
+func (pA *TK) RegStartsWith(strA, patternA string) bool {
 	startT, _ := RegFindFirstIndex(strA, patternA)
 
 	if startT == 0 {
@@ -1156,7 +1330,9 @@ func RegStartsWith(strA, patternA string) bool {
 	return false
 }
 
-func RegStartsWithX(strA, patternA string) bool {
+var RegStartsWith = TKX.RegStartsWith
+
+func (pA *TK) RegStartsWithX(strA, patternA string) bool {
 	startT, _ := RegFindFirstIndexX(strA, patternA)
 
 	if startT == 0 {
@@ -1166,7 +1342,9 @@ func RegStartsWithX(strA, patternA string) bool {
 	return false
 }
 
-func RegMatch(strA, patternA string) bool {
+var RegStartsWithX = TKX.RegStartsWithX
+
+func (pA *TK) RegMatch(strA, patternA string) bool {
 	regexpT, errT := regexp.Compile(patternA)
 
 	if errT != nil {
@@ -1187,7 +1365,9 @@ func RegMatch(strA, patternA string) bool {
 	return false
 }
 
-func RegMatchX(strA, patternA string) bool {
+var RegMatch = TKX.RegMatch
+
+func (pA *TK) RegMatchX(strA, patternA string) bool {
 	regexpT, errT := regexpx.Compile(patternA)
 
 	if errT != nil {
@@ -1208,20 +1388,24 @@ func RegMatchX(strA, patternA string) bool {
 	return false
 }
 
+var RegMatchX = TKX.RegMatchX
+
 // 随机数相关 random related
 
 var ifRandomizedG = false
 
 // Randomize 初始化随机数种子
-func Randomize() {
+func (pA *TK) Randomize() {
 	if !ifRandomizedG {
 		rand.Seed(time.Now().Unix())
 		ifRandomizedG = true
 	}
 }
 
+var Randomize = TKX.Randomize
+
 // GetRandomIntLessThan 获取[0-maxA)之间的随机数
-func GetRandomIntLessThan(maxA int) int {
+func (pA *TK) GetRandomIntLessThan(maxA int) int {
 	Randomize()
 
 	randT := rand.Intn(maxA)
@@ -1229,7 +1413,9 @@ func GetRandomIntLessThan(maxA int) int {
 	return randT
 }
 
-func GetRandomInt64LessThan(maxA int64) int64 {
+var GetRandomIntLessThan = TKX.GetRandomIntLessThan
+
+func (pA *TK) GetRandomInt64LessThan(maxA int64) int64 {
 	Randomize()
 
 	randT := rand.Int63n(maxA)
@@ -1237,8 +1423,10 @@ func GetRandomInt64LessThan(maxA int64) int64 {
 	return randT
 }
 
+var GetRandomInt64LessThan = TKX.GetRandomInt64LessThan
+
 // GetRandomIntInRange 获取[minA-maxA]之间的随机数
-func GetRandomIntInRange(minA int, maxA int) int {
+func (pA *TK) GetRandomIntInRange(minA int, maxA int) int {
 	Randomize()
 
 	randT := rand.Intn(maxA+1-minA) + minA
@@ -1246,7 +1434,9 @@ func GetRandomIntInRange(minA int, maxA int) int {
 	return randT
 }
 
-func GetRandomInt64InRange(minA int64, maxA int64) int64 {
+var GetRandomIntInRange = TKX.GetRandomIntInRange
+
+func (pA *TK) GetRandomInt64InRange(minA int64, maxA int64) int64 {
 	Randomize()
 
 	randT := rand.Int63n(maxA+1-minA) + minA
@@ -1254,7 +1444,9 @@ func GetRandomInt64InRange(minA int64, maxA int64) int64 {
 	return randT
 }
 
-func GenerateRandomString(minCharA, maxCharA int, hasUpperA, hasLowerA, hasDigitA, hasSpecialCharA, hasSpaceA bool, hasInvalidChars bool) string {
+var GetRandomInt64InRange = TKX.GetRandomInt64InRange
+
+func (pA *TK) GenerateRandomString(minCharA, maxCharA int, hasUpperA, hasLowerA, hasDigitA, hasSpecialCharA, hasSpaceA bool, hasInvalidChars bool) string {
 	Randomize()
 
 	if minCharA <= 0 {
@@ -1307,6 +1499,8 @@ func GenerateRandomString(minCharA, maxCharA int, hasUpperA, hasLowerA, hasDigit
 	return rStrT
 }
 
+var GenerateRandomString = TKX.GenerateRandomString
+
 // RandomX 是一个线程不安全的随机数产生器
 type RandomX struct {
 	r uint64
@@ -1320,13 +1514,15 @@ func (p *RandomX) Randomize() {
 	p.r = uint64(tmpc)
 }
 
-func NewRandomGenerator() *RandomX {
+func (pA *TK) NewRandomGenerator() *RandomX {
 	p := &RandomX{r: 0}
 
 	p.Randomize()
 
 	return p
 }
+
+var NewRandomGenerator = TKX.NewRandomGenerator
 
 func (p *RandomX) Int64() int64 {
 	tmpc := p.r
@@ -1367,7 +1563,7 @@ func (p *RandomX) Int() int {
 }
 
 // ShuffleStringArray 把字符串数组随机化打乱timesA次
-func ShuffleStringArray(aryA []string, timesA int) {
+func (pA *TK) ShuffleStringArray(aryA []string, timesA int) {
 	Randomize()
 
 	var x, y int
@@ -1384,8 +1580,10 @@ func ShuffleStringArray(aryA []string, timesA int) {
 	}
 }
 
+var ShuffleStringArray = TKX.ShuffleStringArray
+
 // GetRandomizeStringArrayCopy 获得一个随机化后的字符串数组
-func GetRandomizeStringArrayCopy(aryA []string) []string {
+func (pA *TK) GetRandomizeStringArrayCopy(aryA []string) []string {
 	Randomize()
 
 	lenT := len(aryA)
@@ -1407,7 +1605,9 @@ func GetRandomizeStringArrayCopy(aryA []string) []string {
 	return rs
 }
 
-func GetRandomizeSubStringArrayCopy(aryA []string, subCountA int) []string {
+var GetRandomizeStringArrayCopy = TKX.GetRandomizeStringArrayCopy
+
+func (pA *TK) GetRandomizeSubStringArrayCopy(aryA []string, subCountA int) []string {
 	Randomize()
 
 	lenT := len(aryA)
@@ -1431,8 +1631,10 @@ func GetRandomizeSubStringArrayCopy(aryA []string, subCountA int) []string {
 	return rs
 }
 
+var GetRandomizeSubStringArrayCopy = TKX.GetRandomizeSubStringArrayCopy
+
 // GetRandomizeIntArrayCopy 获得一个随机化顺序后的int数组
-func GetRandomizeIntArrayCopy(aryA []int) []int {
+func (pA *TK) GetRandomizeIntArrayCopy(aryA []int) []int {
 	Randomize()
 
 	lenT := len(aryA)
@@ -1454,7 +1656,9 @@ func GetRandomizeIntArrayCopy(aryA []int) []int {
 	return rs
 }
 
-func GetRandomizeInt64ArrayCopy(aryA []int64) []int64 {
+var GetRandomizeIntArrayCopy = TKX.GetRandomizeIntArrayCopy
+
+func (pA *TK) GetRandomizeInt64ArrayCopy(aryA []int64) []int64 {
 	Randomize()
 
 	lenT := len(aryA)
@@ -1476,7 +1680,9 @@ func GetRandomizeInt64ArrayCopy(aryA []int64) []int64 {
 	return rs
 }
 
-func GetRandomSubDualList(listA [][]string, countA int) [][]string {
+var GetRandomizeInt64ArrayCopy = TKX.GetRandomizeInt64ArrayCopy
+
+func (pA *TK) GetRandomSubDualList(listA [][]string, countA int) [][]string {
 	if countA > len(listA) {
 		countA = len(listA)
 	}
@@ -1505,7 +1711,9 @@ func GetRandomSubDualList(listA [][]string, countA int) [][]string {
 	return l
 }
 
-func JoinDualList(listA [][]string, sepItemA, sepInItemA string, withLineNumberA bool) string {
+var GetRandomSubDualList = TKX.GetRandomSubDualList
+
+func (pA *TK) JoinDualList(listA [][]string, sepItemA, sepInItemA string, withLineNumberA bool) string {
 	if listA == nil {
 		return ""
 	}
@@ -1530,46 +1738,60 @@ func JoinDualList(listA [][]string, sepItemA, sepInItemA string, withLineNumberA
 	return bufT.String()
 }
 
+var JoinDualList = TKX.JoinDualList
+
 // 时间相关 time related
 
 // GetNowDateString output likes 20150409
-func GetNowDateString() string {
+func (pA *TK) GetNowDateString() string {
 	t := time.Now()
 	return fmt.Sprintf("%04d%02d%02d", t.Year(), t.Month(), t.Day())
 }
 
+var GetNowDateString = TKX.GetNowDateString
+
 // GetNowTimeString GetNowTimeString
 // "20060102150405"
-func GetNowTimeString() string {
+func (pA *TK) GetNowTimeString() string {
 	t := time.Now()
 	return fmt.Sprintf("%04d%02d%02d%02d%02d%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
 }
 
+var GetNowTimeString = TKX.GetNowTimeString
+
 // GetNowTimeStringFormat GetNowTimeStringFormat
 // "2006-01-02 15:04:05.000"
-func GetNowTimeStringFormat(formatA string) string {
+func (pA *TK) GetNowTimeStringFormat(formatA string) string {
 	t := time.Now()
 	return t.Format(formatA)
 }
 
+var GetNowTimeStringFormat = TKX.GetNowTimeStringFormat
+
 // GetNowTimeStringFormal get the time string for now as "2020-02-02 08:09:15"
-func GetNowTimeStringFormal() string {
+func (pA *TK) GetNowTimeStringFormal() string {
 	t := time.Now()
 	return fmt.Sprintf("%04d-%02d-%02d %02d:%02d:%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
 }
 
-func GetNowTimeOnlyStringBeijing() string {
+var GetNowTimeStringFormal = TKX.GetNowTimeStringFormal
+
+func (pA *TK) GetNowTimeOnlyStringBeijing() string {
 	t := time.Now()
 	loc := time.FixedZone("GMT+08:00", 8*3600)
 	t = t.In(loc)
 	return fmt.Sprintf("%02d%02d%02d", t.Hour(), t.Minute(), t.Second())
 }
 
-func GetTimeFromUnixTimeStamp(timeStampA int64) time.Time {
+var GetNowTimeOnlyStringBeijing = TKX.GetNowTimeOnlyStringBeijing
+
+func (pA *TK) GetTimeFromUnixTimeStamp(timeStampA int64) time.Time {
 	return time.Unix(timeStampA, 0)
 }
 
-func GetTimeFromUnixTimeStampMid(timeStampStrA string) time.Time {
+var GetTimeFromUnixTimeStamp = TKX.GetTimeFromUnixTimeStamp
+
+func (pA *TK) GetTimeFromUnixTimeStampMid(timeStampStrA string) time.Time {
 	if len(timeStampStrA) < 13 {
 		return time.Time{}
 	}
@@ -1577,28 +1799,40 @@ func GetTimeFromUnixTimeStampMid(timeStampStrA string) time.Time {
 	return time.Unix(StrToInt64WithDefaultValue(timeStampStrA[:10], 0), StrToInt64WithDefaultValue(timeStampStrA[10:], 0))
 }
 
-func GetTimeStamp(timeA time.Time) string {
+var GetTimeFromUnixTimeStampMid = TKX.GetTimeFromUnixTimeStampMid
+
+func (pA *TK) GetTimeStamp(timeA time.Time) string {
 	return Int64ToStr(timeA.Unix())
 }
 
-func GetTimeStampMid(timeA time.Time) string {
+var GetTimeStamp = TKX.GetTimeStamp
+
+func (pA *TK) GetTimeStampMid(timeA time.Time) string {
 	return Int64ToStr(timeA.UnixNano())[:13]
 }
 
-func GetTimeStampNano(timeA time.Time) string {
+var GetTimeStampMid = TKX.GetTimeStampMid
+
+func (pA *TK) GetTimeStampNano(timeA time.Time) string {
 	return Int64ToStr(timeA.UnixNano())
 }
 
-func NowToFileName() string {
+var GetTimeStampNano = TKX.GetTimeStampNano
+
+func (pA *TK) NowToFileName() string {
 	return StringReplace(time.Now().String(), "-", "_", " ", "_", ":", "_", ".", "_", "+", "_", "=", "_")
 }
 
-func GetNowTimeStringHourMinute() string {
+var NowToFileName = TKX.NowToFileName
+
+func (pA *TK) GetNowTimeStringHourMinute() string {
 	t := time.Now()
 	return fmt.Sprintf("%02d:%02d", t.Hour(), t.Minute())
 }
 
-func GetNowMinutesInDay() int {
+var GetNowTimeStringHourMinute = TKX.GetNowTimeStringHourMinute
+
+func (pA *TK) GetNowMinutesInDay() int {
 	t := time.Now()
 
 	rs := int(t.Hour())*60 + int(t.Minute())
@@ -1606,7 +1840,9 @@ func GetNowMinutesInDay() int {
 	return rs
 }
 
-func NowToStrUTC(formatA string) string {
+var GetNowMinutesInDay = TKX.GetNowMinutesInDay
+
+func (pA *TK) NowToStrUTC(formatA string) string {
 	n := time.Now().UTC()
 	if formatA == "" {
 		return (n.Format(TimeFormat))
@@ -1615,7 +1851,9 @@ func NowToStrUTC(formatA string) string {
 	return n.Format(formatA)
 }
 
-func GetTimeStringDiffMS(str1A, str2A, formatA string, defaultA int64) int64 {
+var NowToStrUTC = TKX.NowToStrUTC
+
+func (pA *TK) GetTimeStringDiffMS(str1A, str2A, formatA string, defaultA int64) int64 {
 	formatT := Trim(formatA)
 	if formatT == "" {
 		formatT = TimeFormat
@@ -1636,8 +1874,10 @@ func GetTimeStringDiffMS(str1A, str2A, formatA string, defaultA int64) int64 {
 	return int64(diffT / 1000000)
 }
 
+var GetTimeStringDiffMS = TKX.GetTimeStringDiffMS
+
 // return: 1 if str1A > str2A, -1 if str1A < str2A, 0: equal, error if invalid format
-func CompareTimeString(str1A, str2A, formatA string) (int, error) {
+func (pA *TK) CompareTimeString(str1A, str2A, formatA string) (int, error) {
 	formatT := Trim(formatA)
 	if formatT == "" {
 		formatT = TimeFormat
@@ -1664,7 +1904,9 @@ func CompareTimeString(str1A, str2A, formatA string) (int, error) {
 	return 0, nil
 }
 
-func StrToTime(strA string, defaultA time.Time) time.Time {
+var CompareTimeString = TKX.CompareTimeString
+
+func (pA *TK) StrToTime(strA string, defaultA time.Time) time.Time {
 	t, err := time.Parse(TimeFormat, strA)
 	if err != nil {
 		return defaultA
@@ -1673,8 +1915,10 @@ func StrToTime(strA string, defaultA time.Time) time.Time {
 	return t
 }
 
+var StrToTime = TKX.StrToTime
+
 // StrToTimeByFormat default "2006-01-02 15:04:05"
-func StrToTimeByFormat(strA string, formatA string) (time.Time, error) {
+func (pA *TK) StrToTimeByFormat(strA string, formatA string) (time.Time, error) {
 
 	if formatA == "" {
 		formatA = "2006-01-02 15:04:05"
@@ -1683,8 +1927,10 @@ func StrToTimeByFormat(strA string, formatA string) (time.Time, error) {
 	return time.ParseInLocation(formatA, strA, time.Local)
 }
 
+var StrToTimeByFormat = TKX.StrToTimeByFormat
+
 // FormatTime default format "2006-01-02 15:04:05"
-func FormatTime(timeA time.Time, formatA string) string {
+func (pA *TK) FormatTime(timeA time.Time, formatA string) string {
 	if formatA == "" {
 		formatA = "2006-01-02 15:04:05"
 	}
@@ -1692,8 +1938,10 @@ func FormatTime(timeA time.Time, formatA string) string {
 	return timeA.Format(formatA)
 }
 
+var FormatTime = TKX.FormatTime
+
 // IsYesterday 判断字符串是否是昨天，formatA默认为"20060102"格式
-func IsYesterday(dateStrA string, formatA string) bool {
+func (pA *TK) IsYesterday(dateStrA string, formatA string) bool {
 	if formatA == "" {
 		formatA = "20060102"
 	}
@@ -1710,9 +1958,11 @@ func IsYesterday(dateStrA string, formatA string) bool {
 	return false
 }
 
+var IsYesterday = TKX.IsYesterday
+
 // 切片、数组相关 slice related and array related
 
-func GetRandomItem(aryA []interface{}) interface{} {
+func (pA *TK) GetRandomItem(aryA []interface{}) interface{} {
 	if aryA == nil {
 		return nil
 	}
@@ -1722,7 +1972,9 @@ func GetRandomItem(aryA []interface{}) interface{} {
 	return aryA[GetRandomIntLessThan(lenT)]
 }
 
-func PickRandomItem(aryA []interface{}) interface{} {
+var GetRandomItem = TKX.GetRandomItem
+
+func (pA *TK) PickRandomItem(aryA []interface{}) interface{} {
 	if aryA == nil {
 		return nil
 	}
@@ -1738,7 +1990,9 @@ func PickRandomItem(aryA []interface{}) interface{} {
 	return itemT
 }
 
-func GetRandomStringItem(aryA []string) string {
+var PickRandomItem = TKX.PickRandomItem
+
+func (pA *TK) GetRandomStringItem(aryA []string) string {
 	if aryA == nil {
 		return ErrStrF("nil input")
 	}
@@ -1748,45 +2002,57 @@ func GetRandomStringItem(aryA []string) string {
 	return aryA[GetRandomIntLessThan(lenT)]
 }
 
+var GetRandomStringItem = TKX.GetRandomStringItem
+
 // DeleteItemInStringArray 删除字符串切片中的某一项
-func DeleteItemInStringArray(aryA []string, idxA int) []string {
+func (pA *TK) DeleteItemInStringArray(aryA []string, idxA int) []string {
 	rs := make([]string, 0, len(aryA)-1)
 	rs = append(rs, aryA[:idxA]...)
 	rs = append(rs, aryA[idxA+1:]...)
 	return rs
 }
 
+var DeleteItemInStringArray = TKX.DeleteItemInStringArray
+
 // DeleteItemInArray 删除切片中的某一项
-func DeleteItemInArray(aryA []interface{}, idxA int) []interface{} {
+func (pA *TK) DeleteItemInArray(aryA []interface{}, idxA int) []interface{} {
 	rs := make([]interface{}, 0, len(aryA)-1)
 	rs = append(rs, aryA[:idxA]...)
 	rs = append(rs, aryA[idxA+1:]...)
 	return rs
 }
 
+var DeleteItemInArray = TKX.DeleteItemInArray
+
 // DeleteItemInIntArray 删除字符串切片中的某一项
-func DeleteItemInIntArray(aryA []int, idxA int) []int {
+func (pA *TK) DeleteItemInIntArray(aryA []int, idxA int) []int {
 	rs := make([]int, 0, len(aryA)-1)
 	rs = append(rs, aryA[:idxA]...)
 	rs = append(rs, aryA[idxA+1:]...)
 	return rs
 }
 
-func DeleteItemInInt64Array(aryA []int64, idxA int64) []int64 {
+var DeleteItemInIntArray = TKX.DeleteItemInIntArray
+
+func (pA *TK) DeleteItemInInt64Array(aryA []int64, idxA int64) []int64 {
 	rs := make([]int64, 0, len(aryA)-1)
 	rs = append(rs, aryA[:idxA]...)
 	rs = append(rs, aryA[idxA+1:]...)
 	return rs
 }
 
-func DeleteItemInFloat64Array(aryA []float64, idxA int64) []float64 {
+var DeleteItemInInt64Array = TKX.DeleteItemInInt64Array
+
+func (pA *TK) DeleteItemInFloat64Array(aryA []float64, idxA int64) []float64 {
 	rs := make([]float64, 0, len(aryA)-1)
 	rs = append(rs, aryA[:idxA]...)
 	rs = append(rs, aryA[idxA+1:]...)
 	return rs
 }
 
-func ContainsIn(strA string, subStrsA ...string) bool {
+var DeleteItemInFloat64Array = TKX.DeleteItemInFloat64Array
+
+func (pA *TK) ContainsIn(strA string, subStrsA ...string) bool {
 	for _, v := range subStrsA {
 		if strings.Contains(strA, v) {
 			return true
@@ -1796,7 +2062,9 @@ func ContainsIn(strA string, subStrsA ...string) bool {
 	return false
 }
 
-func ContainsInStringList(strA string, strListA []string) bool {
+var ContainsIn = TKX.ContainsIn
+
+func (pA *TK) ContainsInStringList(strA string, strListA []string) bool {
 	if strListA == nil {
 		return false
 	}
@@ -1810,7 +2078,9 @@ func ContainsInStringList(strA string, strListA []string) bool {
 	return false
 }
 
-func IndexInStringList(strA string, strListA []string) int {
+var ContainsInStringList = TKX.ContainsInStringList
+
+func (pA *TK) IndexInStringList(strA string, strListA []string) int {
 	if strListA == nil {
 		return -1
 	}
@@ -1824,7 +2094,9 @@ func IndexInStringList(strA string, strListA []string) int {
 	return -1
 }
 
-func IndexInStringListFromEnd(strA string, strListA []string) int {
+var IndexInStringList = TKX.IndexInStringList
+
+func (pA *TK) IndexInStringListFromEnd(strA string, strListA []string) int {
 	if strListA == nil {
 		return -1
 	}
@@ -1840,7 +2112,9 @@ func IndexInStringListFromEnd(strA string, strListA []string) int {
 	return -1
 }
 
-func GetStringSliceFilled(filledString string, countA int) []string {
+var IndexInStringListFromEnd = TKX.IndexInStringListFromEnd
+
+func (pA *TK) GetStringSliceFilled(filledString string, countA int) []string {
 	if countA < 0 {
 		countA = 0
 	}
@@ -1854,12 +2128,16 @@ func GetStringSliceFilled(filledString string, countA int) []string {
 	return bufT
 }
 
+var GetStringSliceFilled = TKX.GetStringSliceFilled
+
 // Len64 返回int64结果的len
-func Len64(aryA []string) int64 {
+func (pA *TK) Len64(aryA []string) int64 {
 	return (int64)(len(aryA))
 }
 
-func Int64ArrayToFloat64Array(aryA []int64) []float64 {
+var Len64 = TKX.Len64
+
+func (pA *TK) Int64ArrayToFloat64Array(aryA []int64) []float64 {
 	if aryA == nil {
 		return nil
 	}
@@ -1876,7 +2154,9 @@ func Int64ArrayToFloat64Array(aryA []int64) []float64 {
 
 }
 
-func ByteSliceToStringDec(bufA []byte, sepA string) string {
+var Int64ArrayToFloat64Array = TKX.Int64ArrayToFloat64Array
+
+func (pA *TK) ByteSliceToStringDec(bufA []byte, sepA string) string {
 	if bufA == nil {
 		return ""
 	}
@@ -1896,11 +2176,13 @@ func ByteSliceToStringDec(bufA []byte, sepA string) string {
 	return outBufT.String()
 }
 
+var ByteSliceToStringDec = TKX.ByteSliceToStringDec
+
 // 映射相关 map related
 
 // GetValueOfMSS get the value for key in map[string]string
 // returns default value if not ok
-func GetValueOfMSS(mapA map[string]string, keyA string, defaultA string) string {
+func (pA *TK) GetValueOfMSS(mapA map[string]string, keyA string, defaultA string) string {
 	v, ok := mapA[keyA]
 
 	if ok {
@@ -1910,21 +2192,27 @@ func GetValueOfMSS(mapA map[string]string, keyA string, defaultA string) string 
 	return defaultA
 }
 
+var GetValueOfMSS = TKX.GetValueOfMSS
+
 // 系统相关函数 system related
 
 // GetOSArgs return os.Args
-func GetOSArgs() []string {
+func (pA *TK) GetOSArgs() []string {
 	return os.Args
 }
 
-func GetOSArgsShort() []string {
+var GetOSArgs = TKX.GetOSArgs
+
+func (pA *TK) GetOSArgsShort() []string {
 	return os.Args[1:]
 }
+
+var GetOSArgsShort = TKX.GetOSArgsShort
 
 // EnsureBasePath make sure a base path for application is exists, otherwise create it
 // first look for c:\nameA(Windows) or /nameA(Mac&Linux), then the application path
 // if nameA contains ".", "/", "\\", will use it as basepath instead
-func EnsureBasePath(nameA string) (string, error) {
+func (pA *TK) EnsureBasePath(nameA string) (string, error) {
 	var basePathT string
 
 	if ContainsIn(nameA, ".", "/", "\\") {
@@ -1966,7 +2254,9 @@ func EnsureBasePath(nameA string) (string, error) {
 	return basePathT, nil
 }
 
-func CreateTempFile(dirA string, patternA string) (string, error) {
+var EnsureBasePath = TKX.EnsureBasePath
+
+func (pA *TK) CreateTempFile(dirA string, patternA string) (string, error) {
 	content := []byte("")
 	tmpfile, err := ioutil.TempFile(dirA, patternA)
 	if err != nil {
@@ -1990,8 +2280,10 @@ func CreateTempFile(dirA string, patternA string) (string, error) {
 	return rs, nil
 }
 
+var CreateTempFile = TKX.CreateTempFile
+
 //
-func CopyFile(src, dst string, forceA bool, bufferSizeA int) error {
+func (pA *TK) CopyFile(src, dst string, forceA bool, bufferSizeA int) error {
 
 	srcFileStat, err := os.Stat(src)
 	if err != nil {
@@ -2053,8 +2345,10 @@ func CopyFile(src, dst string, forceA bool, bufferSizeA int) error {
 	return err
 }
 
+var CopyFile = TKX.CopyFile
+
 // GetCurrentThreadID get goroutineid
-func GetCurrentThreadID() string {
+func (pA *TK) GetCurrentThreadID() string {
 	var buf [64]byte
 
 	n := runtime.Stack(buf[:], false)
@@ -2069,8 +2363,10 @@ func GetCurrentThreadID() string {
 	return IntToStr(id)
 }
 
+var GetCurrentThreadID = TKX.GetCurrentThreadID
+
 // Exit usage: Exit() or Exit(number)
-func Exit(c ...int) {
+func (pA *TK) Exit(c ...int) {
 	if c == nil || len(c) < 1 {
 		os.Exit(0)
 	}
@@ -2078,8 +2374,10 @@ func Exit(c ...int) {
 	os.Exit(c[0])
 }
 
+var Exit = TKX.Exit
+
 // RunWinFileWithSystemDefault run a program or open a file with default program in Windows
-func RunWinFileWithSystemDefault(fileA string) string {
+func (pA *TK) RunWinFileWithSystemDefault(fileA string) string {
 	cmd := exec.Command("cmd", "/C", "start", "", fileA)
 	err := cmd.Start()
 	if err != nil {
@@ -2088,8 +2386,10 @@ func RunWinFileWithSystemDefault(fileA string) string {
 	return ""
 }
 
+var RunWinFileWithSystemDefault = TKX.RunWinFileWithSystemDefault
+
 // SystemCmd run system command, such as "cmd /c dir", "cmd /k copy a.txt b.txt".
-func SystemCmd(cmdA string, argsA ...string) string {
+func (pA *TK) SystemCmd(cmdA string, argsA ...string) string {
 	var out bytes.Buffer
 
 	cmd := exec.Command(cmdA, argsA...)
@@ -2103,8 +2403,10 @@ func SystemCmd(cmdA string, argsA ...string) string {
 	return out.String()
 }
 
+var SystemCmd = TKX.SystemCmd
+
 // NewSSHClient create SSH client with fewer settings
-func NewSSHClient(hostA string, portA int, userA string, passA string) (*goph.Client, error) {
+func (pA *TK) NewSSHClient(hostA string, portA int, userA string, passA string) (*goph.Client, error) {
 	authT := goph.Password(passA)
 
 	clientT, errT := goph.NewConn(&goph.Config{
@@ -2163,71 +2465,97 @@ func NewSSHClient(hostA string, portA int, userA string, passA string) (*goph.Cl
 	return clientT, errT
 }
 
+var NewSSHClient = TKX.NewSSHClient
+
 // Prf 仅仅是封装了fmt.Printf函数，但会返回format字符串
-func Prf(formatA string, argsA ...interface{}) string {
+func (pA *TK) Prf(formatA string, argsA ...interface{}) string {
 	fmt.Printf(formatA, argsA...)
 
 	return formatA
 }
 
+var Prf = TKX.Prf
+
 // Prl 仅仅封装了fmt.Println函数
-func Prl(a ...interface{}) {
+func (pA *TK) Prl(a ...interface{}) {
 	fmt.Println(a...)
 }
+
+var Prl = TKX.Prl
 
 // Pln 仅仅封装了fmt.Println函数
-func Pln(a ...interface{}) {
+func (pA *TK) Pln(a ...interface{}) {
 	fmt.Println(a...)
 }
 
+var Pln = TKX.Pln
+
 // Printf 仅仅封装了fmt.Printf函数，与其完全一致
-func Printf(format string, a ...interface{}) {
+func (pA *TK) Printf(format string, a ...interface{}) {
 	fmt.Printf(format, a...)
 }
 
+var Printf = TKX.Printf
+
 // Printfln 仅仅封装了fmt.Printf函数，但结尾会多输出一个换行符
-func Printfln(format string, a ...interface{}) {
+func (pA *TK) Printfln(format string, a ...interface{}) {
 	fmt.Printf(format+"\n", a...)
 }
 
+var Printfln = TKX.Printfln
+
 // Spr 仅仅是封装了fmt.Sprintf函数
-func Spr(formatA string, argsA ...interface{}) string {
+func (pA *TK) Spr(formatA string, argsA ...interface{}) string {
 	return fmt.Sprintf(formatA, argsA...)
 }
 
+var Spr = TKX.Spr
+
 // Pr 即fmt.Print
-func Pr(argsA ...interface{}) {
+func (pA *TK) Pr(argsA ...interface{}) {
 	fmt.Print(argsA...)
 }
 
+var Pr = TKX.Pr
+
 // Pl 类似Pr，但结尾会加有一个回车
-func Pl(formatA string, argsA ...interface{}) {
+func (pA *TK) Pl(formatA string, argsA ...interface{}) {
 	fmt.Printf(formatA+"\n", argsA...)
 }
 
+var Pl = TKX.Pl
+
 // PlNow 类似Pl，但前面会加有当前时间标记
-func PlNow(formatA string, argsA ...interface{}) {
+func (pA *TK) PlNow(formatA string, argsA ...interface{}) {
 	fmt.Printf(fmt.Sprintf("[%v] ", time.Now().Format(TimeFormatCompact2))+formatA+"\n", argsA...)
 }
 
+var PlNow = TKX.PlNow
+
 // PlVerbose 类似Pl，但仅在verboseA为true时才输出
-func PlVerbose(verboseA bool, formatA string, argsA ...interface{}) {
+func (pA *TK) PlVerbose(verboseA bool, formatA string, argsA ...interface{}) {
 	if verboseA {
 		fmt.Printf(formatA+"\n", argsA...)
 	}
 }
 
+var PlVerbose = TKX.PlVerbose
+
 // Fpl 类似Pl，但向流中写入(Fprintf)
-func Fpl(wA io.Writer, formatA string, argsA ...interface{}) {
+func (pA *TK) Fpl(wA io.Writer, formatA string, argsA ...interface{}) {
 	fmt.Fprintf(wA, formatA+"\n", argsA...)
 }
 
+var Fpl = TKX.Fpl
+
 // Fpr 类似Pr，但向流中写入(Fprintf)
-func Fpr(wA io.Writer, formatA string, argsA ...interface{}) {
+func (pA *TK) Fpr(wA io.Writer, formatA string, argsA ...interface{}) {
 	fmt.Fprintf(wA, formatA, argsA...)
 }
 
-func PlvWithError(vA interface{}, errStrA string) {
+var Fpr = TKX.Fpr
+
+func (pA *TK) PlvWithError(vA interface{}, errStrA string) {
 	if errStrA == "" {
 		fmt.Printf("%v\n", vA)
 	} else {
@@ -2235,35 +2563,49 @@ func PlvWithError(vA interface{}, errStrA string) {
 	}
 }
 
-func PlAndExit(formatA string, argsA ...interface{}) {
+var PlvWithError = TKX.PlvWithError
+
+func (pA *TK) PlAndExit(formatA string, argsA ...interface{}) {
 	fmt.Printf(formatA+"\n", argsA...)
 	os.Exit(0)
 }
 
+var PlAndExit = TKX.PlAndExit
+
 // PrlErrSimple 输出错误信息，结尾加一个回车
-func PlErrSimple(formatA string, argsA ...interface{}) {
+func (pA *TK) PlErrSimple(formatA string, argsA ...interface{}) {
 	fmt.Printf("Error: "+formatA+"\n", argsA...)
 }
 
-func PlErrSimpleAndExit(formatA string, argsA ...interface{}) {
+var PlErrSimple = TKX.PlErrSimple
+
+func (pA *TK) PlErrSimpleAndExit(formatA string, argsA ...interface{}) {
 	fmt.Printf("Error: "+formatA+"\n", argsA...)
 	os.Exit(0)
 }
 
-func PlErrAndExit(errA error) {
+var PlErrSimpleAndExit = TKX.PlErrSimpleAndExit
+
+func (pA *TK) PlErrAndExit(errA error) {
 	fmt.Printf("Error: " + errA.Error() + "\n")
 	os.Exit(0)
 }
 
-func PlTXErr(strA string) {
+var PlErrAndExit = TKX.PlErrAndExit
+
+func (pA *TK) PlTXErr(strA string) {
 	fmt.Printf("Error: " + GetErrorString(strA) + "\n")
 }
 
-func PlSimpleErrorString(strA string) {
+var PlTXErr = TKX.PlTXErr
+
+func (pA *TK) PlSimpleErrorString(strA string) {
 	fmt.Printf("Error: " + strA + "\n")
 }
 
-func PlErr(errA error) {
+var PlSimpleErrorString = TKX.PlSimpleErrorString
+
+func (pA *TK) PlErr(errA error) {
 	if errA == nil {
 		return
 	}
@@ -2271,7 +2613,9 @@ func PlErr(errA error) {
 	Pl("Error: %v", errA.Error())
 }
 
-func PlErrString(strA string) {
+var PlErr = TKX.PlErr
+
+func (pA *TK) PlErrString(strA string) {
 	if !IsErrorString(strA) {
 		return
 	}
@@ -2279,7 +2623,9 @@ func PlErrString(strA string) {
 	Pl("Error: %v", GetErrorString(strA))
 }
 
-func PlErrWithPrefix(prefixA string, errA error) {
+var PlErrString = TKX.PlErrString
+
+func (pA *TK) PlErrWithPrefix(prefixA string, errA error) {
 	if errA == nil {
 		return
 	}
@@ -2287,17 +2633,23 @@ func PlErrWithPrefix(prefixA string, errA error) {
 	Pl("%v%v", prefixA, errA.Error())
 }
 
+var PlErrWithPrefix = TKX.PlErrWithPrefix
+
 // Plv output one variable
-func Plv(argsA ...interface{}) {
+func (pA *TK) Plv(argsA ...interface{}) {
 	fmt.Printf("%#v\n", argsA...)
 }
 
-func Plvx(argsA interface{}) {
+var Plv = TKX.Plv
+
+func (pA *TK) Plvx(argsA interface{}) {
 	fmt.Printf("[TYPE] %T [VALUE] %v [ITYPE] %#v\n", argsA, argsA, argsA)
 }
 
+var Plvx = TKX.Plvx
+
 // Plvs output several variables, seperated by sepA
-func Plvs(sepA string, argsA ...interface{}) {
+func (pA *TK) Plvs(sepA string, argsA ...interface{}) {
 	lenT := len(argsA)
 
 	strListA := GetStringSliceFilled("%#v", lenT)
@@ -2307,35 +2659,47 @@ func Plvs(sepA string, argsA ...interface{}) {
 	fmt.Printf(formatT+"\n", argsA...)
 }
 
+var Plvs = TKX.Plvs
+
 // Plvsr output several variables, seperated by \n (new line character)
-func Plvsr(argsA ...interface{}) {
+func (pA *TK) Plvsr(argsA ...interface{}) {
 	Plvs("\n", argsA...)
 }
 
+var Plvsr = TKX.Plvsr
+
 // Errf wrap fmt.Errorf function
-func Errf(formatA string, argsA ...interface{}) error {
+func (pA *TK) Errf(formatA string, argsA ...interface{}) error {
 	return fmt.Errorf(formatA, argsA...)
 }
 
-func FatalErr(prefixA string, errA error) {
+var Errf = TKX.Errf
+
+func (pA *TK) FatalErr(prefixA string, errA error) {
 	Pl("%v%v", prefixA, errA.Error())
 
 	os.Exit(1)
 }
 
-func FatalErrf(formatA string, errA error) {
+var FatalErr = TKX.FatalErr
+
+func (pA *TK) FatalErrf(formatA string, errA error) {
 	Pl(formatA, errA.Error())
 
 	os.Exit(1)
 }
 
-func Fatalf(formatA string, argsA ...interface{}) {
+var FatalErrf = TKX.FatalErrf
+
+func (pA *TK) Fatalf(formatA string, argsA ...interface{}) {
 	Pl(formatA, argsA...)
 
 	os.Exit(1)
 }
 
-func CheckErr(prefixA string, errA error) {
+var Fatalf = TKX.Fatalf
+
+func (pA *TK) CheckErr(prefixA string, errA error) {
 	if errA == nil {
 		return
 	}
@@ -2345,7 +2709,9 @@ func CheckErr(prefixA string, errA error) {
 	os.Exit(1)
 }
 
-func CheckErrf(formatA string, argsA ...interface{}) {
+var CheckErr = TKX.CheckErr
+
+func (pA *TK) CheckErrf(formatA string, argsA ...interface{}) {
 	var errT error = nil
 
 	if argsA == nil {
@@ -2370,7 +2736,9 @@ func CheckErrf(formatA string, argsA ...interface{}) {
 	os.Exit(1)
 }
 
-func CheckErrStrf(formatA string, errStrA string, argsA ...interface{}) {
+var CheckErrf = TKX.CheckErrf
+
+func (pA *TK) CheckErrStrf(formatA string, errStrA string, argsA ...interface{}) {
 	if !IsErrStr(errStrA) {
 		return
 	}
@@ -2380,7 +2748,9 @@ func CheckErrStrf(formatA string, errStrA string, argsA ...interface{}) {
 	os.Exit(1)
 }
 
-func CheckErrCompact(errA error) {
+var CheckErrStrf = TKX.CheckErrStrf
+
+func (pA *TK) CheckErrCompact(errA error) {
 	if errA == nil {
 		return
 	}
@@ -2390,18 +2760,24 @@ func CheckErrCompact(errA error) {
 	os.Exit(1)
 }
 
+var CheckErrCompact = TKX.CheckErrCompact
+
 // GetEnv same as os.Getenv
-func GetEnv(keyA string) string {
+func (pA *TK) GetEnv(keyA string) string {
 	return os.Getenv(keyA)
 }
 
+var GetEnv = TKX.GetEnv
+
 // JoinPath same as filepath.Join
-func JoinPath(elemA ...string) string {
+func (pA *TK) JoinPath(elemA ...string) string {
 	return filepath.Join(elemA...)
 }
 
+var JoinPath = TKX.JoinPath
+
 // GetUserInput 获取键盘输入，不太可靠
-func GetUserInput(promptA string) string {
+func (pA *TK) GetUserInput(promptA string) string {
 	if promptA != "" {
 		fmt.Print(promptA)
 	}
@@ -2415,8 +2791,10 @@ func GetUserInput(promptA string) string {
 	return textT
 }
 
+var GetUserInput = TKX.GetUserInput
+
 // GetInputf like GetInput, but allows using printf for prompt string
-func GetInputf(formatA string, aA ...interface{}) string {
+func (pA *TK) GetInputf(formatA string, aA ...interface{}) string {
 	fmt.Printf(formatA, aA...)
 
 	// var stdinBufferedReaderT *bufio.Reader
@@ -2451,11 +2829,13 @@ func GetInputf(formatA string, aA ...interface{}) string {
 	return GenerateErrorStringF("EOF")
 }
 
+var GetInputf = TKX.GetInputf
+
 var stdinBufferedReader *bufio.Reader
 var stdinBufferedScanner *bufio.Scanner
 
 // GetInputBufferedScan 获取键盘输入
-func GetInputBufferedScan() string {
+func (pA *TK) GetInputBufferedScan() string {
 	if stdinBufferedScanner == nil {
 		stdinBufferedScanner = bufio.NewScanner(os.Stdin)
 	}
@@ -2487,7 +2867,9 @@ func GetInputBufferedScan() string {
 	return GenerateErrorStringF("EOF")
 }
 
-func GetInputPasswordf(formatA string, aA ...interface{}) string {
+var GetInputBufferedScan = TKX.GetInputBufferedScan
+
+func (pA *TK) GetInputPasswordf(formatA string, aA ...interface{}) string {
 	fmt.Printf(formatA, aA...)
 
 	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
@@ -2498,27 +2880,39 @@ func GetInputPasswordf(formatA string, aA ...interface{}) string {
 	return string(bytePassword)
 }
 
-func Sleep(secA float64) {
+var GetInputPasswordf = TKX.GetInputPasswordf
+
+func (pA *TK) Sleep(secA float64) {
 	time.Sleep(time.Duration(secA) * time.Second)
 }
 
-func SleepSeconds(secA int) {
+var Sleep = TKX.Sleep
+
+func (pA *TK) SleepSeconds(secA int) {
 	time.Sleep(time.Duration(secA) * time.Second)
 }
 
-func SleepMilliSeconds(msA int) {
+var SleepSeconds = TKX.SleepSeconds
+
+func (pA *TK) SleepMilliSeconds(msA int) {
 	time.Sleep(time.Duration(msA) * time.Millisecond)
 }
 
-func GetRuntimeStack() string {
+var SleepMilliSeconds = TKX.SleepMilliSeconds
+
+func (pA *TK) GetRuntimeStack() string {
 	return string(debug.Stack())
 }
 
-func GetOSName() string {
+var GetRuntimeStack = TKX.GetRuntimeStack
+
+func (pA *TK) GetOSName() string {
 	return runtime.GOOS
 }
 
-func GetCurrentDir() string {
+var GetOSName = TKX.GetOSName
+
+func (pA *TK) GetCurrentDir() string {
 	strT, errT := os.Getwd()
 	if errT != nil {
 		strT, errT = filepath.Abs(".")
@@ -2530,7 +2924,9 @@ func GetCurrentDir() string {
 	return strT
 }
 
-func GetApplicationPath() string {
+var GetCurrentDir = TKX.GetCurrentDir
+
+func (pA *TK) GetApplicationPath() string {
 	file, _ := exec.LookPath(os.Args[0])
 	pathT, _ := filepath.Abs(file)
 
@@ -2539,7 +2935,9 @@ func GetApplicationPath() string {
 	return dirT
 }
 
-func EnsureMakeDirs(pathA string) string {
+var GetApplicationPath = TKX.GetApplicationPath
+
+func (pA *TK) EnsureMakeDirs(pathA string) string {
 	if !IfFileExists(pathA) {
 		os.MkdirAll(pathA, 0777)
 		return ""
@@ -2552,7 +2950,9 @@ func EnsureMakeDirs(pathA string) string {
 	}
 }
 
-func EnsureMakeDirsE(pathA string) error {
+var EnsureMakeDirs = TKX.EnsureMakeDirs
+
+func (pA *TK) EnsureMakeDirsE(pathA string) error {
 	if !IfFileExists(pathA) {
 		os.MkdirAll(pathA, 0777)
 
@@ -2568,6 +2968,8 @@ func EnsureMakeDirsE(pathA string) error {
 		}
 	}
 }
+
+var EnsureMakeDirsE = TKX.EnsureMakeDirsE
 
 // func GetCurrentThreadID() int {
 // 	var user32 *syscall.DLL
@@ -2594,12 +2996,14 @@ func EnsureMakeDirsE(pathA string) error {
 // 命令行分析
 
 // AnalyzeCommandLineParamter 分解命令行参数，注意如果要带双引号，需要从开始到结束都括上，例如save "-fileName=abc.txt"，而不是save -fileName="abc.txt"
-func AnalyzeCommandLineParamter(cmdLineA string) []string {
+func (pA *TK) AnalyzeCommandLineParamter(cmdLineA string) []string {
 	return regexp.MustCompile("( |\\\".*?\\\"|'.*?')").Split(cmdLineA, -1)
 }
 
+var AnalyzeCommandLineParamter = TKX.AnalyzeCommandLineParamter
+
 // GetParameterByIndexWithDefaultValue 按顺序序号获取命令行参数，其中0代表第一个参数，也就是软件名称或者命令名称，1开始才是第一个参数，注意参数不包括开关，即类似-verbose=true这样的
-func GetParameterByIndexWithDefaultValue(argsA []string, idxA int, defaultA string) string {
+func (pA *TK) GetParameterByIndexWithDefaultValue(argsA []string, idxA int, defaultA string) string {
 	if idxA == -1 {
 		idxA = 1
 	}
@@ -2629,12 +3033,16 @@ func GetParameterByIndexWithDefaultValue(argsA []string, idxA int, defaultA stri
 	return defaultA
 }
 
-func GetParameter(argsA []string, idxA int) string {
+var GetParameterByIndexWithDefaultValue = TKX.GetParameterByIndexWithDefaultValue
+
+func (pA *TK) GetParameter(argsA []string, idxA int) string {
 	return GetParameterByIndexWithDefaultValue(argsA, idxA, ErrStrF("failed"))
 }
 
+var GetParameter = TKX.GetParameter
+
 // GetAllParameters 获取命令行参数中所有非开关参数
-func GetAllParameters(argsA []string) []string {
+func (pA *TK) GetAllParameters(argsA []string) []string {
 	aryT := make([]string, 0, len(argsA))
 
 	for _, argT := range argsA {
@@ -2648,12 +3056,16 @@ func GetAllParameters(argsA []string) []string {
 	return aryT
 }
 
-func GetAllOSParameters() []string {
+var GetAllParameters = TKX.GetAllParameters
+
+func (pA *TK) GetAllOSParameters() []string {
 	return GetAllParameters(os.Args)
 }
 
+var GetAllOSParameters = TKX.GetAllOSParameters
+
 // GetAllSwitches 获取命令行参数中所有开关参数
-func GetAllSwitches(argsA []string) []string {
+func (pA *TK) GetAllSwitches(argsA []string) []string {
 	aryT := make([]string, 0, len(argsA))
 
 	for _, argT := range argsA {
@@ -2667,8 +3079,10 @@ func GetAllSwitches(argsA []string) []string {
 	return aryT
 }
 
+var GetAllSwitches = TKX.GetAllSwitches
+
 // ParseCommandLine 分析命令行字符串，类似os.Args的获取过程
-func ParseCommandLine(commandA string) ([]string, error) {
+func (pA *TK) ParseCommandLine(commandA string) ([]string, error) {
 	var args []string
 
 	state := "start"
@@ -2738,8 +3152,10 @@ func ParseCommandLine(commandA string) ([]string, error) {
 	return args, nil
 }
 
+var ParseCommandLine = TKX.ParseCommandLine
+
 // GetSwitchWithDefaultValue 获取命令行参数中的开关，用法：tmps := tk.GetSwitchWithDefaultValue(args, "-verbose=", "false")
-func GetSwitchWithDefaultValue(argsA []string, switchStrA string, defaultA string) string {
+func (pA *TK) GetSwitchWithDefaultValue(argsA []string, switchStrA string, defaultA string) string {
 	if argsA == nil {
 		return defaultA
 	}
@@ -2765,7 +3181,9 @@ func GetSwitchWithDefaultValue(argsA []string, switchStrA string, defaultA strin
 
 }
 
-func GetSwitch(argsA []string, switchStrA string, defaultA ...string) string {
+var GetSwitchWithDefaultValue = TKX.GetSwitchWithDefaultValue
+
+func (pA *TK) GetSwitch(argsA []string, switchStrA string, defaultA ...string) string {
 
 	ifDefaultT := true
 	var defaultT string
@@ -2811,7 +3229,9 @@ func GetSwitch(argsA []string, switchStrA string, defaultA ...string) string {
 	return ErrStr("not exists")
 }
 
-func GetSwitchI(argsA []interface{}, switchStrA string, defaultA string) string {
+var GetSwitch = TKX.GetSwitch
+
+func (pA *TK) GetSwitchI(argsA []interface{}, switchStrA string, defaultA string) string {
 	if argsA == nil {
 		return defaultA
 	}
@@ -2837,21 +3257,27 @@ func GetSwitchI(argsA []interface{}, switchStrA string, defaultA string) string 
 
 }
 
+var GetSwitchI = TKX.GetSwitchI
+
 // GetSwitchWithDefaultIntValue 与GetSwitchWithDefaultValue类似，返回一个整数
-func GetSwitchWithDefaultIntValue(argsA []string, switchStrA string, defaultA int) int {
+func (pA *TK) GetSwitchWithDefaultIntValue(argsA []string, switchStrA string, defaultA int) int {
 	tmpStrT := GetSwitchWithDefaultValue(argsA, switchStrA, string(defaultA))
 
 	return StrToIntWithDefaultValue(tmpStrT, defaultA)
 }
 
-func GetSwitchWithDefaultInt64Value(argsA []string, switchStrA string, defaultA int64) int64 {
+var GetSwitchWithDefaultIntValue = TKX.GetSwitchWithDefaultIntValue
+
+func (pA *TK) GetSwitchWithDefaultInt64Value(argsA []string, switchStrA string, defaultA int64) int64 {
 	tmpStrT := GetSwitchWithDefaultValue(argsA, switchStrA, string(defaultA))
 
 	return StrToInt64WithDefaultValue(tmpStrT, defaultA)
 }
 
+var GetSwitchWithDefaultInt64Value = TKX.GetSwitchWithDefaultInt64Value
+
 // IfSwitchExists 判断命令行参数中是否存在开关，用法：flag := IfSwitchExists(args, "-restart")
-func IfSwitchExists(argsA []string, switchStrA string) bool {
+func (pA *TK) IfSwitchExists(argsA []string, switchStrA string) bool {
 	if argsA == nil {
 		return false
 	}
@@ -2870,8 +3296,10 @@ func IfSwitchExists(argsA []string, switchStrA string) bool {
 	return false
 }
 
+var IfSwitchExists = TKX.IfSwitchExists
+
 // IfSwitchExistsWhole 判断命令行参数中是否存在开关（完整的，），用法：flag := IfSwitchExistsWhole(args, "-restart")
-func IfSwitchExistsWhole(argsA []string, switchStrA string) bool {
+func (pA *TK) IfSwitchExistsWhole(argsA []string, switchStrA string) bool {
 	if argsA == nil {
 		return false
 	}
@@ -2890,7 +3318,9 @@ func IfSwitchExistsWhole(argsA []string, switchStrA string) bool {
 	return false
 }
 
-func IfSwitchExistsWholeI(argsA []interface{}, switchStrA string) bool {
+var IfSwitchExistsWhole = TKX.IfSwitchExistsWhole
+
+func (pA *TK) IfSwitchExistsWholeI(argsA []interface{}, switchStrA string) bool {
 	if argsA == nil {
 		return false
 	}
@@ -2909,9 +3339,11 @@ func IfSwitchExistsWholeI(argsA []interface{}, switchStrA string) bool {
 	return false
 }
 
+var IfSwitchExistsWholeI = TKX.IfSwitchExistsWholeI
+
 // 各种转换 conversion related
 
-func NilToEmptyStr(vA interface{}) string {
+func (pA *TK) NilToEmptyStr(vA interface{}) string {
 	if vA == nil {
 		return ""
 	}
@@ -2924,7 +3356,9 @@ func NilToEmptyStr(vA interface{}) string {
 	}
 }
 
-func StrToBool(strA string) bool {
+var NilToEmptyStr = TKX.NilToEmptyStr
+
+func (pA *TK) StrToBool(strA string) bool {
 	lowerStr := strings.ToLower(strA)
 	if lowerStr == "yes" || lowerStr == "true" {
 		return true
@@ -2937,24 +3371,34 @@ func StrToBool(strA string) bool {
 	return false
 }
 
-func ByteToHex(byteA byte) string {
+var StrToBool = TKX.StrToBool
+
+func (pA *TK) ByteToHex(byteA byte) string {
 	return Spr("%X", byteA)
 }
 
+var ByteToHex = TKX.ByteToHex
+
 // IntToStr 整形转字符串
-func IntToStr(intA int) string {
+func (pA *TK) IntToStr(intA int) string {
 	return strconv.Itoa(intA)
 }
 
-func Int64ToStr(intA int64) string {
+var IntToStr = TKX.IntToStr
+
+func (pA *TK) Int64ToStr(intA int64) string {
 	return strconv.FormatInt(intA, 10)
 }
 
-func ToStr(v interface{}) string {
+var Int64ToStr = TKX.Int64ToStr
+
+func (pA *TK) ToStr(v interface{}) string {
 	return fmt.Sprintf("%v", v)
 }
 
-func ToFloat(v interface{}, defaultA ...float64) (result float64) {
+var ToStr = TKX.ToStr
+
+func (pA *TK) ToFloat(v interface{}, defaultA ...float64) (result float64) {
 	var defaultT float64
 
 	if defaultA == nil || len(defaultA) < 1 {
@@ -3015,7 +3459,9 @@ func ToFloat(v interface{}, defaultA ...float64) (result float64) {
 	}
 }
 
-func ToInt(v interface{}, defaultA ...int) (result int) {
+var ToFloat = TKX.ToFloat
+
+func (pA *TK) ToInt(v interface{}, defaultA ...int) (result int) {
 	var defaultT int
 
 	if defaultA == nil || len(defaultA) < 1 {
@@ -3076,8 +3522,10 @@ func ToInt(v interface{}, defaultA ...int) (result int) {
 	}
 }
 
+var ToInt = TKX.ToInt
+
 // StrToIntWithDefaultValue 字符串转整数，如果有问题则返回默认数值
-func StrToIntWithDefaultValue(strA string, defaultA ...int) int {
+func (pA *TK) StrToIntWithDefaultValue(strA string, defaultA ...int) int {
 	defaultT := -1
 
 	if (defaultA != nil) && (len(defaultA) > 0) {
@@ -3091,9 +3539,11 @@ func StrToIntWithDefaultValue(strA string, defaultA ...int) int {
 
 	return int(nT)
 }
+
+var StrToIntWithDefaultValue = TKX.StrToIntWithDefaultValue
 
 // StrToInt 字符串转整数
-func StrToInt(strA string, defaultA ...int) int {
+func (pA *TK) StrToInt(strA string, defaultA ...int) int {
 	defaultT := -1
 
 	if (defaultA != nil) && (len(defaultA) > 0) {
@@ -3108,14 +3558,18 @@ func StrToInt(strA string, defaultA ...int) int {
 	return int(nT)
 }
 
+var StrToInt = TKX.StrToInt
+
 // StrToIntE 字符串转整数
-func StrToIntE(strA string) (int, error) {
+func (pA *TK) StrToIntE(strA string) (int, error) {
 	nT, errT := strconv.ParseInt(strA, 10, 0)
 
 	return int(nT), errT
 }
 
-func ToIntI(valueA interface{}, defaultA int) int {
+var StrToIntE = TKX.StrToIntE
+
+func (pA *TK) ToIntI(valueA interface{}, defaultA int) int {
 	nT, errT := strconv.ParseInt(fmt.Sprintf("%d", valueA), 10, 0)
 	if errT != nil {
 		return defaultA
@@ -3124,7 +3578,9 @@ func ToIntI(valueA interface{}, defaultA int) int {
 	return int(nT)
 }
 
-func StrToInt64(strA string, defaultA ...int64) int64 {
+var ToIntI = TKX.ToIntI
+
+func (pA *TK) StrToInt64(strA string, defaultA ...int64) int64 {
 	var defaultT int64 = -1
 
 	if (defaultA != nil) && (len(defaultA) > 0) {
@@ -3139,7 +3595,9 @@ func StrToInt64(strA string, defaultA ...int64) int64 {
 	return nT
 }
 
-func StrToInt64WithDefaultValue(strA string, defaultA int64) int64 {
+var StrToInt64 = TKX.StrToInt64
+
+func (pA *TK) StrToInt64WithDefaultValue(strA string, defaultA int64) int64 {
 	nT, errT := strconv.ParseInt(strA, 10, 64)
 	if errT != nil {
 		return defaultA
@@ -3148,7 +3606,9 @@ func StrToInt64WithDefaultValue(strA string, defaultA int64) int64 {
 	return nT
 }
 
-func StrToIntPositive(strA string) int {
+var StrToInt64WithDefaultValue = TKX.StrToInt64WithDefaultValue
+
+func (pA *TK) StrToIntPositive(strA string) int {
 	nT, errT := strconv.ParseInt(strA, 10, 0)
 	if errT != nil {
 		return -1
@@ -3157,7 +3617,9 @@ func StrToIntPositive(strA string) int {
 	return int(nT)
 }
 
-func StrToFloat64WithDefaultValue(strA string, defaultA float64) float64 {
+var StrToIntPositive = TKX.StrToIntPositive
+
+func (pA *TK) StrToFloat64WithDefaultValue(strA string, defaultA float64) float64 {
 	nT, errT := strconv.ParseFloat(strA, 64)
 	if errT != nil {
 		return defaultA
@@ -3166,7 +3628,9 @@ func StrToFloat64WithDefaultValue(strA string, defaultA float64) float64 {
 	return nT
 }
 
-func StrToFloat64(strA string, defaultA ...float64) float64 {
+var StrToFloat64WithDefaultValue = TKX.StrToFloat64WithDefaultValue
+
+func (pA *TK) StrToFloat64(strA string, defaultA ...float64) float64 {
 	var defaultT float64 = -1
 
 	if (defaultA != nil) && (len(defaultA) > 0) {
@@ -3182,17 +3646,23 @@ func StrToFloat64(strA string, defaultA ...float64) float64 {
 	return nT
 }
 
-func StrToFloat64E(strA string) (float64, error) {
+var StrToFloat64 = TKX.StrToFloat64
+
+func (pA *TK) StrToFloat64E(strA string) (float64, error) {
 	nT, errT := strconv.ParseFloat(strA, 64)
 
 	return nT, errT
 }
 
-func Float64ToStr(floatA float64) string {
+var StrToFloat64E = TKX.StrToFloat64E
+
+func (pA *TK) Float64ToStr(floatA float64) string {
 	return fmt.Sprintf("%f", floatA)
 }
 
-func StrToTimeCompact(strA string, defaultA time.Time) time.Time {
+var Float64ToStr = TKX.Float64ToStr
+
+func (pA *TK) StrToTimeCompact(strA string, defaultA time.Time) time.Time {
 	t, err := time.Parse(TimeFormatCompact, strA)
 	if err != nil {
 		return defaultA
@@ -3201,13 +3671,17 @@ func StrToTimeCompact(strA string, defaultA time.Time) time.Time {
 	return t
 }
 
-func StrToTimeCompactNoError(strA string) time.Time {
+var StrToTimeCompact = TKX.StrToTimeCompact
+
+func (pA *TK) StrToTimeCompactNoError(strA string) time.Time {
 	t, _ := time.Parse(TimeFormatCompact, strA)
 
 	return t
 }
 
-func FormatStringSliceSlice(sliceA [][]string, sepA string, lineSepA string) string {
+var StrToTimeCompactNoError = TKX.StrToTimeCompactNoError
+
+func (pA *TK) FormatStringSliceSlice(sliceA [][]string, sepA string, lineSepA string) string {
 	var bufT strings.Builder
 
 	for i, v := range sliceA {
@@ -3227,9 +3701,11 @@ func FormatStringSliceSlice(sliceA [][]string, sepA string, lineSepA string) str
 	return bufT.String()
 }
 
+var FormatStringSliceSlice = TKX.FormatStringSliceSlice
+
 // IntToKMGT convert a number to "3.21K", "1.2G", etc, formatA like "%.2f"
 // if sizeA < 1024, formatA is ignored
-func IntToKMGT(sizeA int, formatA string) string {
+func (pA *TK) IntToKMGT(sizeA int, formatA string) string {
 	if formatA == "" {
 		formatA = "%.2f"
 	}
@@ -3247,9 +3723,11 @@ func IntToKMGT(sizeA int, formatA string) string {
 	}
 }
 
+var IntToKMGT = TKX.IntToKMGT
+
 // IntToWYZ convert a number to "3.21万", "1.2亿", etc, formatA like "%.2f"
 // if sizeA < 1024, formatA is ignored
-func IntToWYZ(sizeA int, formatA string) string {
+func (pA *TK) IntToWYZ(sizeA int, formatA string) string {
 	if formatA == "" {
 		formatA = "%.2f"
 	}
@@ -3265,13 +3743,17 @@ func IntToWYZ(sizeA int, formatA string) string {
 	}
 }
 
+var IntToWYZ = TKX.IntToWYZ
+
 // 日志相关
 
-func SetLogFile(fileNameA string) {
+func (pA *TK) SetLogFile(fileNameA string) {
 	logFileG = fileNameA
 }
 
-func LogWithTime(formatA string, argsA ...interface{}) {
+var SetLogFile = TKX.SetLogFile
+
+func (pA *TK) LogWithTime(formatA string, argsA ...interface{}) {
 	if EndsWith(formatA, "\n") {
 		AppendStringToFile(fmt.Sprintf(fmt.Sprintf("[%v] ", time.Now())+formatA, argsA...), logFileG)
 	} else {
@@ -3279,7 +3761,9 @@ func LogWithTime(formatA string, argsA ...interface{}) {
 	}
 }
 
-func LogWithTimeCompact(formatA string, argsA ...interface{}) {
+var LogWithTime = TKX.LogWithTime
+
+func (pA *TK) LogWithTimeCompact(formatA string, argsA ...interface{}) {
 	if EndsWith(formatA, "\n") {
 		AppendStringToFile(fmt.Sprintf(fmt.Sprintf("[%v] ", time.Now().Format(TimeFormatCompact2))+formatA, argsA...), logFileG)
 	} else {
@@ -3287,16 +3771,20 @@ func LogWithTimeCompact(formatA string, argsA ...interface{}) {
 	}
 }
 
+var LogWithTimeCompact = TKX.LogWithTimeCompact
+
 // 文件操作相关函数 file related
 
 // IfFileExists 判断文件是否存在
-func IfFileExists(fileNameA string) bool {
+func (pA *TK) IfFileExists(fileNameA string) bool {
 	_, err := os.Stat(fileNameA)
 	return err == nil || os.IsExist(err)
 }
 
+var IfFileExists = TKX.IfFileExists
+
 // IsFile if is file
-func IsFile(fileNameA string) bool {
+func (pA *TK) IsFile(fileNameA string) bool {
 	f, errT := os.Open(fileNameA)
 	if errT != nil {
 		return false
@@ -3315,8 +3803,10 @@ func IsFile(fileNameA string) bool {
 	return false
 }
 
+var IsFile = TKX.IsFile
+
 // IsDirectory if is directory
-func IsDirectory(dirNameA string) bool {
+func (pA *TK) IsDirectory(dirNameA string) bool {
 	f, err := os.Open(dirNameA)
 	if err != nil {
 		return false
@@ -3335,7 +3825,9 @@ func IsDirectory(dirNameA string) bool {
 	return false
 }
 
-func GetFilePathSeperator() string {
+var IsDirectory = TKX.IsDirectory
+
+func (pA *TK) GetFilePathSeperator() string {
 	osT := runtime.GOOS
 	if osT == "windows" {
 		return "\\"
@@ -3344,7 +3836,9 @@ func GetFilePathSeperator() string {
 	}
 }
 
-func GetLastComponentOfFilePath(pathA string) string {
+var GetFilePathSeperator = TKX.GetFilePathSeperator
+
+func (pA *TK) GetLastComponentOfFilePath(pathA string) string {
 	if EndsWith(pathA, GetFilePathSeperator()) {
 		return ""
 	} else {
@@ -3352,34 +3846,46 @@ func GetLastComponentOfFilePath(pathA string) string {
 	}
 }
 
-func GetDirOfFilePath(pathA string) string {
+var GetLastComponentOfFilePath = TKX.GetLastComponentOfFilePath
+
+func (pA *TK) GetDirOfFilePath(pathA string) string {
 	return filepath.Dir(pathA)
 }
 
-func RemoveFileExt(filePathA string) string {
+var GetDirOfFilePath = TKX.GetDirOfFilePath
+
+func (pA *TK) RemoveFileExt(filePathA string) string {
 	extT := filepath.Ext(filePathA)
 	return filePathA[:len(filePathA)-len(extT)]
 }
 
-func GetFileExt(filePathA string) string {
+var RemoveFileExt = TKX.RemoveFileExt
+
+func (pA *TK) GetFileExt(filePathA string) string {
 	return filepath.Ext(filePathA)
 }
 
-func RemoveLastSubString(strA string, subStrA string) string {
+var GetFileExt = TKX.GetFileExt
+
+func (pA *TK) RemoveLastSubString(strA string, subStrA string) string {
 	if EndsWith(strA, subStrA) {
 		return strA[:len(strA)-len(subStrA)]
 	}
 	return strA
 }
 
-func AddLastSubString(strA string, subStrA string) string {
+var RemoveLastSubString = TKX.RemoveLastSubString
+
+func (pA *TK) AddLastSubString(strA string, subStrA string) string {
 	if !EndsWith(strA, subStrA) {
 		return strA + subStrA
 	}
 	return strA
 }
 
-func RemoveFile(filePathT string) error {
+var AddLastSubString = TKX.AddLastSubString
+
+func (pA *TK) RemoveFile(filePathT string) error {
 	if IsDirectory(filePathT) {
 		return Errf("%v is a directory", filePathT)
 	}
@@ -3397,7 +3903,9 @@ func RemoveFile(filePathT string) error {
 	return nil
 }
 
-func GenerateFileListInDir(dirA string, patternA string, verboseA bool) []string {
+var RemoveFile = TKX.RemoveFile
+
+func (pA *TK) GenerateFileListInDir(dirA string, patternA string, verboseA bool) []string {
 	strListT := make([]string, 0, 100)
 
 	pathT, errT := filepath.Abs(dirA)
@@ -3447,7 +3955,9 @@ func GenerateFileListInDir(dirA string, patternA string, verboseA bool) []string
 	return strListT
 }
 
-func GenerateFileListRecursively(dirA string, patternA string, verboseA bool) []string {
+var GenerateFileListInDir = TKX.GenerateFileListInDir
+
+func (pA *TK) GenerateFileListRecursively(dirA string, patternA string, verboseA bool) []string {
 	strListT := make([]string, 0, 100)
 
 	errT := filepath.Walk(dirA, func(path string, f os.FileInfo, err error) error {
@@ -3484,7 +3994,9 @@ func GenerateFileListRecursively(dirA string, patternA string, verboseA bool) []
 	return strListT
 }
 
-func GenerateFileListRecursivelyWithExclusive(dirA string, patternA string, exclusivePatternA string, verboseA bool) []string {
+var GenerateFileListRecursively = TKX.GenerateFileListRecursively
+
+func (pA *TK) GenerateFileListRecursivelyWithExclusive(dirA string, patternA string, exclusivePatternA string, verboseA bool) []string {
 	strListT := make([]string, 0, 100)
 
 	errT := filepath.Walk(dirA, func(path string, f os.FileInfo, err error) error {
@@ -3529,15 +4041,21 @@ func GenerateFileListRecursivelyWithExclusive(dirA string, patternA string, excl
 	return strListT
 }
 
-func Ls(dirA string) []string {
+var GenerateFileListRecursivelyWithExclusive = TKX.GenerateFileListRecursivelyWithExclusive
+
+func (pA *TK) Ls(dirA string) []string {
 	return GenerateFileListInDir(dirA, "*", false)
 }
 
-func Lsr(dirA string) []string {
+var Ls = TKX.Ls
+
+func (pA *TK) Lsr(dirA string) []string {
 	return GenerateFileListRecursivelyWithExclusive(dirA, "*", "", false)
 }
 
-func GetAvailableFileName(fileNameA string) string {
+var Lsr = TKX.Lsr
+
+func (pA *TK) GetAvailableFileName(fileNameA string) string {
 	fileNameT := fileNameA
 
 	for i := 1; true; i++ {
@@ -3551,8 +4069,10 @@ func GetAvailableFileName(fileNameA string) string {
 	return fileNameT
 }
 
+var GetAvailableFileName = TKX.GetAvailableFileName
+
 // LoadStringFromFile 从文件中读取整个内容到字符串中
-func LoadStringFromFile(fileNameA string) string {
+func (pA *TK) LoadStringFromFile(fileNameA string) string {
 	if !IfFileExists(fileNameA) {
 		return GenerateErrorString("文件不存在")
 	}
@@ -3572,8 +4092,10 @@ func LoadStringFromFile(fileNameA string) string {
 	return string(fileContentT)
 }
 
+var LoadStringFromFile = TKX.LoadStringFromFile
+
 // LoadStringFromFileWithDefault 从文件中读取整个内容到字符串中，出现问题时返回默认字符串
-func LoadStringFromFileWithDefault(fileNameA string, defaultA string) string {
+func (pA *TK) LoadStringFromFileWithDefault(fileNameA string, defaultA string) string {
 	if !IfFileExists(fileNameA) {
 		return defaultA
 	}
@@ -3593,7 +4115,9 @@ func LoadStringFromFileWithDefault(fileNameA string, defaultA string) string {
 	return string(fileContentT)
 }
 
-func LoadStringFromFileE(fileNameA string) (string, error) {
+var LoadStringFromFileWithDefault = TKX.LoadStringFromFileWithDefault
+
+func (pA *TK) LoadStringFromFileE(fileNameA string) (string, error) {
 	if !IfFileExists(fileNameA) {
 		return "", fmt.Errorf("file not exists")
 	}
@@ -3613,7 +4137,9 @@ func LoadStringFromFileE(fileNameA string) (string, error) {
 	return string(fileContentT), nil
 }
 
-func LoadStringFromFileB(fileNameA string) (string, bool) {
+var LoadStringFromFileE = TKX.LoadStringFromFileE
+
+func (pA *TK) LoadStringFromFileB(fileNameA string) (string, bool) {
 	if !IfFileExists(fileNameA) {
 		return "file not exists", false
 	}
@@ -3633,8 +4159,10 @@ func LoadStringFromFileB(fileNameA string) (string, bool) {
 	return string(fileContentT), true
 }
 
+var LoadStringFromFileB = TKX.LoadStringFromFileB
+
 // LoadBytes LoadBytes, no numA or numA < 0 indicates read all
-func LoadBytes(fileNameA string, numA ...int) []byte {
+func (pA *TK) LoadBytes(fileNameA string, numA ...int) []byte {
 	if !IfFileExists(fileNameA) {
 		return nil
 	}
@@ -3664,8 +4192,10 @@ func LoadBytes(fileNameA string, numA ...int) []byte {
 	return bufT
 }
 
+var LoadBytes = TKX.LoadBytes
+
 // LoadBytesFromFileE LoadBytes, no numA or numA[0] < 0 indicates read all
-func LoadBytesFromFileE(fileNameA string, numA ...int) ([]byte, error) {
+func (pA *TK) LoadBytesFromFileE(fileNameA string, numA ...int) ([]byte, error) {
 	if !IfFileExists(fileNameA) {
 		return nil, Errf("file not exists")
 	}
@@ -3700,7 +4230,9 @@ func LoadBytesFromFileE(fileNameA string, numA ...int) ([]byte, error) {
 	return bufT, nil
 }
 
-func SaveBytesToFile(bytesA []byte, fileA string) string {
+var LoadBytesFromFileE = TKX.LoadBytesFromFileE
+
+func (pA *TK) SaveBytesToFile(bytesA []byte, fileA string) string {
 	file, err := os.Create(fileA)
 	if err != nil {
 		return GenerateErrorString(err.Error())
@@ -3720,8 +4252,10 @@ func SaveBytesToFile(bytesA []byte, fileA string) string {
 	return ""
 }
 
+var SaveBytesToFile = TKX.SaveBytesToFile
+
 // SaveStringToFile 保存字符串到文件
-func SaveStringToFile(strA string, fileA string) string {
+func (pA *TK) SaveStringToFile(strA string, fileA string) string {
 	file, err := os.Create(fileA)
 	if err != nil {
 		return GenerateErrorString(err.Error())
@@ -3735,7 +4269,9 @@ func SaveStringToFile(strA string, fileA string) string {
 	return ""
 }
 
-func SaveStringToFileE(strA string, fileA string) error {
+var SaveStringToFile = TKX.SaveStringToFile
+
+func (pA *TK) SaveStringToFileE(strA string, fileA string) error {
 	file, err := os.Create(fileA)
 	if err != nil {
 		return err
@@ -3749,7 +4285,9 @@ func SaveStringToFileE(strA string, fileA string) error {
 	return nil
 }
 
-func AppendStringToFile(strA string, fileA string) string {
+var SaveStringToFileE = TKX.SaveStringToFileE
+
+func (pA *TK) AppendStringToFile(strA string, fileA string) string {
 	fileT, err := os.OpenFile(fileA, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		//TXPlErr(err)
@@ -3767,7 +4305,9 @@ func AppendStringToFile(strA string, fileA string) string {
 	return ""
 }
 
-func LoadStringList(fileNameA string) ([]string, string) {
+var AppendStringToFile = TKX.AppendStringToFile
+
+func (pA *TK) LoadStringList(fileNameA string) ([]string, string) {
 	if !IfFileExists(fileNameA) {
 		return nil, "file not exists"
 	}
@@ -3789,7 +4329,9 @@ func LoadStringList(fileNameA string) ([]string, string) {
 	return stringList, ""
 }
 
-func LoadStringListFromFile(fileNameA string) ([]string, error) {
+var LoadStringList = TKX.LoadStringList
+
+func (pA *TK) LoadStringListFromFile(fileNameA string) ([]string, error) {
 	if !IfFileExists(fileNameA) {
 		return nil, fmt.Errorf("file not exists")
 	}
@@ -3811,7 +4353,9 @@ func LoadStringListFromFile(fileNameA string) ([]string, error) {
 	return stringList, nil
 }
 
-func LoadStringListBuffered(fileNameA string, trimA bool, skipEmptyA bool) ([]string, error) {
+var LoadStringListFromFile = TKX.LoadStringListFromFile
+
+func (pA *TK) LoadStringListBuffered(fileNameA string, trimA bool, skipEmptyA bool) ([]string, error) {
 	if !IfFileExists(fileNameA) {
 		return nil, Errf("file not exists", fileNameA)
 	}
@@ -3867,7 +4411,9 @@ func LoadStringListBuffered(fileNameA string, trimA bool, skipEmptyA bool) ([]st
 	return bufT, nil
 }
 
-func SaveStringList(strListA []string, fileA string) string {
+var LoadStringListBuffered = TKX.LoadStringListBuffered
+
+func (pA *TK) SaveStringList(strListA []string, fileA string) string {
 	if strListA == nil {
 		return GenerateErrorString("invalid parameter")
 	}
@@ -3886,7 +4432,9 @@ func SaveStringList(strListA []string, fileA string) string {
 	return ""
 }
 
-func SaveStringListWin(strListA []string, fileA string) string {
+var SaveStringList = TKX.SaveStringList
+
+func (pA *TK) SaveStringListWin(strListA []string, fileA string) string {
 	if strListA == nil {
 		return GenerateErrorString("invalid parameter")
 	}
@@ -3905,7 +4453,9 @@ func SaveStringListWin(strListA []string, fileA string) string {
 	return ""
 }
 
-func SaveStringListBufferedByRange(strListA []string, fileA string, sepA string, startA int, endA int) string {
+var SaveStringListWin = TKX.SaveStringListWin
+
+func (pA *TK) SaveStringListBufferedByRange(strListA []string, fileA string, sepA string, startA int, endA int) string {
 	if strListA == nil {
 		return GenerateErrorString("invalid parameter")
 	}
@@ -3950,7 +4500,9 @@ func SaveStringListBufferedByRange(strListA []string, fileA string, sepA string,
 	return ""
 }
 
-func SaveStringListBuffered(strListA []string, fileA string, sepA string) string {
+var SaveStringListBufferedByRange = TKX.SaveStringListBufferedByRange
+
+func (pA *TK) SaveStringListBuffered(strListA []string, fileA string, sepA string) string {
 	if strListA == nil {
 		return GenerateErrorString("invalid parameter")
 	}
@@ -3991,7 +4543,9 @@ func SaveStringListBuffered(strListA []string, fileA string, sepA string) string
 	return ""
 }
 
-func LoadStringListRemoveEmpty(fileNameA string) []string {
+var SaveStringListBuffered = TKX.SaveStringListBuffered
+
+func (pA *TK) LoadStringListRemoveEmpty(fileNameA string) []string {
 	if !IfFileExists(fileNameA) {
 		return nil
 	}
@@ -4013,7 +4567,9 @@ func LoadStringListRemoveEmpty(fileNameA string) []string {
 	return stringList
 }
 
-func LoadStringListAsMap(fileNameA string) map[string]int {
+var LoadStringListRemoveEmpty = TKX.LoadStringListRemoveEmpty
+
+func (pA *TK) LoadStringListAsMap(fileNameA string) map[string]int {
 	rs, errStr := LoadStringList(fileNameA)
 
 	if errStr != "" || rs == nil {
@@ -4028,7 +4584,9 @@ func LoadStringListAsMap(fileNameA string) map[string]int {
 	return rs1
 }
 
-func LoadStringListAsMapRemoveEmpty(fileNameA string) map[string]int {
+var LoadStringListAsMap = TKX.LoadStringListAsMap
+
+func (pA *TK) LoadStringListAsMapRemoveEmpty(fileNameA string) map[string]int {
 	rs, errStr := LoadStringList(fileNameA)
 
 	if errStr != "" || rs == nil {
@@ -4047,7 +4605,9 @@ func LoadStringListAsMapRemoveEmpty(fileNameA string) map[string]int {
 	return rs1
 }
 
-func LoadJSONMapStringFloat64ArrayFromFile(fileNameA string) map[string][]float64 {
+var LoadStringListAsMapRemoveEmpty = TKX.LoadStringListAsMapRemoveEmpty
+
+func (pA *TK) LoadJSONMapStringFloat64ArrayFromFile(fileNameA string) map[string][]float64 {
 	if !IfFileExists(fileNameA) {
 		return nil
 	}
@@ -4060,8 +4620,10 @@ func LoadJSONMapStringFloat64ArrayFromFile(fileNameA string) map[string][]float6
 	return JSONToMapStringFloat64Array(strT)
 }
 
+var LoadJSONMapStringFloat64ArrayFromFile = TKX.LoadJSONMapStringFloat64ArrayFromFile
+
 // ReadLineFromBufioReader return result string, error and if reach EOF
-func ReadLineFromBufioReader(readerA *bufio.Reader) (string, bool, error) {
+func (pA *TK) ReadLineFromBufioReader(readerA *bufio.Reader) (string, bool, error) {
 	if readerA == nil {
 		return "", false, Errf("nil reader")
 	}
@@ -4080,14 +4642,18 @@ func ReadLineFromBufioReader(readerA *bufio.Reader) (string, bool, error) {
 
 }
 
-func RestoreLineEnds(strA string, replacementA string) string {
+var ReadLineFromBufioReader = TKX.ReadLineFromBufioReader
+
+func (pA *TK) RestoreLineEnds(strA string, replacementA string) string {
 	rs := strings.Replace(strA, replacementA, "\n", -1)
 	return rs
 }
 
+var RestoreLineEnds = TKX.RestoreLineEnds
+
 // 双行列表相关 dual list related
 
-func LoadDualLineList(fileNameA string) ([][]string, string) {
+func (pA *TK) LoadDualLineList(fileNameA string) ([][]string, string) {
 	rs, err := LoadStringList(fileNameA)
 
 	if err != "" {
@@ -4112,7 +4678,9 @@ func LoadDualLineList(fileNameA string) ([][]string, string) {
 	return bufT, ""
 }
 
-func SaveDualLineList(listA [][]string, fileNameA string) string {
+var LoadDualLineList = TKX.LoadDualLineList
+
+func (pA *TK) SaveDualLineList(listA [][]string, fileNameA string) string {
 	if listA == nil {
 		return GenerateErrorString("nil list")
 	}
@@ -4129,7 +4697,9 @@ func SaveDualLineList(listA [][]string, fileNameA string) string {
 	return SaveStringList(bufT, fileNameA)
 }
 
-func RemoveDuplicateInDualLineList(listA [][]string) [][]string {
+var SaveDualLineList = TKX.SaveDualLineList
+
+func (pA *TK) RemoveDuplicateInDualLineList(listA [][]string) [][]string {
 	if listA == nil {
 		return nil
 	}
@@ -4169,7 +4739,9 @@ func RemoveDuplicateInDualLineList(listA [][]string) [][]string {
 	return listT
 }
 
-func AppendDualLineList(listA [][]string, fileNameA string) string {
+var RemoveDuplicateInDualLineList = TKX.RemoveDuplicateInDualLineList
+
+func (pA *TK) AppendDualLineList(listA [][]string, fileNameA string) string {
 	if listA == nil {
 		return GenerateErrorString("nil list")
 	}
@@ -4222,13 +4794,15 @@ func AppendDualLineList(listA [][]string, fileNameA string) string {
 	return SaveStringList(bufT, fileNameA)
 }
 
+var AppendDualLineList = TKX.AppendDualLineList
+
 // SimpleMap related
 // in a simplemap structure, key/value pairs are in form as KEY=VALUE
 // "=" in keys should be replaced as `EQ`
 // line-ends in values such as "\n" should be replaced as #CR#
 // comments could be used after ####
 
-func LoadSimpleMapFromFile(fileNameA string) map[string]string {
+func (pA *TK) LoadSimpleMapFromFile(fileNameA string) map[string]string {
 	if !IfFileExists(fileNameA) {
 		return nil
 	}
@@ -4253,7 +4827,9 @@ func LoadSimpleMapFromFile(fileNameA string) map[string]string {
 	return mapT
 }
 
-func LoadSimpleMapFromFileE(fileNameA string) (map[string]string, error) {
+var LoadSimpleMapFromFile = TKX.LoadSimpleMapFromFile
+
+func (pA *TK) LoadSimpleMapFromFileE(fileNameA string) (map[string]string, error) {
 	if !IfFileExists(fileNameA) {
 		return nil, fmt.Errorf("file not exists")
 	}
@@ -4267,7 +4843,9 @@ func LoadSimpleMapFromFileE(fileNameA string) (map[string]string, error) {
 	return LoadSimpleMapFromStringE(fc)
 }
 
-func SimpleMapToString(mapA map[string]string) string {
+var LoadSimpleMapFromFileE = TKX.LoadSimpleMapFromFileE
+
+func (pA *TK) SimpleMapToString(mapA map[string]string) string {
 	strListT := make([]string, 0, len(mapA)+1)
 
 	var kk string
@@ -4279,7 +4857,9 @@ func SimpleMapToString(mapA map[string]string) string {
 	return JoinLines(strListT)
 }
 
-func LoadSimpleMapFromString(strA string) map[string]string {
+var SimpleMapToString = TKX.SimpleMapToString
+
+func (pA *TK) LoadSimpleMapFromString(strA string) map[string]string {
 	strListT := SplitLines(strA)
 
 	if strListT == nil {
@@ -4302,7 +4882,9 @@ func LoadSimpleMapFromString(strA string) map[string]string {
 	return mapT
 }
 
-func LoadSimpleMapFromStringE(strA string) (map[string]string, error) {
+var LoadSimpleMapFromString = TKX.LoadSimpleMapFromString
+
+func (pA *TK) LoadSimpleMapFromStringE(strA string) (map[string]string, error) {
 	strListT := SplitLines(strA)
 
 	if strListT == nil {
@@ -4325,13 +4907,17 @@ func LoadSimpleMapFromStringE(strA string) (map[string]string, error) {
 	return mapT, nil
 }
 
-func ReplaceLineEnds(strA string, replacementA string) string {
+var LoadSimpleMapFromStringE = TKX.LoadSimpleMapFromStringE
+
+func (pA *TK) ReplaceLineEnds(strA string, replacementA string) string {
 	rs := strings.Replace(strA, "\r", "", -1)
 	rs = strings.Replace(rs, "\n", replacementA, -1)
 	return rs
 }
 
-func SaveSimpleMapToFile(mapA map[string]string, fileA string) string {
+var ReplaceLineEnds = TKX.ReplaceLineEnds
+
+func (pA *TK) SaveSimpleMapToFile(mapA map[string]string, fileA string) string {
 	fileT, errT := os.Create(fileA)
 	if errT != nil {
 		return GenerateErrorString(errT.Error())
@@ -4355,7 +4941,9 @@ func SaveSimpleMapToFile(mapA map[string]string, fileA string) string {
 	return ""
 }
 
-func AppendSimpleMapFromFile(mapA map[string]string, fileNameA string) string {
+var SaveSimpleMapToFile = TKX.SaveSimpleMapToFile
+
+func (pA *TK) AppendSimpleMapFromFile(mapA map[string]string, fileNameA string) string {
 	if !IfFileExists(fileNameA) {
 		return "file not exists"
 	}
@@ -4382,7 +4970,9 @@ func AppendSimpleMapFromFile(mapA map[string]string, fileNameA string) string {
 	return ""
 }
 
-func LoadSimpleMapFromDir(dirA string) map[string]string {
+var AppendSimpleMapFromFile = TKX.AppendSimpleMapFromFile
+
+func (pA *TK) LoadSimpleMapFromDir(dirA string) map[string]string {
 	if !IfFileExists(dirA) {
 		return nil
 	}
@@ -4404,8 +4994,10 @@ func LoadSimpleMapFromDir(dirA string) map[string]string {
 	return mapT
 }
 
+var LoadSimpleMapFromDir = TKX.LoadSimpleMapFromDir
+
 // GetLinesFromFile at least will return []string{}, avoid nil result
-func GetLinesFromFile(fileNameA string, startA int, endA int, optionsA ...string) ([]string, error) {
+func (pA *TK) GetLinesFromFile(fileNameA string, startA int, endA int, optionsA ...string) ([]string, error) {
 	failForRangeT := false
 
 	if !IsNilOrEmpty(optionsA) {
@@ -4473,26 +5065,36 @@ func GetLinesFromFile(fileNameA string, startA int, endA int, optionsA ...string
 	return bufT, nil
 }
 
+var GetLinesFromFile = TKX.GetLinesFromFile
+
 // 编码解码相关 encode/decode
 
-func EncodeToBase64(bufA []byte) string {
+func (pA *TK) EncodeToBase64(bufA []byte) string {
 	return base64.StdEncoding.EncodeToString(bufA)
 }
 
-func EncodeHTML(strA string) string {
+var EncodeToBase64 = TKX.EncodeToBase64
+
+func (pA *TK) EncodeHTML(strA string) string {
 	return html.EscapeString(strA)
 }
 
-func DecodeHTML(strA string) string {
+var EncodeHTML = TKX.EncodeHTML
+
+func (pA *TK) DecodeHTML(strA string) string {
 	return html.UnescapeString(strA)
 }
 
-func DecodeFromBase64(strA string) ([]byte, error) {
+var DecodeHTML = TKX.DecodeHTML
+
+func (pA *TK) DecodeFromBase64(strA string) ([]byte, error) {
 	return base64.StdEncoding.DecodeString(strA)
 }
 
+var DecodeFromBase64 = TKX.DecodeFromBase64
+
 // EncodeToXMLString 转换字符串XML格式编码的字符串，例如：字符串“<as>\"!sdsdsgfde345344对方对方对法国</as>” 会编码为 “&lt;as&gt;&#34;!sdsdsgfde345344对方对方对法国&lt;/as&gt;”
-func EncodeToXMLString(strA string) string {
+func (pA *TK) EncodeToXMLString(strA string) string {
 	var bufT strings.Builder
 
 	errT := xml.EscapeText(&bufT, []byte(strA))
@@ -4504,8 +5106,10 @@ func EncodeToXMLString(strA string) string {
 	return bufT.String()
 }
 
+var EncodeToXMLString = TKX.EncodeToXMLString
+
 // ToJSON use fast method
-func ToJSON(objA interface{}) (string, error) {
+func (pA *TK) ToJSON(objA interface{}) (string, error) {
 	// var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	// var json = jsoniter.ConfigFastest
 	rs, errT := jsoniter.Marshal(objA)
@@ -4517,7 +5121,9 @@ func ToJSON(objA interface{}) (string, error) {
 	return string(rs), errT
 }
 
-func ToJSONX(objA interface{}, optsA ...string) string {
+var ToJSON = TKX.ToJSON
+
+func (pA *TK) ToJSONX(objA interface{}, optsA ...string) string {
 	var errT error
 
 	ifDefaultT := IfSwitchExists(optsA, "-default=")
@@ -4559,7 +5165,9 @@ func ToJSONX(objA interface{}, optsA ...string) string {
 	return string(rs)
 }
 
-func ToJSONWithDefault(objA interface{}, defaultA string) string {
+var ToJSONX = TKX.ToJSONX
+
+func (pA *TK) ToJSONWithDefault(objA interface{}, defaultA string) string {
 	rs, errT := jsoniter.Marshal(objA)
 
 	if errT != nil {
@@ -4569,8 +5177,10 @@ func ToJSONWithDefault(objA interface{}, defaultA string) string {
 	return string(rs)
 }
 
+var ToJSONWithDefault = TKX.ToJSONWithDefault
+
 // ToJSONIndent use fast method
-func ToJSONIndent(objA interface{}) (string, error) {
+func (pA *TK) ToJSONIndent(objA interface{}) (string, error) {
 	// var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	// var json = jsoniter.ConfigFastest
 	rs, errT := jsoniter.MarshalIndent(objA, "", "  ")
@@ -4582,7 +5192,9 @@ func ToJSONIndent(objA interface{}) (string, error) {
 	return string(rs), errT
 }
 
-func ToJSONIndentWithDefault(objA interface{}, defaultA string) string {
+var ToJSONIndent = TKX.ToJSONIndent
+
+func (pA *TK) ToJSONIndentWithDefault(objA interface{}, defaultA string) string {
 	rs, errT := jsoniter.MarshalIndent(objA, "", "  ")
 
 	if errT != nil {
@@ -4592,8 +5204,10 @@ func ToJSONIndentWithDefault(objA interface{}, defaultA string) string {
 	return string(rs)
 }
 
+var ToJSONIndentWithDefault = TKX.ToJSONIndentWithDefault
+
 // FromJson fast JSON decode
-func FromJSON(jsonA string) (interface{}, error) {
+func (pA *TK) FromJSON(jsonA string) (interface{}, error) {
 	var rs interface{}
 
 	errT := jsoniter.Unmarshal([]byte(jsonA), &rs)
@@ -4605,7 +5219,9 @@ func FromJSON(jsonA string) (interface{}, error) {
 	return rs, nil
 }
 
-func FromJSONWithDefault(jsonA string, defaultA interface{}) interface{} {
+var FromJSON = TKX.FromJSON
+
+func (pA *TK) FromJSONWithDefault(jsonA string, defaultA interface{}) interface{} {
 	var rs interface{}
 
 	errT := jsoniter.Unmarshal([]byte(jsonA), &rs)
@@ -4617,7 +5233,9 @@ func FromJSONWithDefault(jsonA string, defaultA interface{}) interface{} {
 	return rs
 }
 
-func MSSFromJSON(jsonA string) (map[string]string, error) {
+var FromJSONWithDefault = TKX.FromJSONWithDefault
+
+func (pA *TK) MSSFromJSON(jsonA string) (map[string]string, error) {
 	var rs map[string]string
 
 	errT := jsoniter.Unmarshal([]byte(jsonA), &rs)
@@ -4629,7 +5247,9 @@ func MSSFromJSON(jsonA string) (map[string]string, error) {
 	return rs, nil
 }
 
-func LoadJSONFromFile(filePathA string, bufA interface{}) error {
+var MSSFromJSON = TKX.MSSFromJSON
+
+func (pA *TK) LoadJSONFromFile(filePathA string, bufA interface{}) error {
 	fcT, errT := LoadBytesFromFileE(filePathA, -1)
 
 	if errT != nil {
@@ -4646,7 +5266,9 @@ func LoadJSONFromFile(filePathA string, bufA interface{}) error {
 
 }
 
-func LoadJSONFromString(strA string, bufA interface{}) error {
+var LoadJSONFromFile = TKX.LoadJSONFromFile
+
+func (pA *TK) LoadJSONFromString(strA string, bufA interface{}) error {
 	errT := jsoniter.Unmarshal([]byte(strA), bufA)
 
 	if errT != nil {
@@ -4657,7 +5279,9 @@ func LoadJSONFromString(strA string, bufA interface{}) error {
 
 }
 
-func SaveJSONToFile(objA interface{}, filePathA string) error {
+var LoadJSONFromString = TKX.LoadJSONFromString
+
+func (pA *TK) SaveJSONToFile(objA interface{}, filePathA string) error {
 	rs, errT := jsoniter.Marshal(objA)
 
 	if errT != nil {
@@ -4669,7 +5293,9 @@ func SaveJSONToFile(objA interface{}, filePathA string) error {
 	return errT
 }
 
-func SaveJSONIndentToFile(objA interface{}, filePathA string) error {
+var SaveJSONToFile = TKX.SaveJSONToFile
+
+func (pA *TK) SaveJSONIndentToFile(objA interface{}, filePathA string) error {
 	rs, errT := jsoniter.MarshalIndent(objA, "", "  ")
 
 	if errT != nil {
@@ -4681,7 +5307,9 @@ func SaveJSONIndentToFile(objA interface{}, filePathA string) error {
 	return errT
 }
 
-func LoadMSSFromJSONFile(filePathA string) (map[string]string, error) {
+var SaveJSONIndentToFile = TKX.SaveJSONIndentToFile
+
+func (pA *TK) LoadMSSFromJSONFile(filePathA string) (map[string]string, error) {
 	fcT, errT := LoadStringFromFileE(filePathA)
 
 	if errT != nil {
@@ -4699,7 +5327,9 @@ func LoadMSSFromJSONFile(filePathA string) (map[string]string, error) {
 	return rs, nil
 }
 
-func SaveMSSToJSONFile(mapA map[string]string, filePathA string) error {
+var LoadMSSFromJSONFile = TKX.LoadMSSFromJSONFile
+
+func (pA *TK) SaveMSSToJSONFile(mapA map[string]string, filePathA string) error {
 	rs1, errT := ToJSONIndent(mapA)
 
 	if errT != nil {
@@ -4712,8 +5342,10 @@ func SaveMSSToJSONFile(mapA map[string]string, filePathA string) error {
 
 }
 
+var SaveMSSToJSONFile = TKX.SaveMSSToJSONFile
+
 // GetJSONNode return jsoniter.Any type as interface{}
-func GetJSONNode(jsonA string, pathA ...interface{}) interface{} {
+func (pA *TK) GetJSONNode(jsonA string, pathA ...interface{}) interface{} {
 	aryT := make([]interface{}, 0, len(pathA))
 
 	var typeT reflect.Type
@@ -4734,8 +5366,10 @@ func GetJSONNode(jsonA string, pathA ...interface{}) interface{} {
 	return rs.GetInterface()
 }
 
+var GetJSONNode = TKX.GetJSONNode
+
 // GetJSONSubNode return jsoniter.Any type as interface{}
-func GetJSONSubNode(jsonNodeA jsoniter.Any, pathA ...interface{}) interface{} {
+func (pA *TK) GetJSONSubNode(jsonNodeA jsoniter.Any, pathA ...interface{}) interface{} {
 	aryT := make([]interface{}, 0, len(pathA))
 
 	var typeT reflect.Type
@@ -4755,10 +5389,12 @@ func GetJSONSubNode(jsonNodeA jsoniter.Any, pathA ...interface{}) interface{} {
 
 	return rs.GetInterface()
 }
+
+var GetJSONSubNode = TKX.GetJSONSubNode
 
 // GetJSONNodeAny return jsoniter.Any type
 // func Get(data []byte, path ...interface{}) Any takes interface{} as path. If string, it will lookup json map. If int, it will lookup json array. If '*', it will map to each element of array or each key of map.
-func GetJSONNodeAny(jsonA string, pathA ...interface{}) jsoniter.Any {
+func (pA *TK) GetJSONNodeAny(jsonA string, pathA ...interface{}) jsoniter.Any {
 	aryT := make([]interface{}, 0, len(pathA))
 
 	var typeT reflect.Type
@@ -4779,7 +5415,9 @@ func GetJSONNodeAny(jsonA string, pathA ...interface{}) jsoniter.Any {
 	return rs
 }
 
-func GetJSONSubNodeAny(jsonNodeA jsoniter.Any, pathA ...interface{}) jsoniter.Any {
+var GetJSONNodeAny = TKX.GetJSONNodeAny
+
+func (pA *TK) GetJSONSubNodeAny(jsonNodeA jsoniter.Any, pathA ...interface{}) jsoniter.Any {
 	aryT := make([]interface{}, 0, len(pathA))
 
 	var typeT reflect.Type
@@ -4800,8 +5438,10 @@ func GetJSONSubNodeAny(jsonNodeA jsoniter.Any, pathA ...interface{}) jsoniter.An
 	return rs
 }
 
+var GetJSONSubNodeAny = TKX.GetJSONSubNodeAny
+
 // ObjectToJSON 任意对象转换为JSON字符串
-func ObjectToJSON(objA interface{}) string {
+func (pA *TK) ObjectToJSON(objA interface{}) string {
 	bufferT, errT := json.Marshal(objA)
 	if errT != nil {
 		return GenerateErrorStringF("failed: %s", errT.Error())
@@ -4810,7 +5450,9 @@ func ObjectToJSON(objA interface{}) string {
 	return string(bufferT)
 }
 
-func ObjectToJSONIndent(objA interface{}) string {
+var ObjectToJSON = TKX.ObjectToJSON
+
+func (pA *TK) ObjectToJSONIndent(objA interface{}) string {
 	bufferT, errT := json.MarshalIndent(objA, "", "")
 	if errT != nil {
 		return GenerateErrorStringF("failed: %s", errT.Error())
@@ -4819,7 +5461,9 @@ func ObjectToJSONIndent(objA interface{}) string {
 	return string(bufferT)
 }
 
-func JSONToMapStringFloat64Array(objStrA string) map[string][]float64 {
+var ObjectToJSONIndent = TKX.ObjectToJSONIndent
+
+func (pA *TK) JSONToMapStringFloat64Array(objStrA string) map[string][]float64 {
 	var rMapT map[string][]float64
 	errT := json.Unmarshal([]byte(objStrA), &rMapT)
 	if errT != nil {
@@ -4829,7 +5473,9 @@ func JSONToMapStringFloat64Array(objStrA string) map[string][]float64 {
 	return rMapT
 }
 
-func JSONToMapStringString(objStrA string) map[string]string {
+var JSONToMapStringFloat64Array = TKX.JSONToMapStringFloat64Array
+
+func (pA *TK) JSONToMapStringString(objStrA string) map[string]string {
 	var rMapT map[string]string
 	errT := json.Unmarshal([]byte(objStrA), &rMapT)
 	if errT != nil {
@@ -4839,7 +5485,9 @@ func JSONToMapStringString(objStrA string) map[string]string {
 	return rMapT
 }
 
-func JSONToMapStringStringArray(objStrA string) []map[string]string {
+var JSONToMapStringString = TKX.JSONToMapStringString
+
+func (pA *TK) JSONToMapStringStringArray(objStrA string) []map[string]string {
 	var rMapT []map[string]string
 	errT := json.Unmarshal([]byte(objStrA), &rMapT)
 	if errT != nil {
@@ -4849,7 +5497,9 @@ func JSONToMapStringStringArray(objStrA string) []map[string]string {
 	return rMapT
 }
 
-func JSONToObject(objStrA string) interface{} {
+var JSONToMapStringStringArray = TKX.JSONToMapStringStringArray
+
+func (pA *TK) JSONToObject(objStrA string) interface{} {
 	var rs interface{}
 	errT := json.Unmarshal([]byte(objStrA), &rs)
 	if errT != nil {
@@ -4859,7 +5509,9 @@ func JSONToObject(objStrA string) interface{} {
 	return rs
 }
 
-func JSONToObjectE(objStrA string) (interface{}, error) {
+var JSONToObject = TKX.JSONToObject
+
+func (pA *TK) JSONToObjectE(objStrA string) (interface{}, error) {
 	var rs interface{}
 
 	errT := json.Unmarshal([]byte(objStrA), &rs)
@@ -4870,7 +5522,9 @@ func JSONToObjectE(objStrA string) (interface{}, error) {
 	return rs, nil
 }
 
-func SafelyGetStringForKeyWithDefault(mapA map[string]string, keyA string, defaultA string) string {
+var JSONToObjectE = TKX.JSONToObjectE
+
+func (pA *TK) SafelyGetStringForKeyWithDefault(mapA map[string]string, keyA string, defaultA string) string {
 	if mapA == nil {
 		return defaultA
 	}
@@ -4883,7 +5537,9 @@ func SafelyGetStringForKeyWithDefault(mapA map[string]string, keyA string, defau
 	return v
 }
 
-func GetMSIStringWithDefault(mapA map[string]interface{}, keyA string, defaultA string) (result string) {
+var SafelyGetStringForKeyWithDefault = TKX.SafelyGetStringForKeyWithDefault
+
+func (pA *TK) GetMSIStringWithDefault(mapA map[string]interface{}, keyA string, defaultA string) (result string) {
 	defer func() {
 		r := recover()
 
@@ -4908,7 +5564,9 @@ func GetMSIStringWithDefault(mapA map[string]interface{}, keyA string, defaultA 
 	return
 }
 
-func SafelyGetFloat64ForKeyWithDefault(mapA map[string]string, keyA string, defaultA float64) float64 {
+var GetMSIStringWithDefault = TKX.GetMSIStringWithDefault
+
+func (pA *TK) SafelyGetFloat64ForKeyWithDefault(mapA map[string]string, keyA string, defaultA float64) float64 {
 	if mapA == nil {
 		return defaultA
 	}
@@ -4921,7 +5579,9 @@ func SafelyGetFloat64ForKeyWithDefault(mapA map[string]string, keyA string, defa
 	return StrToFloat64WithDefaultValue(v, defaultA)
 }
 
-func SafelyGetIntForKeyWithDefault(mapA map[string]string, keyA string, defaultA int) int {
+var SafelyGetFloat64ForKeyWithDefault = TKX.SafelyGetFloat64ForKeyWithDefault
+
+func (pA *TK) SafelyGetIntForKeyWithDefault(mapA map[string]string, keyA string, defaultA int) int {
 	if mapA == nil {
 		return defaultA
 	}
@@ -4934,7 +5594,9 @@ func SafelyGetIntForKeyWithDefault(mapA map[string]string, keyA string, defaultA
 	return StrToIntWithDefaultValue(v, defaultA)
 }
 
-func JSONToStringArray(objStrA string) []string {
+var SafelyGetIntForKeyWithDefault = TKX.SafelyGetIntForKeyWithDefault
+
+func (pA *TK) JSONToStringArray(objStrA string) []string {
 	var rArrayT []string
 	errT := json.Unmarshal([]byte(objStrA), &rArrayT)
 	if errT != nil {
@@ -4944,7 +5606,9 @@ func JSONToStringArray(objStrA string) []string {
 	return rArrayT
 }
 
-func EncodeStringSimple(strA string) string {
+var JSONToStringArray = TKX.JSONToStringArray
+
+func (pA *TK) EncodeStringSimple(strA string) string {
 	lenT := len(strA)
 
 	hexCount := 0
@@ -4979,7 +5643,9 @@ func EncodeStringSimple(strA string) string {
 	return string(t)
 }
 
-func EncodeStringUnderline(strA string) string {
+var EncodeStringSimple = TKX.EncodeStringSimple
+
+func (pA *TK) EncodeStringUnderline(strA string) string {
 	lenT := len(strA)
 
 	var sbuf strings.Builder
@@ -5001,7 +5667,9 @@ func EncodeStringUnderline(strA string) string {
 	return sbuf.String()
 }
 
-func EncodeStringCustom(strA string, paddingA byte) string {
+var EncodeStringUnderline = TKX.EncodeStringUnderline
+
+func (pA *TK) EncodeStringCustom(strA string, paddingA byte) string {
 	if paddingA == 0 {
 		paddingA = '_'
 	}
@@ -5027,7 +5695,9 @@ func EncodeStringCustom(strA string, paddingA byte) string {
 	return sbuf.String()
 }
 
-func EncodeStringCustomEx(strA string, paddingsA ...byte) string {
+var EncodeStringCustom = TKX.EncodeStringCustom
+
+func (pA *TK) EncodeStringCustomEx(strA string, paddingsA ...byte) string {
 	var paddingA byte
 
 	if paddingsA == nil || len(paddingsA) == 0 {
@@ -5057,7 +5727,9 @@ func EncodeStringCustomEx(strA string, paddingsA ...byte) string {
 	return sbuf.String()
 }
 
-func ishex(c byte) bool {
+var EncodeStringCustomEx = TKX.EncodeStringCustomEx
+
+func (pA *TK) ishex(c byte) bool {
 	switch {
 	case '0' <= c && c <= '9':
 		return true
@@ -5069,7 +5741,9 @@ func ishex(c byte) bool {
 	return false
 }
 
-func unhex(c byte) byte {
+var ishex = TKX.ishex
+
+func (pA *TK) unhex(c byte) byte {
 	switch {
 	case '0' <= c && c <= '9':
 		return c - '0'
@@ -5081,7 +5755,9 @@ func unhex(c byte) byte {
 	return 0
 }
 
-func DecodeStringSimple(s string) string {
+var unhex = TKX.unhex
+
+func (pA *TK) DecodeStringSimple(s string) string {
 	// Count %, check that they're well-formed.
 	n := 0
 	// hasPlus := false
@@ -5127,7 +5803,9 @@ func DecodeStringSimple(s string) string {
 	return string(t)
 }
 
-func DecodeStringUnderline(s string) string {
+var DecodeStringSimple = TKX.DecodeStringSimple
+
+func (pA *TK) DecodeStringUnderline(s string) string {
 	var bufT strings.Builder
 
 	lenT := len(s)
@@ -5149,7 +5827,9 @@ func DecodeStringUnderline(s string) string {
 	return bufT.String()
 }
 
-func DecodeStringCustom(s string, paddingsA ...byte) string {
+var DecodeStringUnderline = TKX.DecodeStringUnderline
+
+func (pA *TK) DecodeStringCustom(s string, paddingsA ...byte) string {
 	var paddingA byte
 
 	if paddingsA == nil || len(paddingsA) == 0 {
@@ -5179,7 +5859,9 @@ func DecodeStringCustom(s string, paddingsA ...byte) string {
 	return bufT.String()
 }
 
-func MD5Encrypt(strA string) string {
+var DecodeStringCustom = TKX.DecodeStringCustom
+
+func (pA *TK) MD5Encrypt(strA string) string {
 	tmpb := md5.Sum([]byte(strA))
 
 	tmpbb := tmpb[:]
@@ -5187,13 +5869,17 @@ func MD5Encrypt(strA string) string {
 	return hex.EncodeToString(tmpbb)
 }
 
+var MD5Encrypt = TKX.MD5Encrypt
+
 // 加密解密相关
 
-func BytesToHex(bufA []byte) string {
+func (pA *TK) BytesToHex(bufA []byte) string {
 	return strings.ToUpper(hex.EncodeToString(bufA))
 }
 
-func HexToBytes(strA string) []byte {
+var BytesToHex = TKX.BytesToHex
+
+func (pA *TK) HexToBytes(strA string) []byte {
 	buf, err := hex.DecodeString(strA)
 	if err != nil {
 		return nil
@@ -5202,8 +5888,10 @@ func HexToBytes(strA string) []byte {
 	return buf
 }
 
+var HexToBytes = TKX.HexToBytes
+
 // HexToInt return -1 if failed
-func HexToInt(strA string) int {
+func (pA *TK) HexToInt(strA string) int {
 	buf, err := hex.DecodeString(strA)
 	if err != nil {
 		return -1
@@ -5225,7 +5913,9 @@ func HexToInt(strA string) int {
 
 }
 
-func GetRandomByte() byte {
+var HexToInt = TKX.HexToInt
+
+func (pA *TK) GetRandomByte() byte {
 	Randomize()
 
 	randT := rand.Intn(256)
@@ -5233,7 +5923,9 @@ func GetRandomByte() byte {
 	return byte(randT)
 }
 
-func EncryptDataByTXDEE(srcDataA []byte, codeA string) []byte {
+var GetRandomByte = TKX.GetRandomByte
+
+func (pA *TK) EncryptDataByTXDEE(srcDataA []byte, codeA string) []byte {
 	if srcDataA == nil {
 		return nil
 	}
@@ -5266,7 +5958,9 @@ func EncryptDataByTXDEE(srcDataA []byte, codeA string) []byte {
 	return bufB
 }
 
-func SumBytes(srcDataA []byte) byte {
+var EncryptDataByTXDEE = TKX.EncryptDataByTXDEE
+
+func (pA *TK) SumBytes(srcDataA []byte) byte {
 	if srcDataA == nil {
 		return 0
 	}
@@ -5282,7 +5976,9 @@ func SumBytes(srcDataA []byte) byte {
 	return b
 }
 
-func EncryptDataByTXDEF(srcDataA []byte, codeA string) []byte {
+var SumBytes = TKX.SumBytes
+
+func (pA *TK) EncryptDataByTXDEF(srcDataA []byte, codeA string) []byte {
 	if srcDataA == nil {
 		return nil
 	}
@@ -5319,9 +6015,11 @@ func EncryptDataByTXDEF(srcDataA []byte, codeA string) []byte {
 	return bufB
 }
 
+var EncryptDataByTXDEF = TKX.EncryptDataByTXDEF
+
 const TXDEF_BUFFER_LEN = 1000
 
-func EncryptStreamByTXDEF(readerA io.Reader, codeA string, writerA io.Writer) error {
+func (pA *TK) EncryptStreamByTXDEF(readerA io.Reader, codeA string, writerA io.Writer) error {
 	if readerA == nil {
 		return Errf("reader nil")
 	}
@@ -5423,7 +6121,9 @@ func EncryptStreamByTXDEF(readerA io.Reader, codeA string, writerA io.Writer) er
 	return nil
 }
 
-func DecryptStreamByTXDEF(readerA io.Reader, codeA string, writerA io.Writer) error {
+var EncryptStreamByTXDEF = TKX.EncryptStreamByTXDEF
+
+func (pA *TK) DecryptStreamByTXDEF(readerA io.Reader, codeA string, writerA io.Writer) error {
 	if readerA == nil {
 		return Errf("reader nil")
 	}
@@ -5520,7 +6220,9 @@ func DecryptStreamByTXDEF(readerA io.Reader, codeA string, writerA io.Writer) er
 	return nil
 }
 
-func DecryptDataByTXDEE(srcDataA []byte, codeA string) []byte {
+var DecryptStreamByTXDEF = TKX.DecryptStreamByTXDEF
+
+func (pA *TK) DecryptDataByTXDEE(srcDataA []byte, codeA string) []byte {
 	if srcDataA == nil {
 		return nil
 	}
@@ -5549,7 +6251,9 @@ func DecryptDataByTXDEE(srcDataA []byte, codeA string) []byte {
 	return bufB
 }
 
-func DecryptDataByTXDEF(srcDataA []byte, codeA string) []byte {
+var DecryptDataByTXDEE = TKX.DecryptDataByTXDEE
+
+func (pA *TK) DecryptDataByTXDEF(srcDataA []byte, codeA string) []byte {
 	if srcDataA == nil {
 		return nil
 	}
@@ -5583,7 +6287,9 @@ func DecryptDataByTXDEF(srcDataA []byte, codeA string) []byte {
 	return bufB
 }
 
-func EncryptStringByTXTE(strA string, codeA string) string {
+var DecryptDataByTXDEF = TKX.DecryptDataByTXDEF
+
+func (pA *TK) EncryptStringByTXTE(strA string, codeA string) string {
 	if strA == "" {
 		return ""
 	}
@@ -5609,7 +6315,9 @@ func EncryptStringByTXTE(strA string, codeA string) string {
 
 }
 
-func DecryptStringByTXTE(strA string, codeA string) string {
+var EncryptStringByTXTE = TKX.EncryptStringByTXTE
+
+func (pA *TK) DecryptStringByTXTE(strA string, codeA string) string {
 	if strA == "" {
 		return ""
 	}
@@ -5638,7 +6346,9 @@ func DecryptStringByTXTE(strA string, codeA string) string {
 
 }
 
-func EncryptStringByTXDEE(strA, codeA string) string {
+var DecryptStringByTXTE = TKX.DecryptStringByTXTE
+
+func (pA *TK) EncryptStringByTXDEE(strA, codeA string) string {
 	if strA == "" {
 		return ""
 	}
@@ -5651,7 +6361,9 @@ func EncryptStringByTXDEE(strA, codeA string) string {
 	return strings.ToUpper(hex.EncodeToString(dataDT))
 }
 
-func DecryptStringByTXDEE(strA, codeA string) string {
+var EncryptStringByTXDEE = TKX.EncryptStringByTXDEE
+
+func (pA *TK) DecryptStringByTXDEE(strA, codeA string) string {
 	if strA == "" {
 		return ""
 	}
@@ -5677,7 +6389,9 @@ func DecryptStringByTXDEE(strA, codeA string) string {
 	return string(dataDT)
 }
 
-func EncryptStringByTXDEF(strA, codeA string) string {
+var DecryptStringByTXDEE = TKX.DecryptStringByTXDEE
+
+func (pA *TK) EncryptStringByTXDEF(strA, codeA string) string {
 	if strA == "" {
 		return ""
 	}
@@ -5690,7 +6404,9 @@ func EncryptStringByTXDEF(strA, codeA string) string {
 	return strings.ToUpper(hex.EncodeToString(dataDT))
 }
 
-func DecryptStringByTXDEF(strA, codeA string) string {
+var EncryptStringByTXDEF = TKX.EncryptStringByTXDEF
+
+func (pA *TK) DecryptStringByTXDEF(strA, codeA string) string {
 	if strA == "" {
 		return ""
 	}
@@ -5718,7 +6434,9 @@ func DecryptStringByTXDEF(strA, codeA string) string {
 	return string(dataDT)
 }
 
-func EncryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
+var DecryptStringByTXDEF = TKX.DecryptStringByTXDEF
+
+func (pA *TK) EncryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
 	if !IfFileExists(fileNameA) {
 		return Errf("")
 	}
@@ -5756,7 +6474,9 @@ func EncryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
 	return nil
 }
 
-func EncryptFileByTXDEFWithHeader(fileNameA, codeA, outputFileA string) error {
+var EncryptFileByTXDEF = TKX.EncryptFileByTXDEF
+
+func (pA *TK) EncryptFileByTXDEFWithHeader(fileNameA, codeA, outputFileA string) error {
 	if !IfFileExists(fileNameA) {
 		return Errf("")
 	}
@@ -5798,7 +6518,9 @@ func EncryptFileByTXDEFWithHeader(fileNameA, codeA, outputFileA string) error {
 	return nil
 }
 
-func EncryptFileByTXDEFStream(fileNameA, codeA, outputFileA string) error {
+var EncryptFileByTXDEFWithHeader = TKX.EncryptFileByTXDEFWithHeader
+
+func (pA *TK) EncryptFileByTXDEFStream(fileNameA, codeA, outputFileA string) error {
 	if !IfFileExists(fileNameA) {
 		return Errf("")
 	}
@@ -5849,7 +6571,9 @@ func EncryptFileByTXDEFStream(fileNameA, codeA, outputFileA string) error {
 	return nil
 }
 
-func DecryptFileByTXDEFStream(fileNameA, codeA, outputFileA string) error {
+var EncryptFileByTXDEFStream = TKX.EncryptFileByTXDEFStream
+
+func (pA *TK) DecryptFileByTXDEFStream(fileNameA, codeA, outputFileA string) error {
 	if !IfFileExists(fileNameA) {
 		return Errf("")
 	}
@@ -5900,7 +6624,9 @@ func DecryptFileByTXDEFStream(fileNameA, codeA, outputFileA string) error {
 	return nil
 }
 
-func ErrorToString(errA error) string {
+var DecryptFileByTXDEFStream = TKX.DecryptFileByTXDEFStream
+
+func (pA *TK) ErrorToString(errA error) string {
 	if errA == nil {
 		return ""
 	}
@@ -5908,15 +6634,21 @@ func ErrorToString(errA error) string {
 	return GenerateErrorString(errA.Error())
 }
 
-func EncryptFileByTXDEFS(fileNameA, codeA, outputFileA string) string {
+var ErrorToString = TKX.ErrorToString
+
+func (pA *TK) EncryptFileByTXDEFS(fileNameA, codeA, outputFileA string) string {
 	return ErrorToString(EncryptFileByTXDEF(fileNameA, codeA, outputFileA))
 }
 
-func EncryptFileByTXDEFStreamS(fileNameA, codeA, outputFileA string) string {
+var EncryptFileByTXDEFS = TKX.EncryptFileByTXDEFS
+
+func (pA *TK) EncryptFileByTXDEFStreamS(fileNameA, codeA, outputFileA string) string {
 	return ErrorToString(EncryptFileByTXDEFStream(fileNameA, codeA, outputFileA))
 }
 
-func DecryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
+var EncryptFileByTXDEFStreamS = TKX.EncryptFileByTXDEFStreamS
+
+func (pA *TK) DecryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
 	if !IfFileExists(fileNameA) {
 		return Errf("file not exists")
 	}
@@ -5959,20 +6691,28 @@ func DecryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
 
 }
 
-func DecryptFileByTXDEFS(fileNameA, codeA, outputFileA string) string {
+var DecryptFileByTXDEF = TKX.DecryptFileByTXDEF
+
+func (pA *TK) DecryptFileByTXDEFS(fileNameA, codeA, outputFileA string) string {
 	return ErrorToString(DecryptFileByTXDEF(fileNameA, codeA, outputFileA))
 }
 
-func DecryptFileByTXDEFStreamS(fileNameA, codeA, outputFileA string) string {
+var DecryptFileByTXDEFS = TKX.DecryptFileByTXDEFS
+
+func (pA *TK) DecryptFileByTXDEFStreamS(fileNameA, codeA, outputFileA string) string {
 	return ErrorToString(DecryptFileByTXDEFStream(fileNameA, codeA, outputFileA))
 }
 
-func Pkcs7Padding(ciphertext []byte, blockSize int) []byte {
+var DecryptFileByTXDEFStreamS = TKX.DecryptFileByTXDEFStreamS
+
+func (pA *TK) Pkcs7Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	//	Pl("padding: %v", padding)
 	return append(ciphertext, padtext...)
 }
+
+var Pkcs7Padding = TKX.Pkcs7Padding
 
 // func Pkcs7Unpad(b []byte, blocksize int) ([]byte, error) {
 // 	if blocksize <= 0 {
@@ -5997,7 +6737,7 @@ func Pkcs7Padding(ciphertext []byte, blockSize int) []byte {
 // 	return b[:len(b)-n], nil
 // }
 
-func AESEncrypt(src, key []byte) ([]byte, error) {
+func (pA *TK) AESEncrypt(src, key []byte) ([]byte, error) {
 	//	key = toMD5(key)
 	keyT := key
 	if len(keyT) > 16 {
@@ -6038,6 +6778,8 @@ func AESEncrypt(src, key []byte) ([]byte, error) {
 	return out, nil
 }
 
+var AESEncrypt = TKX.AESEncrypt
+
 // func Unpad(src []byte) ([]byte, error) {
 // 	length := len(src)
 // 	unpadding := int(src[length-1])
@@ -6049,7 +6791,7 @@ func AESEncrypt(src, key []byte) ([]byte, error) {
 // 	return src[:(length - unpadding)], nil
 // }
 
-func AESDecrypt(src, key []byte) ([]byte, error) {
+func (pA *TK) AESDecrypt(src, key []byte) ([]byte, error) {
 	//	key = toMD5(key)
 	keyT := key
 	if len(keyT) > 16 {
@@ -6118,6 +6860,8 @@ func AESDecrypt(src, key []byte) ([]byte, error) {
 	// out = out[:len(out)-diffLen]
 	return out, nil
 }
+
+var AESDecrypt = TKX.AESDecrypt
 
 // func AESDecrypt(src, key []byte) ([]byte, error) {
 // 	//	key = toMD5(key)
@@ -6193,7 +6937,7 @@ func AESDecrypt(src, key []byte) ([]byte, error) {
 
 // URL相关 url related
 
-func AnalyzeURLParams(strA string) map[string]string {
+func (pA *TK) AnalyzeURLParams(strA string) map[string]string {
 	rMapT := make(map[string]string)
 
 	tmpL := strings.Split(strA, "__")
@@ -6211,11 +6955,15 @@ func AnalyzeURLParams(strA string) map[string]string {
 	return rMapT
 }
 
-func UrlEncode(strA string) string {
+var AnalyzeURLParams = TKX.AnalyzeURLParams
+
+func (pA *TK) UrlEncode(strA string) string {
 	return url.QueryEscape(strA)
 }
 
-func UrlEncode2(strA string) string {
+var UrlEncode = TKX.UrlEncode
+
+func (pA *TK) UrlEncode2(strA string) string {
 	u, err := url.Parse(strA)
 	if err != nil {
 		return GenerateErrorString("parsing URL failed")
@@ -6223,7 +6971,9 @@ func UrlEncode2(strA string) string {
 	return u.String()
 }
 
-func UrlDecode(strA string) string {
+var UrlEncode2 = TKX.UrlEncode2
+
+func (pA *TK) UrlDecode(strA string) string {
 	rStrT, errT := url.QueryUnescape(strA)
 	if errT != nil {
 		return GenerateErrorString(errT.Error())
@@ -6231,8 +6981,10 @@ func UrlDecode(strA string) string {
 	return rStrT
 }
 
+var UrlDecode = TKX.UrlDecode
+
 // JoinURL concat a base URL and a relative URL
-func JoinURL(urlBaseA string, urlNextA string) string {
+func (pA *TK) JoinURL(urlBaseA string, urlNextA string) string {
 	u, err := url.Parse(urlNextA)
 	if err != nil {
 		return GenerateErrorString(err.Error())
@@ -6245,7 +6997,9 @@ func JoinURL(urlBaseA string, urlNextA string) string {
 	return base.ResolveReference(u).String()
 }
 
-func FormToMap(formA url.Values) map[string]string {
+var JoinURL = TKX.JoinURL
+
+func (pA *TK) FormToMap(formA url.Values) map[string]string {
 	mapT := make(map[string]string, 0)
 
 	if formA == nil {
@@ -6259,13 +7013,15 @@ func FormToMap(formA url.Values) map[string]string {
 	return mapT
 }
 
+var FormToMap = TKX.FormToMap
+
 // debug related
 
 var DebugModeG bool = false
 var debugLockG sync.Mutex
 var debugBufferG bytes.Buffer
 
-func AddDebug(strA string) {
+func (pA *TK) AddDebug(strA string) {
 	if DebugModeG {
 		debugLockG.Lock()
 		debugBufferG.WriteString(strA + "\n")
@@ -6273,7 +7029,9 @@ func AddDebug(strA string) {
 	}
 }
 
-func AddDebugF(formatA string, argsA ...interface{}) {
+var AddDebug = TKX.AddDebug
+
+func (pA *TK) AddDebugF(formatA string, argsA ...interface{}) {
 	if !DebugModeG {
 		return
 	}
@@ -6285,17 +7043,23 @@ func AddDebugF(formatA string, argsA ...interface{}) {
 	debugLockG.Unlock()
 }
 
-func ClearDebug() {
+var AddDebugF = TKX.AddDebugF
+
+func (pA *TK) ClearDebug() {
 	debugBufferG.Truncate(0)
 }
 
-func GetDebug() string {
+var ClearDebug = TKX.ClearDebug
+
+func (pA *TK) GetDebug() string {
 	return debugBufferG.String()
 }
 
+var GetDebug = TKX.GetDebug
+
 // http/web service related
 
-func DownloadPageUTF8(urlA string, postDataA url.Values, customHeaders string, timeoutSecsA time.Duration, optsA ...string) string {
+func (pA *TK) DownloadPageUTF8(urlA string, postDataA url.Values, customHeaders string, timeoutSecsA time.Duration, optsA ...string) string {
 	client := &http.Client{
 		//CheckRedirect: redirectPolicyFunc,
 		Timeout: time.Second * timeoutSecsA,
@@ -6375,8 +7139,10 @@ func DownloadPageUTF8(urlA string, postDataA url.Values, customHeaders string, t
 	}
 }
 
+var DownloadPageUTF8 = TKX.DownloadPageUTF8
+
 // DownloadPage download page with any encoding and convert to UTF-8
-func DownloadPage(urlA string, originalEncodingA string, postDataA url.Values, customHeaders string, timeoutSecsA time.Duration) string {
+func (pA *TK) DownloadPage(urlA string, originalEncodingA string, postDataA url.Values, customHeaders string, timeoutSecsA time.Duration) string {
 	client := &http.Client{
 		Timeout: time.Second * timeoutSecsA,
 	}
@@ -6443,8 +7209,10 @@ func DownloadPage(urlA string, originalEncodingA string, postDataA url.Values, c
 
 }
 
+var DownloadPage = TKX.DownloadPage
+
 // HttpRequest download page with any encoding and convert to UTF-8
-func HttpRequest(urlA string, methodA string, originalEncodingA string, postDataA url.Values, customHeaders string, timeoutSecsA time.Duration, optsA ...string) string {
+func (pA *TK) HttpRequest(urlA string, methodA string, originalEncodingA string, postDataA url.Values, customHeaders string, timeoutSecsA time.Duration, optsA ...string) string {
 	client := &http.Client{
 		Timeout: time.Second * timeoutSecsA,
 	}
@@ -6513,7 +7281,9 @@ func HttpRequest(urlA string, methodA string, originalEncodingA string, postData
 
 }
 
-func DownloadPageByMap(urlA string, originalEncodingA string, postDataA map[string]string, customHeaders string, timeoutSecsA time.Duration) string {
+var HttpRequest = TKX.HttpRequest
+
+func (pA *TK) DownloadPageByMap(urlA string, originalEncodingA string, postDataA map[string]string, customHeaders string, timeoutSecsA time.Duration) string {
 	if postDataA == nil {
 		return DownloadPage(urlA, originalEncodingA, nil, customHeaders, timeoutSecsA)
 	}
@@ -6529,7 +7299,9 @@ func DownloadPageByMap(urlA string, originalEncodingA string, postDataA map[stri
 	return DownloadPage(urlA, originalEncodingA, postDataT, customHeaders, timeoutSecsA)
 }
 
-func GetLastComponentOfUrl(urlA string) string {
+var DownloadPageByMap = TKX.DownloadPageByMap
+
+func (pA *TK) GetLastComponentOfUrl(urlA string) string {
 	urlT, errT := url.Parse(urlA)
 	if errT != nil {
 		return GenerateErrorStringF(errT.Error())
@@ -6540,7 +7312,9 @@ func GetLastComponentOfUrl(urlA string) string {
 	return splitRT[len(splitRT)-1]
 }
 
-func DownloadFile(urlA, dirA, fileNameA string, ifRenameA bool) string {
+var GetLastComponentOfUrl = TKX.GetLastComponentOfUrl
+
+func (pA *TK) DownloadFile(urlA, dirA, fileNameA string, ifRenameA bool) string {
 
 	var urlT string
 	var fileNameT string = fileNameA
@@ -6612,7 +7386,9 @@ func DownloadFile(urlA, dirA, fileNameA string, ifRenameA bool) string {
 	return fileNameT
 }
 
-func DownloadBytes(urlA string) ([]byte, error) {
+var DownloadFile = TKX.DownloadFile
+
+func (pA *TK) DownloadBytes(urlA string) ([]byte, error) {
 
 	var urlT string
 
@@ -6642,8 +7418,10 @@ func DownloadBytes(urlA string) ([]byte, error) {
 	return bufT, nil
 }
 
+var DownloadBytes = TKX.DownloadBytes
+
 // PostRequest : another POST request sender
-func PostRequest(urlA, reqBodyA string, timeoutSecsA time.Duration) (string, error) {
+func (pA *TK) PostRequest(urlA, reqBodyA string, timeoutSecsA time.Duration) (string, error) {
 
 	req, err := http.NewRequest("POST", urlA, strings.NewReader(reqBodyA))
 
@@ -6673,8 +7451,10 @@ func PostRequest(urlA, reqBodyA string, timeoutSecsA time.Duration) (string, err
 	return string(body), nil
 }
 
+var PostRequest = TKX.PostRequest
+
 // PostRequestX : Post Request with custom headers
-func PostRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA time.Duration, optsA ...string) (string, error) {
+func (pA *TK) PostRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA time.Duration, optsA ...string) (string, error) {
 
 	req, err := http.NewRequest("POST", urlA, strings.NewReader(reqBodyA))
 
@@ -6723,8 +7503,10 @@ func PostRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA tim
 	return string(body), nil
 }
 
+var PostRequestX = TKX.PostRequestX
+
 // PutRequestX : Put Request with custom headers
-func PutRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA time.Duration, optsA ...string) (string, error) {
+func (pA *TK) PutRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA time.Duration, optsA ...string) (string, error) {
 
 	req, err := http.NewRequest("PUT", urlA, strings.NewReader(reqBodyA))
 
@@ -6776,8 +7558,10 @@ func PutRequestX(urlA, reqBodyA string, customHeadersA string, timeoutSecsA time
 	return string(body), nil
 }
 
+var PutRequestX = TKX.PutRequestX
+
 // PostRequestBytesX : PostRequest with custom headers
-func PostRequestBytesX(urlA string, reqBodyA []byte, customHeadersA string, timeoutSecsA time.Duration) ([]byte, error) {
+func (pA *TK) PostRequestBytesX(urlA string, reqBodyA []byte, customHeadersA string, timeoutSecsA time.Duration) ([]byte, error) {
 
 	req, err := http.NewRequest("POST", urlA, bytes.NewReader(reqBodyA))
 
@@ -6819,8 +7603,10 @@ func PostRequestBytesX(urlA string, reqBodyA []byte, customHeadersA string, time
 	return body, nil
 }
 
+var PostRequestBytesX = TKX.PostRequestBytesX
+
 // RequestX : Network(http) Request with custom headers
-func RequestX(urlA, methodA, reqBodyA string, customHeadersA string, timeoutSecsA time.Duration, optsA ...string) (string, error) {
+func (pA *TK) RequestX(urlA, methodA, reqBodyA string, customHeadersA string, timeoutSecsA time.Duration, optsA ...string) (string, error) {
 
 	// methodA: GET, POST, PUT, etc
 	req, err := http.NewRequest(methodA, urlA, strings.NewReader(reqBodyA))
@@ -6873,8 +7659,10 @@ func RequestX(urlA, methodA, reqBodyA string, customHeadersA string, timeoutSecs
 	return string(body), nil
 }
 
+var RequestX = TKX.RequestX
+
 // PostRequestBytesX : PostRequest with custom headers
-func PostRequestBytesWithMSSHeaderX(urlA string, reqBodyA []byte, customHeadersA map[string]string, timeoutSecsA time.Duration) ([]byte, error) {
+func (pA *TK) PostRequestBytesWithMSSHeaderX(urlA string, reqBodyA []byte, customHeadersA map[string]string, timeoutSecsA time.Duration) ([]byte, error) {
 
 	req, err := http.NewRequest("POST", urlA, bytes.NewReader(reqBodyA))
 
@@ -6908,8 +7696,10 @@ func PostRequestBytesWithMSSHeaderX(urlA string, reqBodyA []byte, customHeadersA
 	return body, nil
 }
 
+var PostRequestBytesWithMSSHeaderX = TKX.PostRequestBytesWithMSSHeaderX
+
 // PostRequestBytesWithCookieX : PostRequest with custom headers
-func PostRequestBytesWithCookieX(urlA string, reqBodyA []byte, customHeadersA string, jarA *cookiejar.Jar, timeoutSecsA time.Duration) ([]byte, *cookiejar.Jar, error) {
+func (pA *TK) PostRequestBytesWithCookieX(urlA string, reqBodyA []byte, customHeadersA string, jarA *cookiejar.Jar, timeoutSecsA time.Duration) ([]byte, *cookiejar.Jar, error) {
 
 	req, err := http.NewRequest("POST", urlA, bytes.NewReader(reqBodyA))
 
@@ -6966,7 +7756,9 @@ func PostRequestBytesWithCookieX(urlA string, reqBodyA []byte, customHeadersA st
 	return body, jarT, nil
 }
 
-func GetFormValueWithDefaultValue(reqA *http.Request, keyA string, defaultA string) string {
+var PostRequestBytesWithCookieX = TKX.PostRequestBytesWithCookieX
+
+func (pA *TK) GetFormValueWithDefaultValue(reqA *http.Request, keyA string, defaultA string) string {
 	valueT, ok := reqA.Form[keyA]
 	if ok {
 		return valueT[0]
@@ -6975,7 +7767,9 @@ func GetFormValueWithDefaultValue(reqA *http.Request, keyA string, defaultA stri
 	}
 }
 
-func GenerateJSONPResponse(statusA string, valueA string, reqA *http.Request, argsA ...string) string {
+var GetFormValueWithDefaultValue = TKX.GetFormValueWithDefaultValue
+
+func (pA *TK) GenerateJSONPResponse(statusA string, valueA string, reqA *http.Request, argsA ...string) string {
 	_, valueOnlyT := reqA.Form["valueonly"]
 
 	if valueOnlyT {
@@ -7018,7 +7812,9 @@ func GenerateJSONPResponse(statusA string, valueA string, reqA *http.Request, ar
 	}
 }
 
-func GenerateJSONPResponseMix(statusA string, valueA string, reqA *http.Request, mapA map[string]string) string {
+var GenerateJSONPResponse = TKX.GenerateJSONPResponse
+
+func (pA *TK) GenerateJSONPResponseMix(statusA string, valueA string, reqA *http.Request, mapA map[string]string) string {
 	_, valueOnlyT := reqA.Form["valueonly"]
 
 	if valueOnlyT {
@@ -7059,7 +7855,9 @@ func GenerateJSONPResponseMix(statusA string, valueA string, reqA *http.Request,
 	}
 }
 
-func GenerateJSONPResponseWithMore(statusA string, valueA string, reqA *http.Request, argsA ...string) string {
+var GenerateJSONPResponseMix = TKX.GenerateJSONPResponseMix
+
+func (pA *TK) GenerateJSONPResponseWithMore(statusA string, valueA string, reqA *http.Request, argsA ...string) string {
 	_, valueOnlyT := reqA.Form["valueonly"]
 
 	if valueOnlyT {
@@ -7102,7 +7900,9 @@ func GenerateJSONPResponseWithMore(statusA string, valueA string, reqA *http.Req
 	}
 }
 
-func GenerateJSONPResponseWithObject(statusA string, valueA string, objectA string, reqA *http.Request) string {
+var GenerateJSONPResponseWithMore = TKX.GenerateJSONPResponseWithMore
+
+func (pA *TK) GenerateJSONPResponseWithObject(statusA string, valueA string, objectA string, reqA *http.Request) string {
 	_, valueOnlyT := reqA.Form["valueonly"]
 	_, objectOnlyT := reqA.Form["objectonly"]
 
@@ -7135,7 +7935,9 @@ func GenerateJSONPResponseWithObject(statusA string, valueA string, objectA stri
 	}
 }
 
-func GenerateJSONPResponseWith2Object(statusA string, valueA string, objectA string, object2A string, reqA *http.Request) string {
+var GenerateJSONPResponseWithObject = TKX.GenerateJSONPResponseWithObject
+
+func (pA *TK) GenerateJSONPResponseWith2Object(statusA string, valueA string, objectA string, object2A string, reqA *http.Request) string {
 	_, valueOnlyT := reqA.Form["valueonly"]
 	_, objectOnlyT := reqA.Form["objectonly"]
 
@@ -7169,7 +7971,9 @@ func GenerateJSONPResponseWith2Object(statusA string, valueA string, objectA str
 	}
 }
 
-func GenerateJSONPResponseWith3Object(statusA string, valueA string, objectA string, object2A string, object3A string, reqA *http.Request) string {
+var GenerateJSONPResponseWith2Object = TKX.GenerateJSONPResponseWith2Object
+
+func (pA *TK) GenerateJSONPResponseWith3Object(statusA string, valueA string, objectA string, object2A string, object3A string, reqA *http.Request) string {
 	_, valueOnlyT := reqA.Form["valueonly"]
 	_, objectOnlyT := reqA.Form["objectonly"]
 
@@ -7204,7 +8008,9 @@ func GenerateJSONPResponseWith3Object(statusA string, valueA string, objectA str
 	}
 }
 
-func GetSuccessValue(strA string) string {
+var GenerateJSONPResponseWith3Object = TKX.GenerateJSONPResponseWith3Object
+
+func (pA *TK) GetSuccessValue(strA string) string {
 	rv := JSONToMapStringString(strA)
 	if rv == nil {
 		return GenerateErrorString("invalid json data")
@@ -7227,9 +8033,11 @@ func GetSuccessValue(strA string) string {
 	return valueT
 }
 
+var GetSuccessValue = TKX.GetSuccessValue
+
 // 数学相关 math related
 
-func LimitPrecision(nA interface{}, digitA int) error {
+func (pA *TK) LimitPrecision(nA interface{}, digitA int) error {
 	switch t := nA.(type) {
 	case *float64:
 		vT := *(nA.(*float64))
@@ -7251,7 +8059,9 @@ func LimitPrecision(nA interface{}, digitA int) error {
 
 }
 
-func Float32ArrayToFloat64Array(aryA []float32) []float64 {
+var LimitPrecision = TKX.LimitPrecision
+
+func (pA *TK) Float32ArrayToFloat64Array(aryA []float32) []float64 {
 	if aryA == nil {
 		return nil
 	}
@@ -7265,7 +8075,9 @@ func Float32ArrayToFloat64Array(aryA []float32) []float64 {
 	return rs
 }
 
-func GenerateRandomFloats(sizeA int) []float64 {
+var Float32ArrayToFloat64Array = TKX.Float32ArrayToFloat64Array
+
+func (pA *TK) GenerateRandomFloats(sizeA int) []float64 {
 	bufT := make([]float64, sizeA)
 
 	Randomize()
@@ -7277,7 +8089,9 @@ func GenerateRandomFloats(sizeA int) []float64 {
 	return bufT
 }
 
-func CalCosineSimilarityBetweenFloatsBig(f1, f2 []float64) float64 {
+var GenerateRandomFloats = TKX.GenerateRandomFloats
+
+func (pA *TK) CalCosineSimilarityBetweenFloatsBig(f1, f2 []float64) float64 {
 	if f1 == nil || f2 == nil {
 		return -1
 	}
@@ -7311,10 +8125,12 @@ func CalCosineSimilarityBetweenFloatsBig(f1, f2 []float64) float64 {
 	return rs
 }
 
+var CalCosineSimilarityBetweenFloatsBig = TKX.CalCosineSimilarityBetweenFloatsBig
+
 // 数据库相关 database related
 
 // GetDBConnection must close it manually
-func GetDBConnection(driverA string, pathT string) *sql.DB {
+func (pA *TK) GetDBConnection(driverA string, pathT string) *sql.DB {
 	dbT, errT := sql.Open(driverA, pathT)
 
 	if errT != nil {
@@ -7331,8 +8147,10 @@ func GetDBConnection(driverA string, pathT string) *sql.DB {
 	return dbT
 }
 
+var GetDBConnection = TKX.GetDBConnection
+
 // GetDBRowCount 获取类似select count(*)的结果
-func GetDBRowCount(dbA *sql.DB, sqlA string) (int, error) {
+func (pA *TK) GetDBRowCount(dbA *sql.DB, sqlA string) (int, error) {
 	if dbA == nil {
 		return 0, fmt.Errorf("DB pointer nil")
 	}
@@ -7348,9 +8166,11 @@ func GetDBRowCount(dbA *sql.DB, sqlA string) (int, error) {
 	return c, nil
 }
 
+var GetDBRowCount = TKX.GetDBRowCount
+
 // GetDBRowCountCompact 获取类似select count(*)的结果
 // return < 0 if fail
-func GetDBRowCountCompact(dbA *sql.DB, sqlA string) int {
+func (pA *TK) GetDBRowCountCompact(dbA *sql.DB, sqlA string) int {
 	c, errT := GetDBRowCount(dbA, sqlA)
 
 	if errT != nil {
@@ -7360,8 +8180,10 @@ func GetDBRowCountCompact(dbA *sql.DB, sqlA string) int {
 	return c
 }
 
+var GetDBRowCountCompact = TKX.GetDBRowCountCompact
+
 // GetDBResultString 获取类似select a from ...的结果
-func GetDBResultString(dbA *sql.DB, sqlA string) (string, error) {
+func (pA *TK) GetDBResultString(dbA *sql.DB, sqlA string) (string, error) {
 	if dbA == nil {
 		return "", fmt.Errorf("DB pointer nil")
 	}
@@ -7377,8 +8199,10 @@ func GetDBResultString(dbA *sql.DB, sqlA string) (string, error) {
 	return s, nil
 }
 
+var GetDBResultString = TKX.GetDBResultString
+
 // GetDBResultArray 获取类似select a from ...的多行结果
-func GetDBResultArray(dbA *sql.DB, sqlA string) ([][]string, error) {
+func (pA *TK) GetDBResultArray(dbA *sql.DB, sqlA string) ([][]string, error) {
 	if dbA == nil {
 		return nil, fmt.Errorf("DB pointer nil")
 	}
@@ -7440,10 +8264,12 @@ func GetDBResultArray(dbA *sql.DB, sqlA string) ([][]string, error) {
 	return sliceT, nil
 }
 
+var GetDBResultArray = TKX.GetDBResultArray
+
 // 文本编码相关 encoding related
 
 // ConvertToGB18030 转换UTF-8字符串为GB18030编码
-func ConvertToGB18030(srcA string) string {
+func (pA *TK) ConvertToGB18030(srcA string) string {
 	encoderT := mahonia.NewEncoder("GB18030")
 
 	return encoderT.ConvertString(srcA)
@@ -7455,6 +8281,8 @@ func ConvertToGB18030(srcA string) string {
 	// }
 	// return string(dst[:nDst])
 }
+
+var ConvertToGB18030 = TKX.ConvertToGB18030
 
 // ConvertToGB18030Bytes 转换UTF-8字符串为GB18030编码的字节切片
 // func ConvertToGB18030Bytes(srcA string) []byte {
@@ -7470,7 +8298,7 @@ func ConvertToGB18030(srcA string) string {
 
 // 	return dst[:nDst]
 // }
-func ConvertToGB18030Bytes(srcA string) []byte {
+func (pA *TK) ConvertToGB18030Bytes(srcA string) []byte {
 
 	encoderT := mahonia.NewEncoder("GB18030")
 
@@ -7480,6 +8308,8 @@ func ConvertToGB18030Bytes(srcA string) []byte {
 
 	return []byte(tmps)
 }
+
+var ConvertToGB18030Bytes = TKX.ConvertToGB18030Bytes
 
 // func ConvertToUTF8(srcA []byte, srcEncA string) string {
 // 	srcEncT := srcEncA
@@ -7508,7 +8338,7 @@ func ConvertToGB18030Bytes(srcA string) []byte {
 // 	}
 // }
 // ConvertToUTF8 转换GB18030编码等字符串(字节形式)为UTF-8字符串
-func ConvertToUTF8(srcA []byte, srcEncA string) string {
+func (pA *TK) ConvertToUTF8(srcA []byte, srcEncA string) string {
 	srcEncT := srcEncA
 
 	if srcEncT == "" {
@@ -7527,8 +8357,10 @@ func ConvertToUTF8(srcA []byte, srcEncA string) string {
 
 }
 
+var ConvertToUTF8 = TKX.ConvertToUTF8
+
 // ConvertStringToUTF8 转换GB18030编码等字符串为UTF-8字符串
-func ConvertStringToUTF8(srcA string, srcEncA string) string {
+func (pA *TK) ConvertStringToUTF8(srcA string, srcEncA string) string {
 	srcEncT := srcEncA
 
 	if srcEncT == "" {
@@ -7541,9 +8373,11 @@ func ConvertStringToUTF8(srcA string, srcEncA string) string {
 
 }
 
+var ConvertStringToUTF8 = TKX.ConvertStringToUTF8
+
 // XML related
 
-func ReshapeXML(xmlA string) string {
+func (pA *TK) ReshapeXML(xmlA string) string {
 	var errT error
 
 	treeT := etree.NewDocument()
@@ -7570,7 +8404,9 @@ func ReshapeXML(xmlA string) string {
 
 }
 
-func FlattenXML(xmlA string, nodeA string) string {
+var ReshapeXML = TKX.ReshapeXML
+
+func (pA *TK) FlattenXML(xmlA string, nodeA string) string {
 	var errT error
 
 	treeT := etree.NewDocument()
@@ -7607,7 +8443,9 @@ func FlattenXML(xmlA string, nodeA string) string {
 
 }
 
-func GetMSSFromXML(xmlA string, nodeA string) (map[string]string, error) {
+var FlattenXML = TKX.FlattenXML
+
+func (pA *TK) GetMSSFromXML(xmlA string, nodeA string) (map[string]string, error) {
 	var errT error
 
 	treeT := etree.NewDocument()
@@ -7638,7 +8476,9 @@ func GetMSSFromXML(xmlA string, nodeA string) (map[string]string, error) {
 	return mapT, nil
 }
 
-func GetNodeStringFromXML(xmlA string, nodeA string) (string, error) {
+var GetMSSFromXML = TKX.GetMSSFromXML
+
+func (pA *TK) GetNodeStringFromXML(xmlA string, nodeA string) (string, error) {
 	var errT error
 
 	treeT := etree.NewDocument()
@@ -7664,7 +8504,9 @@ func GetNodeStringFromXML(xmlA string, nodeA string) (string, error) {
 	return stringNodeT.Text(), nil
 }
 
-func GetMSSArrayFromXML(xmlA string, nodeA string) ([]map[string]string, error) {
+var GetNodeStringFromXML = TKX.GetNodeStringFromXML
+
+func (pA *TK) GetMSSArrayFromXML(xmlA string, nodeA string) ([]map[string]string, error) {
 	var errT error
 
 	treeT := etree.NewDocument()
@@ -7703,11 +8545,15 @@ func GetMSSArrayFromXML(xmlA string, nodeA string) ([]map[string]string, error) 
 	return aryT, nil
 }
 
+var GetMSSArrayFromXML = TKX.GetMSSArrayFromXML
+
 // GetXMLNode if no labelsA, return the root node, else return the specific node
 // example: tk.GetXMLNode("... XML content", "envelop", "body", "anode")
-func GetXMLNode(xmlA string, labelsA ...string) (*xmlx.Node, error) {
+func (pA *TK) GetXMLNode(xmlA string, labelsA ...string) (*xmlx.Node, error) {
 	return xmlx.GetXMLNode(xmlA, labelsA...)
 }
+
+var GetXMLNode = TKX.GetXMLNode
 
 // // decode xml to map[string]interface{}
 
@@ -7898,7 +8744,7 @@ func GetXMLNode(xmlA string, labelsA ...string) (*xmlx.Node, error) {
 // 	return nil
 // }
 
-func FromXML(xmlA string) (interface{}, error) {
+func (pA *TK) FromXML(xmlA string) (interface{}, error) {
 	return GetXMLNode(xmlA)
 	// decoder := NewXMLDecoder(strings.NewReader(xmlA))
 	// result, err := decoder.Decode()
@@ -7909,6 +8755,8 @@ func FromXML(xmlA string) (interface{}, error) {
 
 	// return result, nil
 }
+
+var FromXML = TKX.FromXML
 
 // func FromXML(xmlA string) (map[string]interface{}, error) {
 // 	result := make(map[string]interface{})
@@ -7922,7 +8770,7 @@ func FromXML(xmlA string) (interface{}, error) {
 // 	return result, nil
 // }
 
-func FromXMLWithDefault(xmlA string, defaultA interface{}) interface{} {
+func (pA *TK) FromXMLWithDefault(xmlA string, defaultA interface{}) interface{} {
 	// decoder := NewXMLDecoder(strings.NewReader(xmlA))
 	// result, err := decoder.Decode()
 
@@ -7941,6 +8789,8 @@ func FromXMLWithDefault(xmlA string, defaultA interface{}) interface{} {
 	return result
 }
 
+var FromXMLWithDefault = TKX.FromXMLWithDefault
+
 // 事件相关 event related
 
 // SimpleEvent 简捷的事件结构
@@ -7956,7 +8806,7 @@ func (p *SimpleEvent) Init(typeA string, valueA string) {
 }
 
 // CreateSimpleEvent 创建一个SimpleEvent对象，并为其赋初值
-func CreateSimpleEvent(typeA string, valueA string) *SimpleEvent {
+func (pA *TK) CreateSimpleEvent(typeA string, valueA string) *SimpleEvent {
 	p := &SimpleEvent{}
 
 	p.Type = typeA
@@ -7965,9 +8815,11 @@ func CreateSimpleEvent(typeA string, valueA string) *SimpleEvent {
 	return p
 }
 
+var CreateSimpleEvent = TKX.CreateSimpleEvent
+
 // HTML related
 
-func RemoveHtmlTags(strA string) string {
+func (pA *TK) RemoveHtmlTags(strA string) string {
 	reT := regexp.MustCompile("<[^>].*?>")
 	rStrT := reT.ReplaceAllString(strA, "")
 
@@ -7979,7 +8831,9 @@ func RemoveHtmlTags(strA string) string {
 	return rStrT2
 }
 
-func RemoveHtmlTagsX(strA string, optionsA ...string) string {
+var RemoveHtmlTags = TKX.RemoveHtmlTags
+
+func (pA *TK) RemoveHtmlTagsX(strA string, optionsA ...string) string {
 	if Trim(strA) == "" {
 		return strA
 	}
@@ -8005,7 +8859,9 @@ func RemoveHtmlTagsX(strA string, optionsA ...string) string {
 	return rStrT
 }
 
-func HTMLToText(htmlA string, optionsA ...string) (result string) {
+var RemoveHtmlTagsX = TKX.RemoveHtmlTagsX
+
+func (pA *TK) HTMLToText(htmlA string, optionsA ...string) (result string) {
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -8079,13 +8935,17 @@ func HTMLToText(htmlA string, optionsA ...string) (result string) {
 	}
 }
 
+var HTMLToText = TKX.HTMLToText
+
 // Misc Related
 
-func Pass() {
+func (pA *TK) Pass() {
 
 }
 
-func IsNil(v interface{}) bool {
+var Pass = TKX.Pass
+
+func (pA *TK) IsNil(v interface{}) bool {
 	if v == nil {
 		return true
 	}
@@ -8099,7 +8959,9 @@ func IsNil(v interface{}) bool {
 	return false
 }
 
-func IsNilOrEmpty(v interface{}) bool {
+var IsNil = TKX.IsNil
+
+func (pA *TK) IsNilOrEmpty(v interface{}) bool {
 	if v == nil {
 		return true
 	}
@@ -8127,7 +8989,9 @@ func IsNilOrEmpty(v interface{}) bool {
 	return false
 }
 
-func IsError(vA interface{}) bool {
+var IsNilOrEmpty = TKX.IsNilOrEmpty
+
+func (pA *TK) IsError(vA interface{}) bool {
 	_, ok := vA.(error)
 	if ok {
 		return true
@@ -8136,7 +9000,9 @@ func IsError(vA interface{}) bool {
 	return false
 }
 
-func TableToMSSJSON(tableA [][]string) string {
+var IsError = TKX.IsError
+
+func (pA *TK) TableToMSSJSON(tableA [][]string) string {
 	lenT := len(tableA)
 
 	if lenT < 1 {
@@ -8165,7 +9031,9 @@ func TableToMSSJSON(tableA [][]string) string {
 
 }
 
-func GetUUID1() string {
+var TableToMSSJSON = TKX.TableToMSSJSON
+
+func (pA *TK) GetUUID1() string {
 	uuidT, errT := uuid.NewV1()
 	if errT != nil {
 		return GenerateErrorStringF("failed to generate UUID: %v", errT)
@@ -8174,12 +9042,16 @@ func GetUUID1() string {
 	return uuidT.String()
 }
 
-func GetUUID4() string {
+var GetUUID1 = TKX.GetUUID1
+
+func (pA *TK) GetUUID4() string {
 	u1 := uuid.Must(uuid.NewV4())
 	return u1.String()
 }
 
-func GetUUID() string {
+var GetUUID4 = TKX.GetUUID4
+
+func (pA *TK) GetUUID() string {
 	uuidT, errT := uuid.NewV1()
 	if errT != nil {
 		return GenerateErrorStringF("failed to generate UUID: %v", errT)
@@ -8188,7 +9060,9 @@ func GetUUID() string {
 	return uuidT.String()
 }
 
-func IsFloat64NearlyEqual(a, b float64) bool {
+var GetUUID = TKX.GetUUID
+
+func (pA *TK) IsFloat64NearlyEqual(a, b float64) bool {
 
 	if math.Abs(a-b) < 0.000001 {
 		return true
@@ -8197,8 +9071,10 @@ func IsFloat64NearlyEqual(a, b float64) bool {
 	return false
 }
 
+var IsFloat64NearlyEqual = TKX.IsFloat64NearlyEqual
+
 // SetValue set a value to a pointer
-func SetValue(p interface{}, v interface{}) {
+func (pA *TK) SetValue(p interface{}, v interface{}) {
 	// tk.Pl("%#v", reflect.TypeOf(p).Kind())
 	// p = v
 
@@ -8207,13 +9083,17 @@ func SetValue(p interface{}, v interface{}) {
 	vp.Elem().Set(srcRef)
 }
 
+var SetValue = TKX.SetValue
+
 // GetValue get a value from a pointer
-func GetValue(p interface{}) interface{} {
+func (pA *TK) GetValue(p interface{}) interface{} {
 	vp := reflect.Indirect(reflect.ValueOf(p))
 	return vp.Interface()
 }
 
-func GetVar(nameA string) interface{} {
+var GetValue = TKX.GetValue
+
+func (pA *TK) GetVar(nameA string) interface{} {
 	varMutexG.Lock()
 	rs, ok := variableG[nameA]
 	varMutexG.Unlock()
@@ -8224,13 +9104,17 @@ func GetVar(nameA string) interface{} {
 	return rs
 }
 
-func SetVar(nameA string, valueA interface{}) {
+var GetVar = TKX.GetVar
+
+func (pA *TK) SetVar(nameA string, valueA interface{}) {
 	varMutexG.Lock()
 	variableG[nameA] = valueA
 	varMutexG.Unlock()
 }
 
-func GetFileVar(fileNameA string) interface{} {
+var SetVar = TKX.SetVar
+
+func (pA *TK) GetFileVar(fileNameA string) interface{} {
 	var rs interface{}
 	fileVarMutexG.Lock()
 	errT := LoadJSONFromFile(fileNameA, &rs)
@@ -8243,7 +9127,9 @@ func GetFileVar(fileNameA string) interface{} {
 	return rs
 }
 
-func SetFileVar(fileNameA string, valueA interface{}) error {
+var GetFileVar = TKX.GetFileVar
+
+func (pA *TK) SetFileVar(fileNameA string, valueA interface{}) error {
 	fileVarMutexG.Lock()
 	errT := SaveJSONIndentToFile(valueA, fileNameA)
 	fileVarMutexG.Unlock()
@@ -8251,7 +9137,9 @@ func SetFileVar(fileNameA string, valueA interface{}) error {
 	return errT
 }
 
-func CheckErrorFunc(errA error, funcA func()) {
+var SetFileVar = TKX.SetFileVar
+
+func (pA *TK) CheckErrorFunc(errA error, funcA func()) {
 	if errA != nil {
 		PlErr(errA)
 
@@ -8264,7 +9152,9 @@ func CheckErrorFunc(errA error, funcA func()) {
 
 }
 
-func CheckError(errA error, funcsA ...(func())) {
+var CheckErrorFunc = TKX.CheckErrorFunc
+
+func (pA *TK) CheckError(errA error, funcsA ...(func())) {
 	if errA != nil {
 		PlErr(errA)
 
@@ -8279,7 +9169,9 @@ func CheckError(errA error, funcsA ...(func())) {
 
 }
 
-func CheckErrorString(strA string, funcsA ...(func())) {
+var CheckError = TKX.CheckError
+
+func (pA *TK) CheckErrorString(strA string, funcsA ...(func())) {
 	if IsErrorString(strA) {
 		PlErrString(strA)
 
@@ -8294,21 +9186,29 @@ func CheckErrorString(strA string, funcsA ...(func())) {
 
 }
 
-func TypeOfValue(vA interface{}) string {
+var CheckErrorString = TKX.CheckErrorString
+
+func (pA *TK) TypeOfValue(vA interface{}) string {
 	return fmt.Sprintf("%T", vA)
 }
 
-func TypeOfValueReflect(vA interface{}) string {
+var TypeOfValue = TKX.TypeOfValue
+
+func (pA *TK) TypeOfValueReflect(vA interface{}) string {
 	rs := reflect.TypeOf(vA)
 	return rs.String()
 }
 
-func KindOfValueReflect(vA interface{}) string {
+var TypeOfValueReflect = TKX.TypeOfValueReflect
+
+func (pA *TK) KindOfValueReflect(vA interface{}) string {
 	rs := reflect.TypeOf(vA)
 	return rs.Kind().String()
 }
 
-func GetClipText() string {
+var KindOfValueReflect = TKX.KindOfValueReflect
+
+func (pA *TK) GetClipText() string {
 	textT, errT := clipboard.ReadAll()
 	if errT != nil {
 		return GenerateErrorStringF("could not get text from clipboard: %v", errT.Error())
@@ -8317,7 +9217,9 @@ func GetClipText() string {
 	return textT
 }
 
-func GetClipboardTextWithDefault(defaultA string) string {
+var GetClipText = TKX.GetClipText
+
+func (pA *TK) GetClipboardTextWithDefault(defaultA string) string {
 	textT, errT := clipboard.ReadAll()
 	if errT != nil {
 		return defaultA
@@ -8327,7 +9229,9 @@ func GetClipboardTextWithDefault(defaultA string) string {
 
 }
 
-func GetClipboardTextDefaultEmpty() string {
+var GetClipboardTextWithDefault = TKX.GetClipboardTextWithDefault
+
+func (pA *TK) GetClipboardTextDefaultEmpty() string {
 	textT, errT := clipboard.ReadAll()
 	if errT != nil {
 		return ""
@@ -8337,11 +9241,15 @@ func GetClipboardTextDefaultEmpty() string {
 
 }
 
-func SetClipText(textA string) {
+var GetClipboardTextDefaultEmpty = TKX.GetClipboardTextDefaultEmpty
+
+func (pA *TK) SetClipText(textA string) {
 	clipboard.WriteAll(textA)
 }
 
-func GetTextFromFileOrClipboard(fileT string, defaultA string) string {
+var SetClipText = TKX.SetClipText
+
+func (pA *TK) GetTextFromFileOrClipboard(fileT string, defaultA string) string {
 	if IsEmptyTrim(fileT) {
 		return GetClipboardTextWithDefault(defaultA)
 	}
@@ -8353,8 +9261,10 @@ func GetTextFromFileOrClipboard(fileT string, defaultA string) string {
 	return LoadStringFromFileWithDefault(fileT, defaultA)
 }
 
+var GetTextFromFileOrClipboard = TKX.GetTextFromFileOrClipboard
+
 // RemoveItemsInArray
-func RemoveItemsInArray(aryA interface{}, startA int, endA int) interface{} {
+func (pA *TK) RemoveItemsInArray(aryA interface{}, startA int, endA int) interface{} {
 
 	aryT, ok := aryA.([]interface{})
 
@@ -8504,7 +9414,9 @@ func RemoveItemsInArray(aryA interface{}, startA int, endA int) interface{} {
 
 }
 
-func BitXor(p interface{}, v interface{}) interface{} {
+var RemoveItemsInArray = TKX.RemoveItemsInArray
+
+func (pA *TK) BitXor(p interface{}, v interface{}) interface{} {
 	switch p.(type) {
 	case int:
 		return p.(int) ^ v.(int)
@@ -8531,16 +9443,22 @@ func BitXor(p interface{}, v interface{}) interface{} {
 	return 0
 }
 
-func ToPointerStringArray(aryA []string) *[]string {
+var BitXor = TKX.BitXor
+
+func (pA *TK) ToPointerStringArray(aryA []string) *[]string {
 	return &aryA
 }
 
-func ToPointerFloat64Array(aryA []float64) *[]float64 {
+var ToPointerStringArray = TKX.ToPointerStringArray
+
+func (pA *TK) ToPointerFloat64Array(aryA []float64) *[]float64 {
 	return &aryA
 }
+
+var ToPointerFloat64Array = TKX.ToPointerFloat64Array
 
 // ParseHexColor inspired by gg
-func ParseHexColor(x string) (r, g, b, a int) {
+func (pA *TK) ParseHexColor(x string) (r, g, b, a int) {
 	x = strings.TrimPrefix(x, "#")
 	a = 255
 	if len(x) == 3 {
@@ -8561,17 +9479,21 @@ func ParseHexColor(x string) (r, g, b, a int) {
 	return
 }
 
+var ParseHexColor = TKX.ParseHexColor
+
 // DeepClone deep copies original and returns the copy as an interface.
-func DeepClone(original interface{}) (copy interface{}) {
+func (pA *TK) DeepClone(original interface{}) (copy interface{}) {
 	if original == nil {
 		return nil
 	}
 	value := reflect.ValueOf(original)
-	return deepCopy(value).Interface()
+	return pA.deepCopy(value).Interface()
 }
 
+var DeepClone = TKX.DeepClone
+
 // DeepCopyFromTo deep copies original and assigns the copy to the copy argument (pointer).
-func DeepCopyFromTo(original, copy interface{}) error {
+func (pA *TK) DeepCopyFromTo(original, copy interface{}) error {
 	if original == nil {
 		copy = nil
 		return nil
@@ -8592,50 +9514,54 @@ func DeepCopyFromTo(original, copy interface{}) error {
 		}
 		value = value.Elem()
 	}
-	copyValue.Elem().Set(deepCopy(value))
+	copyValue.Elem().Set(pA.deepCopy(value))
 	return nil
 }
 
-func deepCopy(original reflect.Value) reflect.Value {
+var DeepCopyFromTo = TKX.DeepCopyFromTo
+
+func (pA *TK) deepCopy(original reflect.Value) reflect.Value {
 	switch original.Kind() {
 	case reflect.Slice:
-		return deepCopySlice(original)
+		return pA.deepCopySlice(original)
 	case reflect.Map:
-		return deepCopyMap(original)
+		return pA.deepCopyMap(original)
 	case reflect.Ptr:
-		return deepCopyPointer(original)
+		return pA.deepCopyPointer(original)
 	case reflect.Struct:
-		return deepCopyStruct(original)
+		return pA.deepCopyStruct(original)
 	case reflect.Chan:
-		return deepCopyChan(original)
+		return pA.deepCopyChan(original)
 	case reflect.Array:
-		return deepCopyArray(original)
+		return pA.deepCopyArray(original)
 	default:
 		return forceCopyValue(original)
 	}
 }
 
 // forceCopyValue simply creates a new pointer and sets its value to the original.
-func forceCopyValue(original reflect.Value) reflect.Value {
+func (pA *TK) forceCopyValue(original reflect.Value) reflect.Value {
 	originalType := original.Type()
 	newPointer := reflect.New(originalType)
 	newPointer.Elem().Set(original)
 	return newPointer.Elem()
 }
 
-func deepCopySlice(original reflect.Value) reflect.Value {
+var forceCopyValue = TKX.forceCopyValue
+
+func (pA *TK) deepCopySlice(original reflect.Value) reflect.Value {
 	if original.IsNil() {
 		return original
 	}
 	copy := reflect.MakeSlice(original.Type(), 0, 0)
 	for i := 0; i < original.Len(); i++ {
-		elementCopy := deepCopy(original.Index(i))
+		elementCopy := pA.deepCopy(original.Index(i))
 		copy = reflect.Append(copy, elementCopy)
 	}
 	return copy
 }
 
-func deepCopyArray(original reflect.Value) reflect.Value {
+func (pA *TK) deepCopyArray(original reflect.Value) reflect.Value {
 	if original.Len() == 0 {
 		// it cannot be changed anyway, so we can return the original
 		return original
@@ -8645,13 +9571,13 @@ func deepCopyArray(original reflect.Value) reflect.Value {
 	newPointer := reflect.New(arrayType)
 	copy := newPointer.Elem()
 	for i := 0; i < original.Len(); i++ {
-		subCopy := deepCopy(original.Index(i))
+		subCopy := pA.deepCopy(original.Index(i))
 		copy.Index(i).Set(subCopy)
 	}
 	return copy
 }
 
-func deepCopyMap(original reflect.Value) reflect.Value {
+func (pA *TK) deepCopyMap(original reflect.Value) reflect.Value {
 	if original.IsNil() {
 		return original
 	}
@@ -8660,35 +9586,37 @@ func deepCopyMap(original reflect.Value) reflect.Value {
 	mapType := reflect.MapOf(keyType, valueType)
 	copy := reflect.MakeMap(mapType)
 	for _, key := range original.MapKeys() {
-		value := deepCopy(original.MapIndex(key))
+		value := pA.deepCopy(original.MapIndex(key))
 		copy.SetMapIndex(key, value)
 	}
 	return copy
 }
 
-func deepCopyPointer(original reflect.Value) reflect.Value {
+func (pA *TK) deepCopyPointer(original reflect.Value) reflect.Value {
 	if original.IsNil() {
 		return original
 	}
 	element := original.Elem()
 	copy := reflect.New(element.Type())
-	copyElement := deepCopy(element)
+	copyElement := pA.deepCopy(element)
 	copy.Elem().Set(copyElement)
 	return copy
 }
 
-func deepCopyStruct(original reflect.Value) reflect.Value {
+var deepCopyPointer = TKX.deepCopyPointer
+
+func (pA *TK) deepCopyStruct(original reflect.Value) reflect.Value {
 	copy := reflect.New(original.Type()).Elem()
 	copy.Set(original)
 	for i := 0; i < original.NumField(); i++ {
 		fieldValue := copy.Field(i)
 		fieldValue = reflect.NewAt(fieldValue.Type(), unsafe.Pointer(fieldValue.UnsafeAddr())).Elem()
-		fieldValue.Set(deepCopy(fieldValue))
+		fieldValue.Set(pA.deepCopy(fieldValue))
 	}
 	return copy
 }
 
-func deepCopyChan(original reflect.Value) reflect.Value {
+func (pA *TK) deepCopyChan(original reflect.Value) reflect.Value {
 	return reflect.MakeChan(original.Type(), original.Cap())
 }
 
@@ -8704,13 +9632,17 @@ type ServerInfo struct {
 }
 
 // PlainAuth get plain auth
-func GetPlainAuth(identity, username, password, host string) smtp.Auth {
+func (pA *TK) GetPlainAuth(identity, username, password, host string) smtp.Auth {
 	return &PlainAuth{identity, username, password, host}
 }
 
-func isLocalhost(name string) bool {
+var GetPlainAuth = TKX.GetPlainAuth
+
+func (pA *TK) isLocalhost(name string) bool {
 	return name == "localhost" || name == "127.0.0.1" || name == "::1"
 }
+
+var isLocalhost = TKX.isLocalhost
 
 func (a *PlainAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
 	// Must have TLS, or else localhost server.
@@ -8751,9 +9683,11 @@ type LoginAuth struct {
 	username, password string
 }
 
-func GetLoginAuth(username, password string) smtp.Auth {
+func (pA *TK) GetLoginAuth(username, password string) smtp.Auth {
 	return &LoginAuth{username, password}
 }
+
+var GetLoginAuth = TKX.GetLoginAuth
 
 func (a *LoginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
 	return "LOGIN", nil, nil
@@ -8780,7 +9714,7 @@ func (a *LoginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 
 // sock5 related
 
-func StartSocksServer(optionsA ...string) error {
+func (pA *TK) StartSocksServer(optionsA ...string) error {
 	ipT := GetSwitchWithDefaultValue(optionsA, "-ip=", "0.0.0.0")
 	portT := GetSwitchWithDefaultValue(optionsA, "-port=", "7480")
 	passwordT := GetSwitchWithDefaultValue(optionsA, "-password=", "acb123!@#")
@@ -8818,7 +9752,9 @@ func StartSocksServer(optionsA ...string) error {
 
 }
 
-func StartSocksClient(optionsA ...string) error {
+var StartSocksServer = TKX.StartSocksServer
+
+func (pA *TK) StartSocksClient(optionsA ...string) error {
 	remoteIpT := GetSwitchWithDefaultValue(optionsA, "-remoteIp=", "0.0.0.0")
 	remotePortT := GetSwitchWithDefaultValue(optionsA, "-remotePort=", "7480")
 	localIpT := GetSwitchWithDefaultValue(optionsA, "-localIp=", "0.0.0.0")
@@ -8857,9 +9793,11 @@ func StartSocksClient(optionsA ...string) error {
 
 }
 
+var StartSocksClient = TKX.StartSocksClient
+
 // Transparent proxy related
 
-func copyWR(w io.WriteCloser, r io.Reader) {
+func (pA *TK) copyWR(w io.WriteCloser, r io.Reader) {
 	_, err := io.Copy(w, r)
 	if err != nil {
 		Pl("failed to copy: %v", err)
@@ -8867,7 +9805,9 @@ func copyWR(w io.WriteCloser, r io.Reader) {
 	w.Close()
 }
 
-func forwardConn(lc net.Conn, server string, verboseA bool) {
+var copyWR = TKX.copyWR
+
+func (pA *TK) forwardConn(lc net.Conn, server string, verboseA bool) {
 	defer lc.Close()
 
 	rc, err := net.Dial("tcp", server)
@@ -8890,7 +9830,9 @@ func forwardConn(lc net.Conn, server string, verboseA bool) {
 	}
 }
 
-func StartTransparentProxy(local, server string, optionsA ...string) error {
+var forwardConn = TKX.forwardConn
+
+func (pA *TK) StartTransparentProxy(local, server string, optionsA ...string) error {
 	verboseT := IfSwitchExistsWhole(optionsA, "-verbose")
 
 	l, err := net.Listen("tcp", local)
@@ -8924,7 +9866,9 @@ func StartTransparentProxy(local, server string, optionsA ...string) error {
 	}
 }
 
-func StartTransparentProxy2(localA, remoteA string, optionsA ...string) error {
+var StartTransparentProxy = TKX.StartTransparentProxy
+
+func (pA *TK) StartTransparentProxy2(localA, remoteA string, optionsA ...string) error {
 	verboseT := IfSwitchExistsWhole(optionsA, "-verbose")
 
 	listener, err := net.Listen("tcp", localA)
@@ -8981,3 +9925,22 @@ func StartTransparentProxy2(localA, remoteA string, optionsA ...string) error {
 		}(conn, remoteA)
 	}
 }
+
+var StartTransparentProxy2 = TKX.StartTransparentProxy2
+
+// var CreateTXCollection = TKX.CreateTXCollection
+// var Trim = TKX.Trim
+// var RegMatch = TKX.RegMatch
+// var FindFirstDiffIndex = TKX.FindFirstDiffIndex
+// var StartsWith = TKX.StartsWith
+// var IsErrorString = TKX.IsErrorString
+// var GetErrorString = TKX.GetErrorString
+// var RegReplace = TKX.RegReplace
+// var GenerateErrorString = TKX.GenerateErrorString
+// var EncodeStringSimple = TKX.EncodeStringSimple
+// var Replace = TKX.Replace
+// var ObjectToJSON = TKX.ObjectToJSON
+// var SplitLines = TKX.SplitLines
+// var IsErrStr = TKX.IsErrStr
+// var Pl = TKX.Pl
+// var Pl = TKX.Pl
