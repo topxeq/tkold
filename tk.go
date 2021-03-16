@@ -1090,6 +1090,24 @@ func (pA *TK) RegContains(strA, patternA string) bool {
 
 var RegContains = TKX.RegContains
 
+func (pA *TK) RegSplit(strA, patternA string, nA ...int) []string {
+	regexpT, errT := regexp.Compile(patternA)
+
+	if errT != nil {
+		return nil
+	}
+
+	var nT int = -1
+
+	if (nA != nil) && len(nA) > 0 {
+		nT = nA[0]
+	}
+
+	return regexpT.Split(strA, nT)
+}
+
+var RegSplit = TKX.RegSplit
+
 func (pA *TK) RegContainsX(strA, patternA string) bool {
 	regexpT, errT := regexpx.Compile(patternA)
 
