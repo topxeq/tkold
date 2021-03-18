@@ -51,9 +51,9 @@ import (
 	"github.com/atotto/clipboard"
 	"github.com/beevik/etree"
 	jsoniter "github.com/json-iterator/go"
-	uuid "github.com/satori/go.uuid"
 	"github.com/topxeq/mahonia"
 	"github.com/topxeq/socks"
+	"github.com/topxeq/uuid"
 )
 
 var versionG = "0.9a"
