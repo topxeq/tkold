@@ -3675,7 +3675,12 @@ func (pA *TK) StrToFloat64E(strA string) (float64, error) {
 var StrToFloat64E = TKX.StrToFloat64E
 
 func (pA *TK) Float64ToStr(floatA float64) string {
-	return fmt.Sprintf("%f", floatA)
+	tmps := fmt.Sprintf("%f", floatA)
+	if Contains(tmps, ".") {
+		tmps = strings.TrimRight(tmps, "0")
+	}
+
+	return tmps
 }
 
 var Float64ToStr = TKX.Float64ToStr
