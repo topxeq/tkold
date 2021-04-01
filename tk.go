@@ -3369,12 +3369,34 @@ func (pA *TK) NilToEmptyStr(vA interface{}) string {
 	switch vA.(type) {
 	case string:
 		return vA.(string)
+	case float64:
+		return Float64ToStr(vA.(float64))
 	default:
 		return fmt.Sprintf("%v", vA)
 	}
 }
 
 var NilToEmptyStr = TKX.NilToEmptyStr
+
+func (pA *TK) NilEmptyStringNoFloat(vA interface{}) string {
+	if vA == nil {
+		return ""
+	}
+
+	vf, ok := vA.(float64)
+	if ok {
+		return ToStr(int(vf))
+	}
+
+	vs, ok := vA.(string)
+	if ok {
+		return vs
+	}
+
+	return fmt.Sprintf("%v", vA)
+}
+
+var NilEmptyStringNoFloat = TKX.NilEmptyStringNoFloat
 
 func (pA *TK) StrToBool(strA string) bool {
 	lowerStr := strings.ToLower(strA)
