@@ -3678,6 +3678,7 @@ func (pA *TK) Float64ToStr(floatA float64) string {
 	tmps := fmt.Sprintf("%f", floatA)
 	if Contains(tmps, ".") {
 		tmps = strings.TrimRight(tmps, "0")
+		tmps = strings.TrimRight(tmps, ".")
 	}
 
 	return tmps
