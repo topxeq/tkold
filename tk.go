@@ -1,6 +1,6 @@
 package tk
 
-// build 2020121001
+// build 202104060001
 
 import (
 	"bufio"
@@ -15,7 +15,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"math/big"
 	"math/rand"
@@ -56,7 +55,7 @@ import (
 	"github.com/topxeq/uuid"
 )
 
-var versionG = "0.9a"
+var versionG = "0.91a"
 
 type TK struct {
 	Version string
@@ -1068,7 +1067,7 @@ func (pA *TK) LoadStringTX(fileNameA string) *TXString {
 
 	defer fileT.Close()
 
-	fileContentT, err := ioutil.ReadAll(fileT)
+	fileContentT, err := io.ReadAll(fileT)
 	if err != nil {
 		return GenerateErrorStringTX(err.Error())
 	}
@@ -2276,7 +2275,7 @@ var EnsureBasePath = TKX.EnsureBasePath
 
 func (pA *TK) CreateTempFile(dirA string, patternA string) (string, error) {
 	content := []byte("")
-	tmpfile, err := ioutil.TempFile(dirA, patternA)
+	tmpfile, err := os.CreateTemp(dirA, patternA)
 	if err != nil {
 		return "", err
 	}
@@ -4130,7 +4129,7 @@ func (pA *TK) LoadStringFromFile(fileNameA string) string {
 
 	defer fileT.Close()
 
-	fileContentT, err := ioutil.ReadAll(fileT)
+	fileContentT, err := io.ReadAll(fileT)
 	if err != nil {
 		return GenerateErrorString(err.Error())
 	}
@@ -4153,7 +4152,7 @@ func (pA *TK) LoadStringFromFileWithDefault(fileNameA string, defaultA string) s
 
 	defer fileT.Close()
 
-	fileContentT, errT := ioutil.ReadAll(fileT)
+	fileContentT, errT := io.ReadAll(fileT)
 	if errT != nil {
 		return defaultA
 	}
@@ -4175,7 +4174,7 @@ func (pA *TK) LoadStringFromFileE(fileNameA string) (string, error) {
 
 	defer fileT.Close()
 
-	fileContentT, err := ioutil.ReadAll(fileT)
+	fileContentT, err := io.ReadAll(fileT)
 	if err != nil {
 		return "", err
 	}
@@ -4197,7 +4196,7 @@ func (pA *TK) LoadStringFromFileB(fileNameA string) (string, bool) {
 
 	defer fileT.Close()
 
-	fileContentT, err := ioutil.ReadAll(fileT)
+	fileContentT, err := io.ReadAll(fileT)
 	if err != nil {
 		return err.Error(), false
 	}
@@ -4221,7 +4220,7 @@ func (pA *TK) LoadBytes(fileNameA string, numA ...int) []byte {
 	defer fileT.Close()
 
 	if numA == nil || len(numA) < 1 || numA[0] <= 0 {
-		fileContentT, err := ioutil.ReadAll(fileT)
+		fileContentT, err := io.ReadAll(fileT)
 		if err != nil {
 			return nil
 		}
@@ -4254,7 +4253,7 @@ func (pA *TK) LoadBytesFromFileE(fileNameA string, numA ...int) ([]byte, error) 
 	defer fileT.Close()
 
 	if numA == nil || len(numA) < 1 || numA[0] <= 0 {
-		fileContentT, errT := ioutil.ReadAll(fileT)
+		fileContentT, errT := io.ReadAll(fileT)
 		if errT != nil {
 			return nil, errT
 		}
@@ -4365,7 +4364,7 @@ func (pA *TK) LoadStringList(fileNameA string) ([]string, string) {
 
 	defer fileT.Close()
 
-	fileContentT, err := ioutil.ReadAll(fileT)
+	fileContentT, err := io.ReadAll(fileT)
 	if err != nil {
 		return nil, err.Error()
 	}
@@ -4389,7 +4388,7 @@ func (pA *TK) LoadStringListFromFile(fileNameA string) ([]string, error) {
 
 	defer fileT.Close()
 
-	fileContentT, err := ioutil.ReadAll(fileT)
+	fileContentT, err := io.ReadAll(fileT)
 	if err != nil {
 		return nil, err
 	}
@@ -4603,7 +4602,7 @@ func (pA *TK) LoadStringListRemoveEmpty(fileNameA string) []string {
 
 	defer fileT.Close()
 
-	fileContentT, err := ioutil.ReadAll(fileT)
+	fileContentT, err := io.ReadAll(fileT)
 	if err != nil {
 		return nil
 	}
@@ -6502,7 +6501,7 @@ func (pA *TK) EncryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
 		outputFileT = fileNameA + ".txdef"
 	}
 
-	fileContenT, errT := ioutil.ReadFile(fileNameA)
+	fileContenT, errT := os.ReadFile(fileNameA)
 	if errT != nil {
 		return errT
 	}
@@ -6512,7 +6511,7 @@ func (pA *TK) EncryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
 		return Errf("encrypt data failed")
 	}
 
-	errT = ioutil.WriteFile(outputFileT, writeContentT, srcStatT.Mode())
+	errT = os.WriteFile(outputFileT, writeContentT, srcStatT.Mode())
 	if errT != nil {
 		return errT
 	}
@@ -6542,7 +6541,7 @@ func (pA *TK) EncryptFileByTXDEFWithHeader(fileNameA, codeA, outputFileA string)
 		outputFileT = fileNameA + ".txdef"
 	}
 
-	fileContenT, errT := ioutil.ReadFile(fileNameA)
+	fileContenT, errT := os.ReadFile(fileNameA)
 	if errT != nil {
 		return errT
 	}
@@ -6556,7 +6555,7 @@ func (pA *TK) EncryptFileByTXDEFWithHeader(fileNameA, codeA, outputFileA string)
 
 	bufT = append(bufT, writeContentT...)
 
-	errT = ioutil.WriteFile(outputFileT, bufT, srcStatT.Mode())
+	errT = os.WriteFile(outputFileT, bufT, srcStatT.Mode())
 	if errT != nil {
 		return errT
 	}
@@ -6714,7 +6713,7 @@ func (pA *TK) DecryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
 		outputFileT = fileNameA + ".untxdef"
 	}
 
-	fileContenT, errT := ioutil.ReadFile(fileNameA)
+	fileContenT, errT := os.ReadFile(fileNameA)
 	if errT != nil {
 		return errT
 	}
@@ -6728,7 +6727,7 @@ func (pA *TK) DecryptFileByTXDEF(fileNameA, codeA, outputFileA string) error {
 		return Errf("decrypt data failed")
 	}
 
-	errT = ioutil.WriteFile(outputFileT, writeContentT, srcStatT.Mode())
+	errT = os.WriteFile(outputFileT, writeContentT, srcStatT.Mode())
 	if errT != nil {
 		return errT
 	}
@@ -7172,7 +7171,7 @@ func (pA *TK) DownloadPageUTF8(urlA string, postDataA url.Values, customHeaders 
 
 			return GenerateErrorStringF("response status: %v", respT.StatusCode)
 		} else {
-			body, errT := ioutil.ReadAll(respT.Body)
+			body, errT := io.ReadAll(respT.Body)
 
 			if errT == nil {
 				return string(body)
@@ -7237,7 +7236,7 @@ func (pA *TK) DownloadPage(urlA string, originalEncodingA string, postDataA url.
 		if respT.StatusCode != 200 {
 			return GenerateErrorStringF("response status: %v", respT.StatusCode)
 		} else {
-			body, errT := ioutil.ReadAll(respT.Body)
+			body, errT := io.ReadAll(respT.Body)
 
 			if errT == nil {
 				if (originalEncodingA == "") || (strings.ToLower(originalEncodingA) == "utf-8") {
@@ -7309,7 +7308,7 @@ func (pA *TK) HttpRequest(urlA string, methodA string, originalEncodingA string,
 		if respT.StatusCode != 200 {
 			return GenerateErrorStringF("response status: %v", respT.StatusCode)
 		} else {
-			body, errT := ioutil.ReadAll(respT.Body)
+			body, errT := io.ReadAll(respT.Body)
 
 			if errT == nil {
 				if (originalEncodingA == "") || (strings.ToLower(originalEncodingA) == "utf-8") {
@@ -7365,7 +7364,7 @@ func (pA *TK) DownloadFile(urlA, dirA, fileNameA string, ifRenameA bool) string 
 	var urlT string
 	var fileNameT string = fileNameA
 
-	if !StartsWithIgnoreCase(urlA, "http://") {
+	if (!StartsWithIgnoreCase(urlA, "http://")) && (!StartsWithIgnoreCase(urlA, "http://")) {
 		urlT = "http://" + urlA
 	} else {
 		urlT = urlA
@@ -7401,7 +7400,7 @@ func (pA *TK) DownloadFile(urlA, dirA, fileNameA string, ifRenameA bool) string 
 	defer fileT.Close()
 
 	// if respT.ContentLength == -1 {
-	// 	tmpBuf, _ := ioutil.ReadAll(respT.Body)
+	// 	tmpBuf, _ := io.ReadAll(respT.Body)
 	// 	return GenerateErrorStringF("failed to get http response content length: %v\n%#v", string(tmpBuf), respT)
 	// }
 
@@ -7455,7 +7454,7 @@ func (pA *TK) DownloadBytes(urlA string) ([]byte, error) {
 
 	defer respT.Body.Close()
 
-	bufT, errT := ioutil.ReadAll(respT.Body)
+	bufT, errT := io.ReadAll(respT.Body)
 
 	if errT != nil {
 		return nil, Errf("failed to get http response body: %v", errT)
@@ -7489,7 +7488,7 @@ func (pA *TK) PostRequest(urlA, reqBodyA string, timeoutSecsA time.Duration) (st
 
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -7541,7 +7540,7 @@ func (pA *TK) PostRequestX(urlA, reqBodyA string, customHeadersA string, timeout
 		Pl("response status: %v (%v)", resp.StatusCode, resp)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -7596,7 +7595,7 @@ func (pA *TK) PutRequestX(urlA, reqBodyA string, customHeadersA string, timeoutS
 		Pl("response status: %v (%v)", resp.StatusCode, resp)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -7641,7 +7640,7 @@ func (pA *TK) PostRequestBytesX(urlA string, reqBodyA []byte, customHeadersA str
 
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -7697,7 +7696,7 @@ func (pA *TK) RequestX(urlA, methodA, reqBodyA string, customHeadersA string, ti
 		Pl("response status: %v (%v)", resp.StatusCode, resp)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -7734,7 +7733,7 @@ func (pA *TK) PostRequestBytesWithMSSHeaderX(urlA string, reqBodyA []byte, custo
 
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -7786,7 +7785,7 @@ func (pA *TK) PostRequestBytesWithCookieX(urlA string, reqBodyA []byte, customHe
 
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, nil, err
 	}
