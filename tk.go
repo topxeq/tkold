@@ -7364,7 +7364,7 @@ func (pA *TK) DownloadFile(urlA, dirA, fileNameA string, ifRenameA bool) string 
 	var urlT string
 	var fileNameT string = fileNameA
 
-	if (!StartsWithIgnoreCase(urlA, "http://")) && (!StartsWithIgnoreCase(urlA, "http://")) {
+	if (!StartsWithIgnoreCase(urlA, "http://")) && (!StartsWithIgnoreCase(urlA, "https://")) {
 		urlT = "http://" + urlA
 	} else {
 		urlT = urlA
