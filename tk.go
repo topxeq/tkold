@@ -9048,6 +9048,10 @@ func (pA *TK) IsError(vA interface{}) bool {
 var IsError = TKX.IsError
 
 func (pA *TK) TableToMSSArray(tableA [][]string) []map[string]string {
+	if tableA == nil {
+		return []map[string]string{}
+	}
+
 	lenT := len(tableA)
 
 	if lenT < 1 {
@@ -9079,6 +9083,10 @@ func (pA *TK) TableToMSSArray(tableA [][]string) []map[string]string {
 var TableToMSSArray = TKX.TableToMSSArray
 
 func (pA *TK) TableToMSSMap(tableA [][]string, keyA string) map[string]map[string]string {
+	if tableA == nil {
+		return map[string]map[string]string{}
+	}
+
 	lenT := len(tableA)
 
 	if lenT < 1 {
@@ -9110,10 +9118,14 @@ func (pA *TK) TableToMSSMap(tableA [][]string, keyA string) map[string]map[strin
 var TableToMSSMap = TKX.TableToMSSMap
 
 func (pA *TK) TableToMSSJSON(tableA [][]string) string {
+	if tableA == nil {
+		return "[]"
+	}
+
 	lenT := len(tableA)
 
 	if lenT < 1 {
-		return ErrStrf("no data")
+		return "[]"
 	}
 
 	inLenT := len(tableA[0])
