@@ -3658,6 +3658,12 @@ func (pA *TK) StrToIntPositive(strA string) int {
 
 var StrToIntPositive = TKX.StrToIntPositive
 
+func (pA *TK) StrToHex(strA string) string {
+	return hex.EncodeToString([]byte(strA))
+}
+
+var StrToHex = TKX.StrToHex
+
 func (pA *TK) StrToFloat64WithDefaultValue(strA string, defaultA float64) float64 {
 	nT, errT := strconv.ParseFloat(strA, 64)
 	if errT != nil {
