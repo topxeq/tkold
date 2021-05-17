@@ -5941,6 +5941,17 @@ func (pA *TK) HexToBytes(strA string) []byte {
 
 var HexToBytes = TKX.HexToBytes
 
+func (pA *TK) HexToStr(strA string) string {
+	buf, err := hex.DecodeString(strA)
+	if err != nil {
+		return ErrToStr(err)
+	}
+
+	return string(buf)
+}
+
+var HexToStr = TKX.HexToStr
+
 // HexToInt return -1 if failed
 func (pA *TK) HexToInt(strA string) int {
 	buf, err := hex.DecodeString(strA)
