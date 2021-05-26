@@ -9134,6 +9134,46 @@ func (pA *TK) TableToMSSMap(tableA [][]string, keyA string) map[string]map[strin
 
 var TableToMSSMap = TKX.TableToMSSMap
 
+func (pA *TK) TableToMSSMapArray(tableA [][]string, keyA string) map[string][]map[string]string {
+	if tableA == nil {
+		return map[string][]map[string]string{}
+	}
+
+	lenT := len(tableA)
+
+	if lenT < 1 {
+		return map[string][]map[string]string{}
+	}
+
+	inLenT := len(tableA[0])
+
+	bufT := make(map[string][]map[string]string, 0)
+
+	for i, v := range tableA {
+		if i == 0 {
+			continue
+		}
+
+		inBufT := make(map[string]string, inLenT)
+
+		for j, jv := range v {
+			inBufT[tableA[0][j]] = jv
+		}
+
+		_, ok := bufT[inBufT[keyA]]
+		if !ok {
+			bufT[inBufT[keyA]] = make([]map[string]string, 0, lenT)
+		}
+
+		bufT[inBufT[keyA]] = append(bufT[inBufT[keyA]], inBufT)
+	}
+
+	return bufT
+
+}
+
+var TableToMSSMapArray = TKX.TableToMSSMapArray
+
 func (pA *TK) TableToMSSJSON(tableA [][]string) string {
 	if tableA == nil {
 		return "[]"
