@@ -1979,6 +1979,28 @@ var IsYesterday = TKX.IsYesterday
 
 // 切片、数组相关 slice related and array related
 
+func (pA *TK) SafelyGetStringInArray(aryA []interface{}, idxA int, optionsA ...string) string {
+	defaultT := GetSwitch(optionsA, "-default=", "")
+
+	if aryA == nil {
+		return defaultT
+	}
+
+	lenT := len(aryA)
+
+	if idxA >= lenT {
+		return defaultT
+	}
+
+	if IfSwitchExists(optionsA, "-nofloat") {
+		return NilEmptyStringNoFloat(aryA[idxA])
+	}
+
+	return NilToEmptyStr(aryA[idxA])
+}
+
+var SafelyGetStringInArray = TKX.SafelyGetStringInArray
+
 func (pA *TK) GetRandomItem(aryA []interface{}) interface{} {
 	if aryA == nil {
 		return nil
