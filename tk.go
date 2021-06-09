@@ -1988,7 +1988,7 @@ func (pA *TK) SafelyGetStringInArray(aryA []interface{}, idxA int, optionsA ...s
 
 	lenT := len(aryA)
 
-	if idxA >= lenT {
+	if (idxA >= lenT) || (idxA < 0) {
 		return defaultT
 	}
 
