@@ -3776,6 +3776,18 @@ func (pA *TK) FormatStringSliceSlice(sliceA [][]string, sepA string, lineSepA st
 
 var FormatStringSliceSlice = TKX.FormatStringSliceSlice
 
+// number related
+
+func AbsInt(c int) int {
+	if c < 0 {
+		return -c
+	} else {
+		return c
+	}
+}
+
+var AbsInt = TKX.AbsInt
+
 // IntToKMGT convert a number to "3.21K", "1.2G", etc, formatA like "%.2f"
 // if sizeA < 1024, formatA is ignored
 func (pA *TK) IntToKMGT(sizeA int, formatA string) string {
