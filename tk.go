@@ -9647,6 +9647,28 @@ func (pA *TK) RemoveItemsInArray(aryA interface{}, startA int, endA int) interfa
 
 var RemoveItemsInArray = TKX.RemoveItemsInArray
 
+func (pA *TK) RemoveStringInArray(sliceA []string, idxA int) []string {
+	if idxA >= 0 && idxA < len(sliceA) {
+		copy(sliceA[idxA:], sliceA[idxA+1:])
+		sliceA = sliceA[0 : len(sliceA)-1]
+	}
+
+	return sliceA
+}
+
+var RemoveStringInArray = TKX.RemoveStringInArray
+
+func (pA *TK) RemoveIntInArray(sliceA []int, idxA int) []int {
+	if idxA >= 0 && idxA < len(sliceA) {
+		copy(sliceA[idxA:], sliceA[idxA+1:])
+		sliceA = sliceA[0 : len(sliceA)-1]
+	}
+
+	return sliceA
+}
+
+var RemoveIntInArray = TKX.RemoveIntInArray
+
 func (pA *TK) BitXor(p interface{}, v interface{}) interface{} {
 	switch p.(type) {
 	case int:
@@ -9673,6 +9695,7 @@ func (pA *TK) BitXor(p interface{}, v interface{}) interface{} {
 
 	return 0
 }
+
 
 var BitXor = TKX.BitXor
 
