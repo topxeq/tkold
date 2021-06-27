@@ -7865,6 +7865,17 @@ func (pA *TK) GetFormValueWithDefaultValue(reqA *http.Request, keyA string, defa
 
 var GetFormValueWithDefaultValue = TKX.GetFormValueWithDefaultValue
 
+func (pA *TK) IfFormValueExists(reqA *http.Request, keyA string) bool {
+	_, ok := reqA.Form[keyA]
+	if ok {
+		return true
+	} else {
+		return false
+	}
+}
+
+var IfFormValueExists = TKX.IfFormValueExists
+
 func (pA *TK) GenerateJSONPResponse(statusA string, valueA string, reqA *http.Request, argsA ...string) string {
 	_, valueOnlyT := reqA.Form["valueonly"]
 
