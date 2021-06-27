@@ -3778,7 +3778,7 @@ var FormatStringSliceSlice = TKX.FormatStringSliceSlice
 
 // number related
 
-func AbsInt(c int) int {
+func (pA *TK) AbsInt(c int) int {
 	if c < 0 {
 		return -c
 	} else {
