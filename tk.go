@@ -3434,6 +3434,16 @@ func (pA *TK) StrToBool(strA string) bool {
 
 var StrToBool = TKX.StrToBool
 
+func (pA *TK) BoolToStr(vA bool) string {
+	if vA {
+		return "true"
+	} else {
+		return "false"
+	}
+}
+
+var BoolToStr = TKX.BoolToStr
+
 func (pA *TK) ByteToHex(byteA byte) string {
 	return Spr("%X", byteA)
 }
