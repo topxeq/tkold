@@ -412,6 +412,18 @@ func (pA *TK) InStrings(strA string, argsA ...string) bool {
 
 var InStrings = TKX.InStrings
 
+func (pA *TK) InStringsTrim(strA string, argsA ...string) bool {
+	for _, arg := range argsA {
+		if strA == Trim(arg) {
+			return true
+		}
+	}
+
+	return false
+}
+
+var InStringsTrim = TKX.InStringsTrim
+
 func (pA *TK) IsValidEmail(strA string) bool {
 	return RegMatch(strA, `[a-zA-Z0-9]+?[a-zA-Z0-9\.\-_]*?@[a-zA-Z0-9]+?(\.[a-zA-Z0-9\.\-_]*)+`)
 }
@@ -9695,7 +9707,6 @@ func (pA *TK) BitXor(p interface{}, v interface{}) interface{} {
 
 	return 0
 }
-
 
 var BitXor = TKX.BitXor
 
