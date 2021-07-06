@@ -4012,6 +4012,32 @@ func (pA *TK) RemoveFile(filePathT string) error {
 
 var RemoveFile = TKX.RemoveFile
 
+func (pA *TK) GetFileSize(filePathA string) (int64, error) {
+	fi, err := os.Stat(filePathA)
+	if err != nil {
+		return -1, err
+	}
+
+	sizeT := fi.Size()
+
+	return sizeT, nil
+}
+
+var GetFileSize = TKX.GetFileSize
+
+func (pA *TK) GetFileSizeCompact(filePathA string) int64 {
+	fi, err := os.Stat(filePathA)
+	if err != nil {
+		return -1
+	}
+
+	sizeT := fi.Size()
+
+	return sizeT
+}
+
+var GetFileSizeCompact = TKX.GetFileSizeCompact
+
 func (pA *TK) GenerateFileListInDir(dirA string, patternA string, verboseA bool) []string {
 	strListT := make([]string, 0, 100)
 
