@@ -9517,8 +9517,8 @@ func (pA *TK) GetClipboardTextDefaultEmpty() string {
 
 var GetClipboardTextDefaultEmpty = TKX.GetClipboardTextDefaultEmpty
 
-func (pA *TK) SetClipText(textA string) {
-	clipboard.WriteAll(textA)
+func (pA *TK) SetClipText(textA string) error {
+	return clipboard.WriteAll(textA)
 }
 
 var SetClipText = TKX.SetClipText
