@@ -5657,14 +5657,19 @@ func (pA *TK) JSONToObjectE(objStrA string) (interface{}, error) {
 
 var JSONToObjectE = TKX.JSONToObjectE
 
-func (pA *TK) SafelyGetStringForKeyWithDefault(mapA map[string]string, keyA string, defaultA string) string {
+func (pA *TK) SafelyGetStringForKeyWithDefault(mapA map[string]string, keyA string, defaultA ...string) string {
+	defaultT := ""
+	if (defaultA != nil) && (len(defaultA) > 0) {
+		defaultT = defaultA[0]
+	}
+
 	if mapA == nil {
-		return defaultA
+		return defaultT
 	}
 
 	v, ok := mapA[keyA]
 	if !ok {
-		return defaultA
+		return defaultT
 	}
 
 	return v
