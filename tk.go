@@ -4176,6 +4176,95 @@ func (pA *TK) GenerateFileListRecursivelyWithExclusive(dirA string, patternA str
 
 var GenerateFileListRecursivelyWithExclusive = TKX.GenerateFileListRecursivelyWithExclusive
 
+type FileInfo struct {
+	Name  string
+	IsDir string
+	Size  string
+	Mode  string
+	Time  string
+}
+
+func (pA *TK) GetFileList(dirA string, argsA ...string) []map[string]string {
+
+	verboseT := IfSwitchExistsWhole(argsA, "-verbose")
+
+	recursiveT := IfSwitchExistsWhole(argsA, "-recursive")
+
+	patternT := GetSwitch(argsA, "-pattern=", "*")
+
+	exclusivePatternT := GetSwitch(argsA, "-exclusive=", "")
+
+	pathT, errT := filepath.Abs(dirA)
+
+	if errT != nil {
+		return nil
+	}
+
+	mapListT := make([]map[string]string, 0, 100)
+
+	errT = filepath.Walk(dirA, func(path string, f os.FileInfo, err error) error {
+		if verboseT {
+			Pln(path)
+		}
+
+		if f == nil {
+			return err
+		}
+
+		if f.IsDir() {
+			if recursiveT {
+				return nil
+			} else {
+				if path != "." && path != pathT {
+					return filepath.SkipDir
+				} else {
+					return nil
+				}
+			}
+		}
+
+		matchedT, errTI := filepath.Match(patternT, filepath.Base(path))
+		if errTI == nil {
+			if matchedT {
+				if exclusivePatternT != "" {
+					matched2T, err2TI := filepath.Match(exclusivePatternT, filepath.Base(path))
+					if err2TI == nil {
+						if matched2T {
+							return nil
+						}
+					}
+				}
+
+				absPathT, err1T := filepath.Abs(path)
+
+				if err1T != nil {
+					return nil
+				}
+
+				mapListT = append(mapListT, map[string]string{"Path": path, "Abs": absPathT, "Name": filepath.Base(path), "Size": Int64ToStr(f.Size()), "IsDir": BoolToStr(f.IsDir()), "Time": FormatTime(f.ModTime(), TimeFormatCompact), "Mode": fmt.Sprintf("%v", f.Mode())})
+			}
+		} else {
+			if verboseT {
+				Pl("matching failed: %v", errTI.Error())
+			}
+		}
+
+		return nil
+	})
+
+	if errT != nil {
+		if verboseT {
+			Pl("Search directory failed: %v", errT.Error())
+		}
+
+		return nil
+	}
+
+	return mapListT
+}
+
+var GetFileList = TKX.GetFileList
+
 func (pA *TK) Ls(dirA string) []string {
 	return GenerateFileListInDir(dirA, "*", false)
 }
