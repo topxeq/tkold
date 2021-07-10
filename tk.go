@@ -2801,6 +2801,18 @@ func (pA *TK) CheckErrStrf(formatA string, errStrA string, argsA ...interface{})
 
 var CheckErrStrf = TKX.CheckErrStrf
 
+func (pA *TK) CheckErrStr(errStrA string, argsA ...interface{}) {
+	if !IsErrStr(errStrA) {
+		return
+	}
+
+	Pl("error: %v", append([]interface{}{GetErrStr(errStrA)}, argsA...)...)
+
+	os.Exit(1)
+}
+
+var CheckErrStr = TKX.CheckErrStr
+
 func (pA *TK) CheckErrCompact(errA error) {
 	if errA == nil {
 		return
