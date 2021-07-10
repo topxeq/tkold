@@ -1119,6 +1119,24 @@ func (pA *TK) RegSplit(strA, patternA string, nA ...int) []string {
 
 var RegSplit = TKX.RegSplit
 
+func (pA *TK) RegSplitX(strA, patternA string, nA ...int) []string {
+	regexpT, errT := regexpx.Compile(patternA)
+
+	if errT != nil {
+		return nil
+	}
+
+	var nT int = -1
+
+	if (nA != nil) && len(nA) > 0 {
+		nT = nA[0]
+	}
+
+	return regexpT.Split(strA, nT)
+}
+
+var RegSplitX = TKX.RegSplitX
+
 func (pA *TK) RegContainsX(strA, patternA string) bool {
 	regexpT, errT := regexpx.Compile(patternA)
 
@@ -3488,7 +3506,20 @@ func (pA *TK) Int64ToStr(intA int64) string {
 var Int64ToStr = TKX.Int64ToStr
 
 func (pA *TK) ToStr(v interface{}) string {
-	return fmt.Sprintf("%v", v)
+	switch nv := v.(type) {
+	case float64, float32:
+		tmps := fmt.Sprintf("%f", nv)
+		if Contains(tmps, ".") {
+			tmps = strings.TrimRight(tmps, "0")
+			tmps = strings.TrimRight(tmps, ".")
+		}
+
+		return tmps
+	case int64:
+		return strconv.FormatInt(nv, 10)
+	default:
+		return fmt.Sprintf("%v", v)
+	}
 }
 
 var ToStr = TKX.ToStr
@@ -7536,6 +7567,18 @@ func (pA *TK) HttpRequest(urlA string, methodA string, originalEncodingA string,
 }
 
 var HttpRequest = TKX.HttpRequest
+
+func (pA *TK) MapToPostData(postDataA map[string]string) url.Values {
+	postDataT := url.Values{}
+
+	for k, v := range postDataA {
+		postDataT.Set(k, v)
+	}
+
+	return postDataT
+}
+
+var MapToPostData = TKX.MapToPostData
 
 func (pA *TK) DownloadPageByMap(urlA string, originalEncodingA string, postDataA map[string]string, customHeaders string, timeoutSecsA time.Duration) string {
 	if postDataA == nil {
