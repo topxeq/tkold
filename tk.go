@@ -5443,13 +5443,17 @@ func (pA *TK) FromJSON(jsonA string) (interface{}, error) {
 
 var FromJSON = TKX.FromJSON
 
-func (pA *TK) FromJSONWithDefault(jsonA string, defaultA interface{}) interface{} {
+func (pA *TK) FromJSONWithDefault(jsonA string, defaultA ...interface{}) interface{} {
 	var rs interface{}
 
 	errT := jsoniter.Unmarshal([]byte(jsonA), &rs)
 
 	if errT != nil {
-		return defaultA
+		if len(defaultA) > 0 {
+			return defaultA[0]
+		}
+
+		return nil
 	}
 
 	return rs
