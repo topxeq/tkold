@@ -55,7 +55,7 @@ import (
 	"github.com/topxeq/uuid"
 )
 
-var versionG = "0.91a"
+var versionG = "0.92a"
 
 type TK struct {
 	Version string
@@ -304,6 +304,105 @@ func (pA *TK) IsEmptyTrim(strA string) bool {
 }
 
 var IsEmptyTrim = TKX.IsEmptyTrim
+
+func (pA *TK) JoinList(aryA interface{}, sepA string, defaultA ...string) string {
+	var defaultT string = ""
+	if (defaultA != nil) && (len(defaultA) > 0) {
+		defaultT = defaultA[0]
+	}
+
+	if aryA == nil {
+		return defaultT
+	}
+
+	switch v := aryA.(type) {
+	case []string:
+		return strings.Join(v, sepA)
+	case []interface{}:
+		var bufT strings.Builder
+		for j, jv := range v {
+			if j > 0 {
+				bufT.WriteString(sepA)
+			}
+
+			bufT.WriteString(fmt.Sprintf("%v", jv))
+		}
+
+		return bufT.String()
+	case []int:
+		var bufT strings.Builder
+		for j, jv := range v {
+			if j > 0 {
+				bufT.WriteString(sepA)
+			}
+
+			bufT.WriteString(fmt.Sprintf("%v", jv))
+		}
+
+		return bufT.String()
+	case []int64:
+		var bufT strings.Builder
+		for j, jv := range v {
+			if j > 0 {
+				bufT.WriteString(sepA)
+			}
+
+			bufT.WriteString(fmt.Sprintf("%v", jv))
+		}
+
+		return bufT.String()
+	case []float64:
+		var bufT strings.Builder
+		for j, jv := range v {
+			if j > 0 {
+				bufT.WriteString(sepA)
+			}
+
+			bufT.WriteString(fmt.Sprintf("%v", jv))
+		}
+
+		return bufT.String()
+	case []byte:
+		var bufT strings.Builder
+		for j, jv := range v {
+			if j > 0 {
+				bufT.WriteString(sepA)
+			}
+
+			bufT.WriteString(fmt.Sprintf("%X", jv))
+		}
+
+		return bufT.String()
+	case map[string]string:
+		var bufT strings.Builder
+		j := 0
+		for k, kv := range v {
+			if j > 0 {
+				bufT.WriteString(sepA)
+			}
+
+			bufT.WriteString(fmt.Sprintf("%v: %v", k, kv))
+		}
+
+		return bufT.String()
+	case map[string]interface{}:
+		var bufT strings.Builder
+		j := 0
+		for k, kv := range v {
+			if j > 0 {
+				bufT.WriteString(sepA)
+			}
+
+			bufT.WriteString(fmt.Sprintf("%v: %v", k, kv))
+		}
+
+		return bufT.String()
+	}
+
+	return defaultT
+}
+
+var JoinList = TKX.JoinList
 
 // StartsWith 检查字符串strA开始是否是subStrA
 func (pA *TK) StartsWith(strA string, subStrA string) bool {
@@ -1977,12 +2076,18 @@ func (pA *TK) StrToTimeByFormat(strA string, formatA string) (time.Time, error) 
 var StrToTimeByFormat = TKX.StrToTimeByFormat
 
 // FormatTime default format "2006-01-02 15:04:05"
-func (pA *TK) FormatTime(timeA time.Time, formatA string) string {
-	if formatA == "" {
-		formatA = "2006-01-02 15:04:05"
+func (pA *TK) FormatTime(timeA time.Time, formatA ...string) string {
+	formatT := ""
+
+	if (formatA != nil) && (len(formatA) > 0) {
+		formatT = formatA[0]
 	}
 
-	return timeA.Format(formatA)
+	if formatT == "" {
+		formatT = "2006-01-02 15:04:05"
+	}
+
+	return timeA.Format(formatT)
 }
 
 var FormatTime = TKX.FormatTime
@@ -3498,6 +3603,53 @@ func (pA *TK) IntToStr(intA int) string {
 }
 
 var IntToStr = TKX.IntToStr
+
+func (pA *TK) IntToStrX(n interface{}, defaultA ...string) string {
+	var defaultT string = ""
+	if (defaultA != nil) && (len(defaultA) > 0) {
+		defaultT = defaultA[0]
+	}
+
+	switch nv := n.(type) {
+	case int:
+		return fmt.Sprintf("%v", nv)
+	case int8:
+		return fmt.Sprintf("%v", nv)
+	case int16:
+		return fmt.Sprintf("%v", nv)
+	case int32:
+		return fmt.Sprintf("%v", nv)
+	case int64:
+		return strconv.FormatInt(nv, 10)
+	case float64:
+		return Float64ToStr(nv)
+	case float32:
+		tmps := fmt.Sprintf("%f", nv)
+		if Contains(tmps, ".") {
+			tmps = strings.TrimRight(tmps, "0")
+			tmps = strings.TrimRight(tmps, ".")
+		}
+
+		return tmps
+	case string:
+		nT, errT := strconv.ParseInt(nv, 10, 0)
+		if errT != nil {
+			return defaultT
+		}
+
+		return fmt.Sprintf("%v", nT)
+	default:
+		nT, errT := strconv.ParseInt(fmt.Sprintf("%v", nv), 10, 0)
+		if errT != nil {
+			return defaultT
+		}
+
+		return fmt.Sprintf("%v", nT)
+	}
+
+}
+
+var IntToStrX = TKX.IntToStrX
 
 func (pA *TK) Int64ToStr(intA int64) string {
 	return strconv.FormatInt(intA, 10)
@@ -7611,7 +7763,9 @@ func (pA *TK) GetLastComponentOfUrl(urlA string) string {
 
 var GetLastComponentOfUrl = TKX.GetLastComponentOfUrl
 
-func (pA *TK) DownloadFile(urlA, dirA, fileNameA string, ifRenameA bool) string {
+func (pA *TK) DownloadFile(urlA, dirA, fileNameA string, argsA ...string) string {
+
+	ifRenameT := IfSwitchExistsWhole(argsA, "-rename")
 
 	var urlT string
 	var fileNameT string = fileNameA
@@ -7641,7 +7795,7 @@ func (pA *TK) DownloadFile(urlA, dirA, fileNameA string, ifRenameA bool) string 
 		fileNameT = filepath.Join(dirA, fileNameT)
 	}
 
-	if ifRenameA {
+	if ifRenameT {
 		fileNameT = GetAvailableFileName(fileNameT)
 	}
 
