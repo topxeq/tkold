@@ -3669,8 +3669,10 @@ func (pA *TK) ToStr(v interface{}) string {
 		return tmps
 	case int64:
 		return strconv.FormatInt(nv, 10)
+	case []uint8:
+		return string(nv)
 	default:
-		return fmt.Sprintf("%v", v)
+		return fmt.Sprintf("%T-%v", v, v)
 	}
 }
 
