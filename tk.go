@@ -3672,7 +3672,8 @@ func (pA *TK) ToStr(v interface{}) string {
 	case []uint8:
 		return string(nv)
 	default:
-		return fmt.Sprintf("%T-%v", v, v)
+		Pl("%T", v)
+		return fmt.Sprintf("%v", v)
 	}
 }
 
