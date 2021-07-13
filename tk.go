@@ -55,7 +55,7 @@ import (
 	"github.com/topxeq/uuid"
 )
 
-var versionG = "0.92a"
+var versionG = "0.93a"
 
 type TK struct {
 	Version string
@@ -6415,7 +6415,7 @@ func (pA *TK) SumBytes(srcDataA []byte) byte {
 
 var SumBytes = TKX.SumBytes
 
-func (pA *TK) EncryptDataByTXDEF(srcDataA []byte, codeA string) []byte {
+func (pA *TK) EncryptDataByTXDEF(srcDataA []byte, codeA ...string) []byte {
 	if srcDataA == nil {
 		return nil
 	}
@@ -6425,7 +6425,12 @@ func (pA *TK) EncryptDataByTXDEF(srcDataA []byte, codeA string) []byte {
 		return srcDataA
 	}
 
-	codeT := codeA
+	codeT := ""
+
+	if (codeA != nil) && (len(codeA) > 0) {
+		codeT = codeA[0]
+	}
+
 	if codeT == "" {
 		codeT = "topxeq"
 	}
@@ -6690,12 +6695,17 @@ func (pA *TK) DecryptDataByTXDEE(srcDataA []byte, codeA string) []byte {
 
 var DecryptDataByTXDEE = TKX.DecryptDataByTXDEE
 
-func (pA *TK) DecryptDataByTXDEF(srcDataA []byte, codeA string) []byte {
+func (pA *TK) DecryptDataByTXDEF(srcDataA []byte, codeA ...string) []byte {
 	if srcDataA == nil {
 		return nil
 	}
 
-	codeT := codeA
+	codeT := ""
+
+	if (codeA != nil) && (len(codeA) > 0) {
+		codeT = codeA[0]
+	}
+
 	if codeT == "" {
 		codeT = "topxeq"
 	}
@@ -6828,12 +6838,18 @@ func (pA *TK) DecryptStringByTXDEE(strA, codeA string) string {
 
 var DecryptStringByTXDEE = TKX.DecryptStringByTXDEE
 
-func (pA *TK) EncryptStringByTXDEF(strA, codeA string) string {
+func (pA *TK) EncryptStringByTXDEF(strA string, codeA ...string) string {
 	if strA == "" {
 		return ""
 	}
 
-	dataDT := EncryptDataByTXDEF([]byte(strA), codeA)
+	codeT := ""
+
+	if (codeA != nil) && (len(codeA) > 0) {
+		codeT = codeA[0]
+	}
+
+	dataDT := EncryptDataByTXDEF([]byte(strA), codeT)
 	if dataDT == nil {
 		return GenerateErrorStringF("encrypting failed")
 	}
@@ -6843,9 +6859,15 @@ func (pA *TK) EncryptStringByTXDEF(strA, codeA string) string {
 
 var EncryptStringByTXDEF = TKX.EncryptStringByTXDEF
 
-func (pA *TK) DecryptStringByTXDEF(strA, codeA string) string {
+func (pA *TK) DecryptStringByTXDEF(strA string, codeA ...string) string {
 	if strA == "" {
 		return ""
+	}
+
+	codeT := ""
+
+	if (codeA != nil) && (len(codeA) > 0) {
+		codeT = codeA[0]
 	}
 
 	var sBufT []byte
@@ -6863,7 +6885,7 @@ func (pA *TK) DecryptStringByTXDEF(strA, codeA string) string {
 		return GenerateErrorStringF("decrypting failed: %v", errT)
 	}
 
-	dataDT := DecryptDataByTXDEF(sBufT, codeA)
+	dataDT := DecryptDataByTXDEF(sBufT, codeT)
 	if dataDT == nil {
 		return GenerateErrorStringF("decrypting failed")
 	}
