@@ -56,7 +56,7 @@ import (
 	"github.com/topxeq/uuid"
 )
 
-var versionG = "0.93a"
+var versionG = "0.95a"
 
 type TK struct {
 	Version string
@@ -883,6 +883,85 @@ func (pA *TK) EnsureValidFileNameX(fileNameA string) string {
 
 var EnsureValidFileNameX = TKX.EnsureValidFileNameX
 
+// StringRing
+type StringRing struct {
+	Buf   []string
+	Start int
+	End   int
+}
+
+func (pA *TK) NewStringRing(sizeA ...int) *StringRing {
+	ringT := &StringRing{}
+
+	ringT.Reset(sizeA...)
+
+	return ringT
+}
+
+var NewStringRing = TKX.NewStringRing
+
+func (p *StringRing) Reset(sizeA ...int) {
+	var sizeT int = 10
+
+	if len(sizeA) > 0 {
+		sizeT = sizeA[0]
+	}
+
+	p.Buf = make([]string, sizeT+1)
+
+	p.Start = 0
+	p.End = 0
+}
+
+func (p *StringRing) Push(strA string) {
+	p.Buf[p.Start] = strA
+	p.Start++
+
+	if p.Start >= len(p.Buf) {
+		p.Start = 0
+	}
+
+	if p.Start == p.End {
+		p.End++
+
+		if p.End >= len(p.Buf) {
+			p.End = 0
+		}
+	}
+}
+
+func (v StringRing) GetList() []string {
+	bufT := make([]string, 0, len(v.Buf))
+
+	i := v.End
+	for i != v.Start {
+		bufT = append(bufT, v.Buf[i])
+
+		i++
+		if i >= len(v.Buf) {
+			i = 0
+		}
+	}
+
+	return bufT
+}
+
+func (v StringRing) GetString(sepA ...string) string {
+	var sepT string = "\n"
+
+	if len(sepA) > 0 {
+		sepT = sepA[0]
+	}
+
+	bufT := v.GetList()
+
+	return strings.Join(bufT, sepT)
+}
+
+func (v StringRing) String() string {
+	return Spr("Start: %v, End: %v, Buf: %v", v.Start, v.End, v.Buf)
+}
+
 // TXString 相关
 
 type TXString struct {
@@ -946,8 +1025,8 @@ func (pA *TK) CreateStringErrorFromTXError(errA string) *TXString {
 
 var CreateStringErrorFromTXError = TKX.CreateStringErrorFromTXError
 
-func (p *TXString) String() string {
-	return p.string
+func (v TXString) String() string {
+	return v.string
 }
 
 func (p *TXString) Length() int {
