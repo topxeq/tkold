@@ -9,6 +9,7 @@ import (
 	"crypto/md5"
 	"database/sql"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"encoding/xml"
@@ -499,8 +500,40 @@ func (pA *TK) TrimCharSet(strA string, charSetA string) string {
 
 var TrimCharSet = TKX.TrimCharSet
 
+// InStrings 第一个可变参数如果以“-”开头，将表示参数开关，-it表示忽略大小写，并且trim再比较（strA并不trim）
 func (pA *TK) InStrings(strA string, argsA ...string) bool {
-	for _, arg := range argsA {
+	ignoreCaseT := false
+	trimT := false
+
+	for i, arg := range argsA {
+		if i == 0 {
+			if len(arg) > 0 {
+				if arg[0] == '-' {
+					if strings.Contains(arg, "i") {
+						ignoreCaseT = true
+					}
+
+					if strings.Contains(arg, "t") {
+						trimT = true
+					}
+
+					if ignoreCaseT {
+						strA = strings.ToLower(strA)
+					}
+
+					continue
+				}
+			}
+		}
+
+		if ignoreCaseT {
+			arg = strings.ToLower(arg)
+		}
+
+		if trimT {
+			arg = Trim(arg)
+		}
+
 		if strA == arg {
 			return true
 		}
@@ -3069,7 +3102,7 @@ func (pA *TK) GetInputPasswordf(formatA string, aA ...interface{}) string {
 var GetInputPasswordf = TKX.GetInputPasswordf
 
 func (pA *TK) Sleep(secA float64) {
-	time.Sleep(time.Duration(secA) * time.Second)
+	time.Sleep(time.Duration(secA*1000) * time.Millisecond)
 }
 
 var Sleep = TKX.Sleep
@@ -3528,6 +3561,121 @@ func (pA *TK) IfSwitchExistsWholeI(argsA []interface{}, switchStrA string) bool 
 var IfSwitchExistsWholeI = TKX.IfSwitchExistsWholeI
 
 // 各种转换 conversion related
+
+func (pA *TK) ToInterface(vA interface{}) interface{} {
+	return vA
+}
+
+var ToInterface = TKX.ToInterface
+
+func (pA *TK) ToPointer(pointerA *interface{}) interface{} {
+	v := *pointerA
+
+	switch v.(type) {
+	case int:
+		return (*int)(unsafe.Pointer(pointerA))
+	case []int:
+		return (*[]int)(unsafe.Pointer(pointerA))
+	case uint:
+		return (*uint)(unsafe.Pointer(pointerA))
+	case uint8: // byte
+		return (*uint8)(unsafe.Pointer(pointerA))
+	case []uint8: // []byte
+		return (*[]uint8)(unsafe.Pointer(pointerA))
+	case uint16:
+		return (*uint16)(unsafe.Pointer(pointerA))
+	case uint32:
+		return (*uint32)(unsafe.Pointer(pointerA))
+	case uint64:
+		return (*uint64)(unsafe.Pointer(pointerA))
+	case int8:
+		return (*int8)(unsafe.Pointer(pointerA))
+	case int16:
+		return (*int16)(unsafe.Pointer(pointerA))
+	case int32: // rune
+		return (*int32)(unsafe.Pointer(pointerA))
+	case []int32: // []rune
+		return (*[]int32)(unsafe.Pointer(pointerA))
+	case int64:
+		return (*int64)(unsafe.Pointer(pointerA))
+	case []int64:
+		return (*[]int64)(unsafe.Pointer(pointerA))
+	case complex64:
+		return (*complex64)(unsafe.Pointer(pointerA))
+	case []complex64:
+		return (*[]complex64)(unsafe.Pointer(pointerA))
+	case complex128:
+		return (*complex128)(unsafe.Pointer(pointerA))
+	case []complex128:
+		return (*[]complex128)(unsafe.Pointer(pointerA))
+	case float32:
+		return (*float32)(unsafe.Pointer(pointerA))
+	case []float32:
+		return (*[]float32)(unsafe.Pointer(pointerA))
+	case float64:
+		return (*float64)(unsafe.Pointer(pointerA))
+	case []float64:
+		return (*[]float64)(unsafe.Pointer(pointerA))
+	case bool:
+		return (*bool)(unsafe.Pointer(pointerA))
+	case string:
+		return (*string)(unsafe.Pointer(pointerA))
+	case []string:
+		return (*[]string)(unsafe.Pointer(pointerA))
+	case map[string]string:
+		return (*map[string]string)(unsafe.Pointer(pointerA))
+	case []map[string]string:
+		return (*[]map[string]string)(unsafe.Pointer(pointerA))
+	case time.Time:
+		return (*time.Time)(unsafe.Pointer(pointerA))
+	case []interface{}:
+		return (*[]interface{})(unsafe.Pointer(pointerA))
+	case map[string]interface{}:
+		return (*map[string]interface{})(unsafe.Pointer(pointerA))
+	case []map[string]interface{}:
+		return (*[]map[string]interface{})(unsafe.Pointer(pointerA))
+	case *interface{}:
+		return (*interface{})(unsafe.Pointer(pointerA))
+	case interface{}:
+		return pointerA
+	}
+
+	return pointerA
+}
+
+var ToPointer = TKX.ToPointer
+
+func (pA *TK) BytesToData(bytesA []byte, dataA interface{}) error {
+	bufT := bytes.NewBuffer(bytesA)
+
+	errT := binary.Read(bufT, binary.BigEndian, dataA)
+
+	return errT
+}
+
+var BytesToData = TKX.BytesToData
+
+func (pA *TK) DataToBytes(dataA interface{}) interface{} {
+	bufT := new(bytes.Buffer)
+
+	var errT error
+
+	_, ok := dataA.(int)
+
+	if ok {
+		errT = binary.Write(bufT, binary.BigEndian, uint64(dataA.(int)))
+	} else {
+		errT = binary.Write(bufT, binary.BigEndian, dataA)
+	}
+
+	if errT != nil {
+		return errT
+	}
+
+	return bufT.Bytes()
+}
+
+var DataToBytes = TKX.DataToBytes
 
 func (pA *TK) NilToEmptyStr(vA interface{}) string {
 	if vA == nil {
@@ -7840,6 +7988,8 @@ func (pA *TK) DownloadFile(urlA, dirA, fileNameA string, argsA ...string) string
 
 	bufT := make([]byte, 1000000)
 
+	// var writeCountT int = 0
+
 	for {
 		n, errT := respT.Body.Read(bufT)
 
@@ -7851,7 +8001,12 @@ func (pA *TK) DownloadFile(urlA, dirA, fileNameA string, argsA ...string) string
 			return GenerateErrorStringF("failed to download: %v", errT.Error())
 		}
 
-		fileT.WriteString(string(bufT[:n]))
+		_, errT = fileT.Write(bufT[:n])
+		if errT != nil {
+			return GenerateErrorStringF("failed to writer file: %v", errT)
+		}
+
+		// writeCountT += countT
 	}
 
 	// valid download exe
@@ -7861,7 +8016,6 @@ func (pA *TK) DownloadFile(urlA, dirA, fileNameA string, argsA ...string) string
 	// 		return GenerateErrorStringF("Downloaded file size error")
 	// 	}
 	// }
-
 	return fileNameT
 }
 
