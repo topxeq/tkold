@@ -2664,11 +2664,18 @@ var Exit = TKX.Exit
 
 // RunWinFileWithSystemDefault run a program or open a file with default program in Windows
 func (pA *TK) RunWinFileWithSystemDefault(fileA string) string {
+	if StartsWith(runtime.GOOS, "darwin") {
+		return SystemCmd("open", fileA)
+	} else if EndsWith(runtime.GOOS, "nux") {
+		return SystemCmd("xdg-open", fileA)
+	}
+
 	cmd := exec.Command("cmd", "/C", "start", "", fileA)
 	err := cmd.Start()
 	if err != nil {
 		return err.Error()
 	}
+
 	return ""
 }
 
