@@ -3346,6 +3346,25 @@ func (pA *TK) GetParameter(argsA []string, idxA int) string {
 
 var GetParameter = TKX.GetParameter
 
+func (pA *TK) GetParam(argsA []string, optsA ...interface{}) string {
+	idxT := 1
+	defaultT := ""
+
+	for _, v := range optsA {
+		if _, ok := v.(int); ok {
+			idxT = v.(int)
+		}
+
+		if _, ok := v.(string); ok {
+			defaultT = v.(string)
+		}
+	}
+
+	return GetParameterByIndexWithDefaultValue(argsA, idxT, defaultT)
+}
+
+var GetParam = TKX.GetParam
+
 // GetAllParameters 获取命令行参数中所有非开关参数
 func (pA *TK) GetAllParameters(argsA []string) []string {
 	aryT := make([]string, 0, len(argsA))
@@ -3565,13 +3584,33 @@ func (pA *TK) GetSwitchI(argsA []interface{}, switchStrA string, defaultA string
 var GetSwitchI = TKX.GetSwitchI
 
 // GetSwitchWithDefaultIntValue 与GetSwitchWithDefaultValue类似，返回一个整数
-func (pA *TK) GetSwitchWithDefaultIntValue(argsA []string, switchStrA string, defaultA int) int {
-	tmpStrT := GetSwitchWithDefaultValue(argsA, switchStrA, string(defaultA))
+func (pA *TK) GetSwitchWithDefaultIntValue(argsA []string, switchStrA string, defaultA ...int) int {
+	defaultT := 0
 
-	return StrToIntWithDefaultValue(tmpStrT, defaultA)
+	if len(defaultA) > 0 {
+		defaultT = defaultA[0]
+	}
+
+	tmpStrT := GetSwitchWithDefaultValue(argsA, switchStrA, IntToStr(defaultT))
+
+	return StrToIntWithDefaultValue(tmpStrT, defaultT)
 }
 
 var GetSwitchWithDefaultIntValue = TKX.GetSwitchWithDefaultIntValue
+
+func (pA *TK) GetSwitchWithDefaultFloatValue(argsA []string, switchStrA string, defaultA ...float64) float64 {
+	defaultT := 0.0
+
+	if len(defaultA) > 0 {
+		defaultT = defaultA[0]
+	}
+
+	tmpStrT := GetSwitchWithDefaultValue(argsA, switchStrA, Float64ToStr(defaultT))
+
+	return StrToFloat64WithDefaultValue(tmpStrT, defaultT)
+}
+
+var GetSwitchWithDefaultFloatValue = TKX.GetSwitchWithDefaultFloatValue
 
 func (pA *TK) GetSwitchWithDefaultInt64Value(argsA []string, switchStrA string, defaultA int64) int64 {
 	tmpStrT := GetSwitchWithDefaultValue(argsA, switchStrA, string(defaultA))
