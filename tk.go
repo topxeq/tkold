@@ -4928,6 +4928,44 @@ func (pA *TK) LoadBytesFromFileE(fileNameA string, numA ...int) ([]byte, error) 
 
 var LoadBytesFromFileE = TKX.LoadBytesFromFileE
 
+// LoadBytesFromFile LoadBytes, no numA or numA[0] < 0 indicates read all
+func (pA *TK) LoadBytesFromFile(fileNameA string, numA ...int) interface{} {
+	if !IfFileExists(fileNameA) {
+		return Errf("file not exists")
+	}
+
+	fileT, errT := os.Open(fileNameA)
+	if errT != nil {
+		return errT
+	}
+
+	defer fileT.Close()
+
+	if numA == nil || len(numA) < 1 || numA[0] <= 0 {
+		fileContentT, errT := io.ReadAll(fileT)
+		if errT != nil {
+			return errT
+		}
+
+		return fileContentT
+	}
+
+	bufT := make([]byte, numA[0])
+
+	nnT, errT := fileT.Read(bufT)
+	if errT != nil {
+		return errT
+	}
+
+	if nnT != len(bufT) {
+		return Errf("read bytes not identical")
+	}
+
+	return bufT
+}
+
+var LoadBytesFromFile = TKX.LoadBytesFromFile
+
 func (pA *TK) SaveBytesToFile(bytesA []byte, fileA string) string {
 	file, err := os.Create(fileA)
 	if err != nil {
@@ -4949,6 +4987,28 @@ func (pA *TK) SaveBytesToFile(bytesA []byte, fileA string) string {
 }
 
 var SaveBytesToFile = TKX.SaveBytesToFile
+
+func (pA *TK) SaveBytesToFileE(bytesA []byte, fileA string) error {
+	file, err := os.Create(fileA)
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+
+	wFile := bufio.NewWriter(file)
+	_, err = wFile.Write(bytesA)
+
+	if err != nil {
+		return err
+	}
+
+	wFile.Flush()
+
+	return nil
+}
+
+var SaveBytesToFileE = TKX.SaveBytesToFileE
 
 // SaveStringToFile 保存字符串到文件
 func (pA *TK) SaveStringToFile(strA string, fileA string) string {
