@@ -3693,7 +3693,92 @@ func (pA *TK) ToInterface(vA interface{}) interface{} {
 
 var ToInterface = TKX.ToInterface
 
-func (pA *TK) ToPointer(pointerA *interface{}) interface{} {
+func (pA *TK) ToVar(pointerA *interface{}) interface{} {
+	return *pointerA
+}
+
+var ToVar = TKX.ToVar
+
+func (pA *TK) ToPointer(pointerA *interface{}, typeA ...string) interface{} {
+
+	typeT := ""
+	if len(typeA) > 0 {
+		typeT = Trim(typeA[0])
+	}
+
+	if typeT != "" {
+		switch typeT {
+		case "int":
+			return (*int)(unsafe.Pointer(pointerA))
+		case "[]int":
+			return (*[]int)(unsafe.Pointer(pointerA))
+		case "uint":
+			return (*uint)(unsafe.Pointer(pointerA))
+		case "uint8": // byte
+			return (*uint8)(unsafe.Pointer(pointerA))
+		case "[]uint8": // []byte
+			return (*[]uint8)(unsafe.Pointer(pointerA))
+		case "uint16":
+			return (*uint16)(unsafe.Pointer(pointerA))
+		case "uint32":
+			return (*uint32)(unsafe.Pointer(pointerA))
+		case "uint64":
+			return (*uint64)(unsafe.Pointer(pointerA))
+		case "int8":
+			return (*int8)(unsafe.Pointer(pointerA))
+		case "int16":
+			return (*int16)(unsafe.Pointer(pointerA))
+		case "int32": // rune
+			return (*int32)(unsafe.Pointer(pointerA))
+		case "[]int32": // []rune
+			return (*[]int32)(unsafe.Pointer(pointerA))
+		case "int64":
+			return (*int64)(unsafe.Pointer(pointerA))
+		case "[]int64":
+			return (*[]int64)(unsafe.Pointer(pointerA))
+		case "complex64":
+			return (*complex64)(unsafe.Pointer(pointerA))
+		case "[]complex64":
+			return (*[]complex64)(unsafe.Pointer(pointerA))
+		case "complex128":
+			return (*complex128)(unsafe.Pointer(pointerA))
+		case "[]complex128":
+			return (*[]complex128)(unsafe.Pointer(pointerA))
+		case "float32":
+			return (*float32)(unsafe.Pointer(pointerA))
+		case "[]float32":
+			return (*[]float32)(unsafe.Pointer(pointerA))
+		case "float64":
+			return (*float64)(unsafe.Pointer(pointerA))
+		case "[]float64":
+			return (*[]float64)(unsafe.Pointer(pointerA))
+		case "bool":
+			return (*bool)(unsafe.Pointer(pointerA))
+		case "string":
+			return (*string)(unsafe.Pointer(pointerA))
+		case "[]string":
+			return (*[]string)(unsafe.Pointer(pointerA))
+		case "map[string]string":
+			return (*map[string]string)(unsafe.Pointer(pointerA))
+		case "[]map[string]string":
+			return (*[]map[string]string)(unsafe.Pointer(pointerA))
+		case "time.Time", "time":
+			return (*time.Time)(unsafe.Pointer(pointerA))
+		case "[]interface{}", "[]var", "[]":
+			return (*[]interface{})(unsafe.Pointer(pointerA))
+		case "map[string]interface{}", "msi":
+			return (*map[string]interface{})(unsafe.Pointer(pointerA))
+		case "[]map[string]interface{}", "[]msi":
+			return (*[]map[string]interface{})(unsafe.Pointer(pointerA))
+		case "*interface{}", "*var":
+			return (*interface{})(unsafe.Pointer(pointerA))
+		case "interface{}", "var", "":
+			return pointerA
+		}
+
+		return pointerA
+	}
+
 	v := *pointerA
 
 	switch v.(type) {
@@ -3770,10 +3855,88 @@ func (pA *TK) ToPointer(pointerA *interface{}) interface{} {
 
 var ToPointer = TKX.ToPointer
 
+func (pA *TK) GetSystemEndian() binary.ByteOrder {
+	var n uint64 = 1
+
+	buf := make([]byte, binary.MaxVarintLen64)
+
+	binary.PutUvarint(buf, n)
+
+	if buf[0] == 1 {
+		return binary.LittleEndian
+	}
+
+	return binary.BigEndian
+}
+
+var GetSystemEndian = TKX.GetSystemEndian
+
+// GetSystemEndianInt return 1 indicate BigEndian, 0 indicate LitteEndian
+func (pA *TK) GetSystemEndianInt() int {
+	var n uint64 = 1
+
+	buf := make([]byte, binary.MaxVarintLen64)
+
+	binary.PutUvarint(buf, n)
+
+	if buf[0] == 1 {
+		return 0
+	}
+
+	return 1
+}
+
+var GetSystemEndianInt = TKX.GetSystemEndianInt
+
+func (pA *TK) CompareBytes(buf1 []byte, buf2 []byte) [][]int {
+	len1 := len(buf1)
+
+	len2 := len(buf2)
+
+	lenT := len1
+
+	if lenT < len2 {
+		lenT = len2
+	}
+
+	var c1 int
+	var c2 int
+
+	diffBufT := make([][]int, 0, 100)
+
+	for i := 0; i < lenT; i++ {
+		if i >= len1 {
+			c1 = 256
+		} else {
+			c1 = int(buf1[i])
+		}
+
+		if i >= len2 {
+			c2 = 256
+		} else {
+			c2 = int(buf2[i])
+		}
+
+		// if i%1000000 == 0 {
+		// 	pl("%v(%v) - %v %v", i, i, c1, c2)
+		// }
+
+		if c1 != c2 {
+			diffBufT = append(diffBufT, []int{i, c1, c2})
+			// pl("%v(%v) - %v %v", i, i, c1, c2)
+		}
+
+	}
+
+	return diffBufT
+}
+
+var CompareBytes = TKX.CompareBytes
+
 func (pA *TK) BytesToData(bytesA []byte, dataA interface{}) error {
 	bufT := bytes.NewBuffer(bytesA)
 
-	errT := binary.Read(bufT, binary.BigEndian, dataA)
+	errT := binary.Read(bufT, GetSystemEndian(), dataA)
 
 	return errT
 }
@@ -3788,9 +3951,9 @@ func (pA *TK) DataToBytes(dataA interface{}) interface{} {
 	_, ok := dataA.(int)
 
 	if ok {
-		errT = binary.Write(bufT, binary.BigEndian, uint64(dataA.(int)))
+		errT = binary.Write(bufT, GetSystemEndian(), uint64(dataA.(int)))
 	} else {
-		errT = binary.Write(bufT, binary.BigEndian, dataA)
+		errT = binary.Write(bufT, GetSystemEndian(), dataA)
 	}
 
 	if errT != nil {
@@ -3801,6 +3964,57 @@ func (pA *TK) DataToBytes(dataA interface{}) interface{} {
 }
 
 var DataToBytes = TKX.DataToBytes
+
+func (pA *TK) ToByte(vA interface{}, defaultA ...byte) byte {
+	var defaultT byte = 0
+
+	if len(defaultA) > 0 {
+		defaultT = defaultA[0]
+	}
+
+	switch vT := vA.(type) {
+	case byte:
+		return vT
+	case int8:
+		return byte(vT)
+	case int16:
+		return byte(vT)
+	case int32:
+		return byte(vT)
+	case int:
+		return byte(vT)
+	case int64:
+		return byte(vT)
+	case uint16:
+		return byte(vT)
+	case uint32:
+		return byte(vT)
+	case uint:
+		return byte(vT)
+	case uint64:
+		return byte(vT)
+	case string:
+		return byte(StrToInt(vT, int(defaultT)))
+	}
+
+	var bufT bytes.Buffer
+
+	errT := binary.Write(&bufT, GetSystemEndian(), vA)
+
+	if errT != nil {
+		return defaultT
+	}
+
+	bytesT := bufT.Bytes()
+
+	if len(bytesT) < 1 {
+		return defaultT
+	}
+
+	return bytesT[0]
+}
+
+var ToByte = TKX.ToByte
 
 func (pA *TK) NilToEmptyStr(vA interface{}) string {
 	if vA == nil {
@@ -4181,6 +4395,41 @@ func (pA *TK) StrToHex(strA string) string {
 }
 
 var StrToHex = TKX.StrToHex
+
+func (pA *TK) ToHex(vA interface{}) string {
+	var rs string
+
+	switch vT := vA.(type) {
+	case byte:
+		rs = fmt.Sprintf("%x", vT)
+
+		if len(rs)%2 != 0 {
+			rs = "0" + rs
+		}
+	case int:
+		rs = fmt.Sprintf("%x", vT)
+
+		if len(rs)%2 != 0 {
+			rs = "0" + rs
+		}
+	case []byte:
+		rs = fmt.Sprintf("%x", vT)
+	case bool:
+		if vT {
+			rs = "01"
+		}
+		rs = "00"
+	case string:
+		rs = fmt.Sprintf("%x", vT)
+	default:
+		Plvx(vA)
+		rs = fmt.Sprintf("%x", vA)
+	}
+
+	return rs
+}
+
+var ToHex = TKX.ToHex
 
 func (pA *TK) StrToFloat64WithDefaultValue(strA string, defaultA float64) float64 {
 	nT, errT := strconv.ParseFloat(strA, 64)
@@ -6666,14 +6915,44 @@ func (pA *TK) HexToStr(strA string) string {
 
 var HexToStr = TKX.HexToStr
 
-// HexToInt return -1 if failed
-func (pA *TK) HexToInt(strA string) int {
-	buf, err := hex.DecodeString(strA)
-	if err != nil {
-		return -1
+// HexToInt return 0 if failed
+func (pA *TK) HexToInt(strA string, optsA ...string) int {
+	defaultT := GetSwitchWithDefaultIntValue(optsA, "-default=", 0)
+
+	lenT := len(strA)
+
+	if lenT < 1 {
+		return defaultT
 	}
 
-	lenT := len(buf)
+	if lenT%2 != 0 {
+		strA = "0" + strA
+	}
+
+	buf, err := hex.DecodeString(strA)
+	if err != nil {
+		return defaultT
+	}
+
+	// endianStrT := Trim(GetSwitch(optsA, "-endian=", ""))
+
+	// endianT := GetSystemEndianInt()
+
+	// if StartsWith(endianStrT, "B") {
+	// 	endianT = 1
+	// } else if StartsWith(endianStrT, "L") {
+	// 	endianT = 0
+	// }
+
+	// if endianT < 1 {
+
+	// }
+
+	lenT = len(buf)
+
+	if lenT < 1 {
+		return defaultT
+	}
 
 	m := 1
 
@@ -6686,10 +6965,63 @@ func (pA *TK) HexToInt(strA string) int {
 	}
 
 	return rs
-
 }
 
 var HexToInt = TKX.HexToInt
+
+// HexToUInt return 0 if failed
+func (pA *TK) HexToUInt(strA string, optsA ...string) uint64 {
+	defaultT := GetSwitchWithDefaultIntValue(optsA, "-default=", 0)
+
+	lenT := len(strA)
+
+	if lenT < 1 {
+		return uint64(defaultT)
+	}
+
+	if lenT%2 != 0 {
+		strA = "0" + strA
+	}
+
+	buf, err := hex.DecodeString(strA)
+	if err != nil {
+		return uint64(defaultT)
+	}
+
+	// endianStrT := Trim(GetSwitch(optsA, "-endian=", ""))
+
+	// endianT := GetSystemEndianInt()
+
+	// if StartsWith(endianStrT, "B") {
+	// 	endianT = 1
+	// } else if StartsWith(endianStrT, "L") {
+	// 	endianT = 0
+	// }
+
+	// if endianT < 1 {
+
+	// }
+
+	lenT = len(buf)
+
+	if lenT < 1 {
+		return uint64(defaultT)
+	}
+
+	var m uint64 = 1
+
+	var rs uint64 = 0
+
+	for i := lenT - 1; i >= 0; i-- {
+		rs += uint64(buf[i]) * m
+
+		m *= 256
+	}
+
+	return rs
+}
+
+var HexToUInt = TKX.HexToUInt
 
 func (pA *TK) GetRandomByte() byte {
 	Randomize()
