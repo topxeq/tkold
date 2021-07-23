@@ -10163,6 +10163,16 @@ func (pA *TK) IsError(vA interface{}) bool {
 
 var IsError = TKX.IsError
 
+func (pA *TK) IfThenElse(condA bool, thenA interface{}, elseA interface{}) interface{} {
+	if condA {
+		return thenA
+	}
+
+	return elseA
+}
+
+var IfThenElse = TKX.IfThenElse
+
 func (pA *TK) TableToMSSArray(tableA [][]string) []map[string]string {
 	if tableA == nil {
 		return []map[string]string{}
