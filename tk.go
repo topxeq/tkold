@@ -3933,17 +3933,45 @@ func (pA *TK) CompareBytes(buf1 []byte, buf2 []byte) [][]int {
 
 var CompareBytes = TKX.CompareBytes
 
-func (pA *TK) BytesToData(bytesA []byte, dataA interface{}) error {
+func (pA *TK) BytesToData(bytesA []byte, dataA interface{}, optsA ...string) error {
+	defaultEndianT := GetSystemEndian()
+
+	if len(optsA) > 0 {
+		endianStrA := GetSwitch(optsA, "-endian=", "")
+
+		if endianStrA != "" {
+			if StartsWith(endianStrA, "B") {
+				defaultEndianT = binary.BigEndian
+			} else if StartsWith(endianStrA, "L") {
+				defaultEndianT = binary.LittleEndian
+			} 
+		}
+	}
+
 	bufT := bytes.NewBuffer(bytesA)
 
-	errT := binary.Read(bufT, GetSystemEndian(), dataA)
+	errT := binary.Read(bufT, defaultEndianT, dataA)
 
 	return errT
 }
 
 var BytesToData = TKX.BytesToData
 
-func (pA *TK) DataToBytes(dataA interface{}) interface{} {
+func (pA *TK) DataToBytes(dataA interface{}, optsA ...string) interface{} {
+	defaultEndianT := GetSystemEndian()
+
+	if len(optsA) > 0 {
+		endianStrA := GetSwitch(optsA, "-endian=", "")
+
+		if endianStrA != "" {
+			if StartsWith(endianStrA, "B") {
+				defaultEndianT = binary.BigEndian
+			} else if StartsWith(endianStrA, "L") {
+				defaultEndianT = binary.LittleEndian
+			} 
+		}
+	}
+
 	bufT := new(bytes.Buffer)
 
 	var errT error
@@ -3951,9 +3979,9 @@ func (pA *TK) DataToBytes(dataA interface{}) interface{} {
 	_, ok := dataA.(int)
 
 	if ok {
-		errT = binary.Write(bufT, GetSystemEndian(), uint64(dataA.(int)))
+		errT = binary.Write(bufT, defaultEndianT, uint64(dataA.(int)))
 	} else {
-		errT = binary.Write(bufT, GetSystemEndian(), dataA)
+		errT = binary.Write(bufT, defaultEndianT, dataA)
 	}
 
 	if errT != nil {
