@@ -885,13 +885,16 @@ var EnsureValidFileNameX = TKX.EnsureValidFileNameX
 
 // StringRing
 type StringRing struct {
-	Buf   []string
-	Start int
-	End   int
+	Buf    []string
+	Start  int
+	End    int
+	MutexM *sync.Mutex
 }
 
 func (pA *TK) NewStringRing(sizeA ...int) *StringRing {
 	ringT := &StringRing{}
+
+	ringT.MutexM = new(sync.Mutex)
 
 	ringT.Reset(sizeA...)
 
@@ -907,13 +910,16 @@ func (p *StringRing) Reset(sizeA ...int) {
 		sizeT = sizeA[0]
 	}
 
+	p.MutexM.Lock()
 	p.Buf = make([]string, sizeT+1)
 
 	p.Start = 0
 	p.End = 0
+	p.MutexM.Unlock()
 }
 
 func (p *StringRing) Push(strA string) {
+	p.MutexM.Lock()
 	p.Buf[p.Start] = strA
 	p.Start++
 
@@ -928,9 +934,11 @@ func (p *StringRing) Push(strA string) {
 			p.End = 0
 		}
 	}
+	p.MutexM.Unlock()
 }
 
 func (v StringRing) GetList() []string {
+	v.MutexM.Lock()
 	bufT := make([]string, 0, len(v.Buf))
 
 	i := v.End
@@ -943,6 +951,7 @@ func (v StringRing) GetList() []string {
 		}
 	}
 
+	v.MutexM.Unlock()
 	return bufT
 }
 
@@ -959,7 +968,11 @@ func (v StringRing) GetString(sepA ...string) string {
 }
 
 func (v StringRing) String() string {
-	return Spr("Start: %v, End: %v, Buf: %v", v.Start, v.End, v.Buf)
+	v.MutexM.Lock()
+	rs := Spr("Start: %v, End: %v, Buf: %v", v.Start, v.End, v.Buf)
+	v.MutexM.Unlock()
+
+	return rs
 }
 
 // TXString 相关
@@ -3781,6 +3794,8 @@ func (pA *TK) ToPointer(pointerA *interface{}, typeA ...string) interface{} {
 
 	v := *pointerA
 
+	Pl("type: %T, v: %v", v, v)
+
 	switch v.(type) {
 	case int:
 		return (*int)(unsafe.Pointer(pointerA))
@@ -3831,6 +3846,9 @@ func (pA *TK) ToPointer(pointerA *interface{}, typeA ...string) interface{} {
 	case string:
 		return (*string)(unsafe.Pointer(pointerA))
 	case []string:
+		Pl("%T %v %#v %#v", pointerA, pointerA, pointerA, *pointerA)
+		tmp := unsafe.Pointer(pointerA)
+		Pl("%T %v %#v", tmp, tmp, *(*[]string)(tmp))
 		return (*[]string)(unsafe.Pointer(pointerA))
 	case map[string]string:
 		return (*map[string]string)(unsafe.Pointer(pointerA))
@@ -3944,7 +3962,7 @@ func (pA *TK) BytesToData(bytesA []byte, dataA interface{}, optsA ...string) err
 				defaultEndianT = binary.BigEndian
 			} else if StartsWith(endianStrA, "L") {
 				defaultEndianT = binary.LittleEndian
-			} 
+			}
 		}
 	}
 
@@ -3968,7 +3986,7 @@ func (pA *TK) DataToBytes(dataA interface{}, optsA ...string) interface{} {
 				defaultEndianT = binary.BigEndian
 			} else if StartsWith(endianStrA, "L") {
 				defaultEndianT = binary.LittleEndian
-			} 
+			}
 		}
 	}
 
@@ -10387,13 +10405,16 @@ func (pA *TK) IsFloat64NearlyEqual(a, b float64) bool {
 var IsFloat64NearlyEqual = TKX.IsFloat64NearlyEqual
 
 // SetValue set a value to a pointer
-func (pA *TK) SetValue(p interface{}, v interface{}) {
+func (pA *TK) SetValue(p interface{}, v interface{}) error {
 	// tk.Pl("%#v", reflect.TypeOf(p).Kind())
 	// p = v
 
 	srcRef := reflect.ValueOf(v)
 	vp := reflect.ValueOf(p)
+	// Pl("srcRef: %v, vp: %v, Elem: %v", srcRef, vp, vp.Elem())
 	vp.Elem().Set(srcRef)
+
+	return nil
 }
 
 var SetValue = TKX.SetValue
@@ -10405,6 +10426,20 @@ func (pA *TK) GetValue(p interface{}) interface{} {
 }
 
 var GetValue = TKX.GetValue
+
+func (pA *TK) GetPointer(p interface{}) interface{} {
+	vp := reflect.Indirect(reflect.ValueOf(p))
+	return vp.Pointer()
+}
+
+var GetPointer = TKX.GetPointer
+
+func (pA *TK) GetAddr(p interface{}) interface{} {
+	vp := reflect.Indirect(reflect.ValueOf(p))
+	return vp.Addr()
+}
+
+var GetAddr = TKX.GetAddr
 
 func (pA *TK) GetVar(nameA string) interface{} {
 	varMutexG.Lock()
