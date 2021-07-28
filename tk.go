@@ -4959,6 +4959,8 @@ func (pA *TK) GetFileList(dirA string, argsA ...string) []map[string]string {
 
 	recursiveT := IfSwitchExistsWhole(argsA, "-recursive")
 
+	withDirectoryT := IfSwitchExistsWhole(argsA, "-withDir")
+
 	patternT := GetSwitch(argsA, "-pattern=", "*")
 
 	exclusivePatternT := GetSwitch(argsA, "-exclusive=", "")
@@ -4982,9 +4984,61 @@ func (pA *TK) GetFileList(dirA string, argsA ...string) []map[string]string {
 
 		if f.IsDir() {
 			if recursiveT {
+				if withDirectoryT {
+					matchedT, errTI := filepath.Match(patternT, filepath.Base(path))
+					if errTI == nil {
+						if matchedT {
+							if exclusivePatternT != "" {
+								matched2T, err2TI := filepath.Match(exclusivePatternT, filepath.Base(path))
+								if err2TI == nil {
+									if !matched2T {
+										absPathT, err1T := filepath.Abs(path)
+
+										if err1T == nil {
+											mapListT = append(mapListT, map[string]string{"Path": path, "Abs": absPathT, "Name": filepath.Base(path), "Size": Int64ToStr(f.Size()), "IsDir": "true", "Time": FormatTime(f.ModTime(), TimeFormatCompact), "Mode": fmt.Sprintf("%v", f.Mode())})
+										}
+									}
+								}
+							} else {
+								absPathT, err1T := filepath.Abs(path)
+
+								if err1T == nil {
+									mapListT = append(mapListT, map[string]string{"Path": path, "Abs": absPathT, "Name": filepath.Base(path), "Size": Int64ToStr(f.Size()), "IsDir": "true", "Time": FormatTime(f.ModTime(), TimeFormatCompact), "Mode": fmt.Sprintf("%v", f.Mode())})
+								}
+							}
+						}
+					}
+				}
+
 				return nil
 			} else {
 				if path != "." && path != pathT {
+					if withDirectoryT {
+						matchedT, errTI := filepath.Match(patternT, filepath.Base(path))
+						if errTI == nil {
+							if matchedT {
+								if exclusivePatternT != "" {
+									matched2T, err2TI := filepath.Match(exclusivePatternT, filepath.Base(path))
+									if err2TI == nil {
+										if !matched2T {
+											absPathT, err1T := filepath.Abs(path)
+
+											if err1T == nil {
+												mapListT = append(mapListT, map[string]string{"Path": path, "Abs": absPathT, "Name": filepath.Base(path), "Size": Int64ToStr(f.Size()), "IsDir": "true", "Time": FormatTime(f.ModTime(), TimeFormatCompact), "Mode": fmt.Sprintf("%v", f.Mode())})
+											}
+										}
+									}
+								} else {
+									absPathT, err1T := filepath.Abs(path)
+
+									if err1T == nil {
+										mapListT = append(mapListT, map[string]string{"Path": path, "Abs": absPathT, "Name": filepath.Base(path), "Size": Int64ToStr(f.Size()), "IsDir": "true", "Time": FormatTime(f.ModTime(), TimeFormatCompact), "Mode": fmt.Sprintf("%v", f.Mode())})
+									}
+								}
+							}
+						}
+					}
+
 					return filepath.SkipDir
 				} else {
 					return nil
