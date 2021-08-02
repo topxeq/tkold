@@ -9008,12 +9008,18 @@ func (pA *TK) PostRequestBytesWithCookieX(urlA string, reqBodyA []byte, customHe
 
 var PostRequestBytesWithCookieX = TKX.PostRequestBytesWithCookieX
 
-func (pA *TK) GetFormValueWithDefaultValue(reqA *http.Request, keyA string, defaultA string) string {
+func (pA *TK) GetFormValueWithDefaultValue(reqA *http.Request, keyA string, defaultA ...string) string {
+	defaultT := ""
+
+	if len(defaultA) > 0 {
+		defaultT = defaultA[0]
+	}
+
 	valueT, ok := reqA.Form[keyA]
 	if ok {
 		return valueT[0]
 	} else {
-		return defaultA
+		return defaultT
 	}
 }
 
