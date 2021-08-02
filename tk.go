@@ -10258,6 +10258,22 @@ func (pA *TK) IsNilOrEmpty(v interface{}) bool {
 
 var IsNilOrEmpty = TKX.IsNilOrEmpty
 
+func (pA *TK) TrimSafely(vA interface{}, defaultA ...string) string {
+	var defaultT string = ""
+	if len(defaultA) > 0 {
+		defaultT = defaultA[0]
+	}
+
+	switch nv := vA.(type) {
+	case string:
+		return strings.TrimSpace(nv)
+	}
+
+	return defaultT
+}
+
+var TrimSafely = TKX.TrimSafely
+
 func (pA *TK) IsError(vA interface{}) bool {
 	_, ok := vA.(error)
 	if ok {
