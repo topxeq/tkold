@@ -8289,6 +8289,14 @@ var GetDebug = TKX.GetDebug
 
 // http/web service related
 
+func (pA *TK) WriteResponse(resA http.ResponseWriter, strA string) error {
+	_, errT := resA.Write([]byte(strA))
+
+	return errT
+}
+
+var WriteResponse = TKX.WriteResponse
+
 func (pA *TK) DownloadPageUTF8(urlA string, postDataA url.Values, customHeaders string, timeoutSecsA time.Duration, optsA ...string) string {
 	client := &http.Client{
 		//CheckRedirect: redirectPolicyFunc,
@@ -10726,6 +10734,44 @@ func (pA *TK) RemoveItemsInArray(aryA interface{}, startA int, endA int) interfa
 
 		rs = append(rs, aryST[:startA]...)
 		rs = append(rs, aryST[endA+1:]...)
+
+		return rs
+	}
+
+	arySAT, ok := aryA.([][]string)
+
+	if ok {
+		if startA < 0 || startA >= len(arySAT) {
+			return nil
+		}
+
+		if endA < 0 || endA >= len(arySAT) {
+			return nil
+		}
+
+		rs := make([][]string, 0, len(arySAT)-(endA+1-startA))
+
+		rs = append(rs, arySAT[:startA]...)
+		rs = append(rs, arySAT[endA+1:]...)
+
+		return rs
+	}
+
+	arySIT, ok := aryA.([][]interface{})
+
+	if ok {
+		if startA < 0 || startA >= len(arySIT) {
+			return nil
+		}
+
+		if endA < 0 || endA >= len(arySIT) {
+			return nil
+		}
+
+		rs := make([][]interface{}, 0, len(arySIT)-(endA+1-startA))
+
+		rs = append(rs, arySIT[:startA]...)
+		rs = append(rs, arySIT[endA+1:]...)
 
 		return rs
 	}
