@@ -8,6 +8,7 @@ require (
 	github.com/beevik/etree v1.1.0
 	github.com/json-iterator/go v1.1.9
 	github.com/melbahja/goph v1.2.1
+	github.com/mholt/archiver/v3 v3.5.0 // indirect
 	github.com/topxeq/mahonia v0.0.0-20190828060648-12b0599ddd1a
 	github.com/topxeq/regexpx v0.0.0-20200814082553-4bffc7d07029
 	github.com/topxeq/socks v0.0.0-20200812112322-24acb126b5f3

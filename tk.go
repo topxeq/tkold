@@ -54,6 +54,8 @@ import (
 	"github.com/topxeq/mahonia"
 	"github.com/topxeq/socks"
 	"github.com/topxeq/uuid"
+
+	"github.com/mholt/archiver/v3"
 )
 
 var versionG = "0.95a"
@@ -10302,6 +10304,22 @@ func (pA *TK) IfThenElse(condA bool, thenA interface{}, elseA interface{}) inter
 }
 
 var IfThenElse = TKX.IfThenElse
+
+func (pA *TK) GetZipArchiver(argsA ...string) *archiver.Zip {
+	z := &archiver.Zip{
+		// CompressionLevel:       3,
+		OverwriteExisting: IfSwitchExistsWhole(argsA, "-overwrite"),
+		// MkdirAll:               true,
+		// SelectiveCompression:   true,
+		ImplicitTopLevelFolder: IfSwitchExistsWhole(argsA, "-implicitTop"),
+		ContinueOnError:        IfSwitchExistsWhole(argsA, "-continueOnError"),
+	}
+
+	return z
+}
+
+var GetZipArchiver = TKX.GetZipArchiver
+var GetZip = TKX.GetZipArchiver
 
 func (pA *TK) TableToMSSArray(tableA [][]string) []map[string]string {
 	if tableA == nil {
