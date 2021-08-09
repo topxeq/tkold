@@ -3007,6 +3007,16 @@ func (pA *TK) Fatalf(formatA string, argsA ...interface{}) {
 
 var Fatalf = TKX.Fatalf
 
+func (pA *TK) FatalfByCondition(ignoreA bool, formatA string, argsA ...interface{}) {
+	Pl(formatA, argsA...)
+
+	if !ignoreA {
+		os.Exit(1)
+	}
+}
+
+var FatalfByCondition = TKX.FatalfByCondition
+
 func (pA *TK) CheckErr(prefixA string, errA error) {
 	if errA == nil {
 		return
