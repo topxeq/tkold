@@ -2705,7 +2705,7 @@ func (pA *TK) SystemCmd(cmdA string, argsA ...string) string {
 	cmd.Stdout = &out
 	errT := cmd.Run()
 	if errT != nil {
-		return GenerateErrorStringF("failed: %v", errT)
+		return GenerateErrorStringF("failed: %v (%v)", errT, out.String())
 	}
 
 	return out.String()
