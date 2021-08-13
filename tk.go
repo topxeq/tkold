@@ -1,12 +1,13 @@
 package tk
 
-// build 202104060001
+// build 202108110001
 
 import (
 	"bufio"
 	"bytes"
 	"crypto/aes"
 	"crypto/md5"
+	"crypto/tls"
 	"database/sql"
 	"encoding/base64"
 	"encoding/binary"
@@ -23,6 +24,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/smtp"
+	"net/textproto"
 	"net/url"
 	"os"
 	"os/exec"
@@ -56,6 +58,8 @@ import (
 	"github.com/topxeq/uuid"
 
 	"github.com/mholt/archiver/v3"
+
+	"github.com/jhillyerd/enmime"
 )
 
 var versionG = "0.95a"
@@ -11464,3 +11468,492 @@ var StartTransparentProxy2 = TKX.StartTransparentProxy2
 // var IsErrStr = TKX.IsErrStr
 // var Pl = TKX.Pl
 // var Pl = TKX.Pl
+
+// Client holds the net conn and read/write buffer objects.
+type Connection struct {
+	conn   io.ReadWriteCloser
+	Reader *textproto.Reader
+	Writer *textproto.Writer
+}
+
+// NewConnection initializes a connection.
+func NewConnection(conn io.ReadWriteCloser) *Connection {
+	return &Connection{
+		conn,
+		textproto.NewReader(bufio.NewReader(conn)),
+		textproto.NewWriter(bufio.NewWriter(conn)),
+	}
+}
+
+// Close closes a connection.
+func (c *Connection) Close() error {
+	return c.conn.Close()
+}
+
+// Cmd sends the given command on the connection.
+func (c *Connection) Cmd(format string, args ...interface{}) (string, error) {
+	if err := c.Writer.PrintfLine(format, args...); err != nil {
+		return "", fmt.Errorf("failed to write with format and args: %w", err)
+	}
+
+	return c.ReadLine()
+}
+
+// ReadLine reads a single line from the buffer.
+func (c *Connection) ReadLine() (string, error) {
+	line, err := c.Reader.ReadLine()
+	if err != nil {
+		return "", fmt.Errorf("failed to read line: %w", err)
+	}
+
+	if len(line) < 1 {
+		return "", errors.New("empty response")
+	}
+
+	if IsPop3Err(line) {
+		return line, fmt.Errorf("something went wrong: %s", line)
+	}
+
+	return line, nil
+}
+
+// ReadLines reads from the buffer until it hits the message end dot (".").
+func (c *Connection) ReadLines() (lines []string, err error) {
+	for {
+		line, err := c.ReadLine()
+		if err != nil {
+			return nil, fmt.Errorf("failed to read line: %w", err)
+		}
+
+		// Look for a dot to indicate the end of a message
+		// from the server.
+		if line == "." {
+			break
+		}
+		lines = append(lines, line)
+	}
+	return
+}
+
+// POP3 replies as extracted from rfc1939 section 9.
+// const (
+// 	OK  = "+OK"
+// 	ERR = "-ERR"
+// )
+
+// IsPop3OK checks to see if the reply from the server contains +OK.
+func IsPop3OK(s string) bool {
+	if strings.Fields(s)[0] != "+OK" {
+		return false
+	}
+	return true
+}
+
+// IsPop3Err checks to see if the reply from the server contains +Err.
+func IsPop3Err(s string) bool {
+	if strings.Fields(s)[0] != "-ERR" {
+		return false
+	}
+	return true
+}
+
+// MessageList represents the metadata returned by the server for a
+// message stored in the maildrop.
+type MessageList struct {
+	// Non unique id reported by the server
+	ID int
+
+	// Size of the message
+	Size int
+}
+
+const (
+	CommandReset = "RSET"
+
+	// CommandStat is a command to retrieve statistics about mailbox.
+	CommandStat = "STAT"
+
+	// CommandDelete is a command to delete message from POP3 server.
+	CommandDelete = "DELE"
+
+	// CommandList is a command to get list of messages from POP3 server.
+	CommandList = "LIST"
+
+	// CommandUIDL is a command to get list of messages from POP3 server.
+	CommandUIDL = "UIDL"
+
+	// CommandNoop is a ping-like command that tells POP3 to do nothing.
+	// (i.e. send something line pong-response).
+	CommandNoop = "NOOP"
+
+	// CommandPassword is a command to send user password to POP3 server.
+	CommandPassword = "PASS"
+
+	// CommandQuit is a command to tell POP3 server that you are quitting.
+	CommandQuit = "QUIT"
+
+	// CommandRetrieve is a command to retrieve POP3 message from server.
+	CommandRetrieve = "RETR"
+
+	// CommandUser is a command to send user login to POP3 server.
+	CommandUser = "USER"
+)
+
+// Client for POP3.
+type Pop3Client struct {
+	conn *Connection
+}
+
+func (pA *TK) ConnectPop3(addrA string, userNameA string, passwordA string, optsA ...string) (*Pop3Client, error) {
+	secureT := !IfSwitchExists(optsA, "-insecure")
+
+	var clientT *Pop3Client = nil
+	var errT error
+
+	if secureT {
+		clientT, errT = DialPop3TLS(addrA)
+
+	} else {
+		clientT, errT = DialPop3(addrA)
+	}
+
+	if errT != nil {
+		return nil, errT
+	}
+
+	errT = clientT.Authorization(userNameA, passwordA)
+
+	if errT != nil {
+		return nil, errT
+	}
+
+	return clientT, nil
+}
+
+var ConnectPop3 = TKX.ConnectPop3
+
+func (c *Pop3Client) GetMessage(idxT int, optsA ...string) (map[string]string, error) {
+	msgT, errT := c.Retr(idxT)
+	if errT != nil {
+		return nil, errT
+	}
+
+	// // A list of headers is retrieved via Envelope.GetHeaderKeys().
+	// headers := message.GetHeaderKeys()
+	// sort.Strings(headers)
+
+	// // Print each header, key and value.
+	// for _, header := range headers {
+	// 	fmt.Printf("%s: %v\n", header, message.GetHeader(header))
+	// }
+
+	rsMapT := make(map[string]string, 10)
+
+	rsMapT["Content-Type"] = msgT.GetHeader("Content-Type")
+	rsMapT["Subject"] = msgT.GetHeader("Subject")
+	rsMapT["Date"] = msgT.GetHeader("Date")
+	rsMapT["From"] = msgT.GetHeader("From")
+	rsMapT["Message-Id"] = msgT.GetHeader("Message-Id")
+	rsMapT["Mime-Version"] = msgT.GetHeader("Mime-Version")
+	rsMapT["Received"] = msgT.GetHeader("Received")
+	rsMapT["To"] = msgT.GetHeader("To")
+	rsMapT["Cc"] = msgT.GetHeader("Cc")
+	rsMapT["X-Mailer"] = msgT.GetHeader("X-Mailer")
+	rsMapT["X-Originating-Ip"] = msgT.GetHeader("X-Originating-Ip")
+	rsMapT["X-Priority"] = msgT.GetHeader("X-Priority")
+	rsMapT["Text"] = msgT.Text
+	rsMapT["HTML"] = msgT.HTML
+
+	return rsMapT, nil
+}
+
+// DialPop3 opens new connection and creates a new POP3 client.
+func (pA *TK) DialPop3(addr string) (c *Pop3Client, err error) {
+	var conn net.Conn
+	if conn, err = net.Dial("tcp", addr); err != nil {
+		return nil, fmt.Errorf("failed to dial: %w", err)
+	}
+
+	return NewPop3Client(conn)
+}
+
+var DialPop3 = TKX.DialPop3
+
+// DialPop3TLS opens new TLS connection and creates a new POP3 Pop3Client.
+func (pA *TK) DialPop3TLS(addr string) (c *Pop3Client, err error) {
+	var conn *tls.Conn
+	if conn, err = tls.Dial("tcp", addr, &tls.Config{InsecureSkipVerify: true}); err != nil {
+		return nil, fmt.Errorf("failed to dial tls: %w", err)
+	}
+	return NewPop3Client(conn)
+}
+
+var DialPop3TLS = TKX.DialPop3TLS
+
+// NewPop3Client creates a new POP3 Pop3Client.
+func (pA *TK) NewPop3Client(conn net.Conn) (*Pop3Client, error) {
+	c := &Pop3Client{
+		conn: NewConnection(conn),
+	}
+
+	// Make sure we receive the server greeting
+	line, err := c.conn.ReadLine()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read line: %w", err)
+	}
+
+	if !IsPop3OK(line) {
+		return nil, fmt.Errorf("server did not response with +OK: %s", line)
+	}
+
+	return c, nil
+}
+
+var NewPop3Client = TKX.NewPop3Client
+
+// Authorization logs into POP3 server with login and password.
+func (c *Pop3Client) Authorization(user, pass string) error {
+	if _, err := c.conn.Cmd("%s %s", CommandUser, user); err != nil {
+		return fmt.Errorf("failed at USER command: %w", err)
+	}
+
+	if _, err := c.conn.Cmd("%s %s", CommandPassword, pass); err != nil {
+		return fmt.Errorf("failed at PASS command: %w", err)
+	}
+
+	return c.Noop()
+}
+
+// Quit sends the QUIT message to the POP3 server and closes the connection.
+func (c *Pop3Client) Quit() error {
+	if _, err := c.conn.Cmd(CommandQuit); err != nil {
+		return fmt.Errorf("failed at QUIT command: %w", err)
+	}
+
+	if err := c.conn.Close(); err != nil {
+		return fmt.Errorf("failed to close connection: %w", err)
+	}
+
+	return nil
+}
+
+// Noop will do nothing however can prolong the end of a connection.
+func (c *Pop3Client) Noop() error {
+	if _, err := c.conn.Cmd(CommandNoop); err != nil {
+		return fmt.Errorf("failed at NOOP command: %w", err)
+	}
+
+	return nil
+}
+
+// Stat retrieves a drop listing for the current maildrop, consisting of the
+// number of messages and the total size (in octets) of the maildrop.
+// In the event of an error, all returned numeric values will be 0.
+func (c *Pop3Client) Stat() (count, size int, err error) {
+	line, err := c.conn.Cmd(CommandStat)
+	if err != nil {
+		return
+	}
+
+	if len(strings.Fields(line)) != 3 {
+		return 0, 0, fmt.Errorf("invalid response returned from server: %s", line)
+	}
+
+	// Number of messages in maildrop
+	count, err = strconv.Atoi(strings.Fields(line)[1])
+	if err != nil {
+		return
+	}
+	if count == 0 {
+		return
+	}
+
+	// Total size of messages in bytes
+	size, err = strconv.Atoi(strings.Fields(line)[2])
+	if err != nil {
+		return
+	}
+	if size == 0 {
+		return
+	}
+	return
+}
+
+func (c *Pop3Client) GetCount() (count int, err error) {
+	line, err := c.conn.Cmd(CommandStat)
+	if err != nil {
+		return
+	}
+
+	if len(strings.Fields(line)) < 2 {
+		return 0, fmt.Errorf("invalid response returned from server: %s", line)
+	}
+
+	// Number of messages in maildrop
+	count, err = strconv.Atoi(strings.Fields(line)[1])
+	if err != nil {
+		return
+	}
+	if count == 0 {
+		return
+	}
+
+	return
+}
+
+// ListAll returns a MessageList object which contains all messages in the maildrop.
+func (c *Pop3Client) ListAll() (list []MessageList, err error) {
+	if _, err = c.conn.Cmd(CommandList); err != nil {
+		return
+	}
+
+	lines, err := c.conn.ReadLines()
+	if err != nil {
+		return
+	}
+
+	for _, v := range lines {
+		id, err := strconv.Atoi(strings.Fields(v)[0])
+		if err != nil {
+			return nil, err
+		}
+
+		size, err := strconv.Atoi(strings.Fields(v)[1])
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, MessageList{id, size})
+	}
+	return
+}
+
+func (c *Pop3Client) ListMessages(argsA ...string) (list []map[string]string, err error) {
+	nT := ""
+	if len(argsA) > 0 {
+		nT = " " + argsA[0]
+	}
+
+	if _, err = c.conn.Cmd("LIST" + nT); err != nil {
+		return
+	}
+
+	lines, err := c.conn.ReadLines()
+	if err != nil {
+		return
+	}
+
+	for _, v := range lines {
+		// id, err := strconv.Atoi(strings.Fields(v)[0])
+		// if err != nil {
+		// 	return nil, err
+		// }
+
+		// size, err := strconv.Atoi(strings.Fields(v)[1])
+		// if err != nil {
+		// 	return nil, err
+		// }
+		list = append(list, map[string]string{"Index": strings.Fields(v)[0], "Size": strings.Fields(v)[0]})
+	}
+	return
+}
+
+// ListUIDAll returns a map[string]string object which contains all messages in the maildrop.
+func (c *Pop3Client) ListUIDAll() (list []map[string]string, err error) {
+	if _, err = c.conn.Cmd(CommandUIDL); err != nil {
+		return
+	}
+
+	lines, err := c.conn.ReadLines()
+	if err != nil {
+		return
+	}
+
+	for _, v := range lines {
+		// list = append(list, map[string]string{"Data": v})
+		// indexT, err := strconv.Atoi(strings.Fields(v)[0])
+		// if err != nil {
+		// 	return nil, err
+		// }
+
+		// uidT, err := strconv.Atoi(strings.Fields(v)[1])
+		// if err != nil {
+		// 	return nil, err
+		// }
+
+		list = append(list, map[string]string{"Index": strings.Fields(v)[0], "Uid": strings.Fields(v)[1]})
+	}
+	return
+}
+
+func (c *Pop3Client) GetUID(idxA int) (uid string, err error) {
+	if _, err = c.conn.Cmd(CommandUIDL, IntToStr(idxA)); err != nil {
+		return
+	}
+
+	lines, err := c.conn.ReadLines()
+	if err != nil {
+		return
+	}
+
+	for _, v := range lines {
+		// list = append(list, map[string]string{"Data": v})
+		// indexT, err := strconv.Atoi(strings.Fields(v)[0])
+		// if err != nil {
+		// 	return nil, err
+		// }
+
+		// uidT, err := strconv.Atoi(strings.Fields(v)[1])
+		// if err != nil {
+		// 	return nil, err
+		// }
+		uid = strings.Fields(v)[1]
+		return
+	}
+	return
+}
+
+// SendCommand returns a []string object which contains all response lines.
+func (c *Pop3Client) SendCommand(cmdA string, argsA ...interface{}) ([]string, error) {
+	if _, err := c.conn.Cmd(cmdA, argsA...); err != nil {
+		return nil, err
+	}
+
+	lines, err := c.conn.ReadLines()
+	if err != nil {
+		return nil, err
+	}
+
+	return lines, nil
+}
+
+// Rset will unmark any messages that have being marked for deletion in
+// the current session.
+func (c *Pop3Client) Rset() error {
+	if _, err := c.conn.Cmd(CommandReset); err != nil {
+		return fmt.Errorf("failed at RSET command: %w", err)
+	}
+	return nil
+}
+
+// Retr downloads the given message and returns it as a mail.Message object.
+func (c *Pop3Client) Retr(msg int) (*enmime.Envelope, error) {
+	if _, err := c.conn.Cmd("%s %d", CommandRetrieve, msg); err != nil {
+		return nil, fmt.Errorf("failed at RETR command: %w", err)
+	}
+
+	message, err := enmime.ReadEnvelope(c.conn.Reader.DotReader())
+	if err != nil {
+		return nil, fmt.Errorf("failed to read message: %w", err)
+	}
+
+	return message, nil
+}
+
+// Dele will delete the given message from the maildrop.
+// Changes will only take affect after the Quit command is issued.
+func (c *Pop3Client) Dele(msg int) error {
+	if _, err := c.conn.Cmd("%s %d", CommandDelete, msg); err != nil {
+		return fmt.Errorf("failed at DELE command: %w", err)
+	}
+	return nil
+}
