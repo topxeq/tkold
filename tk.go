@@ -60,6 +60,9 @@ import (
 	"github.com/mholt/archiver/v3"
 
 	"github.com/jhillyerd/enmime"
+
+	"github.com/boombuler/barcode"
+	"github.com/boombuler/barcode/qr"
 )
 
 var versionG = "0.95a"
@@ -10318,6 +10321,32 @@ func (pA *TK) IfThenElse(condA bool, thenA interface{}, elseA interface{}) inter
 }
 
 var IfThenElse = TKX.IfThenElse
+
+// GenerateQR default -level=1, 4 indicates more error tolerance
+func (pA *TK) GenerateQR(contentA string, optsA ...string) (barcode.Barcode, error) {
+	var qrCode barcode.Barcode
+
+	levelT := GetSwitchWithDefaultIntValue(optsA, "-level=", 1)
+
+	switch levelT {
+	case 0:
+		qrCode, _ = qr.Encode(contentA, qr.L, qr.Auto)
+	case 1:
+		qrCode, _ = qr.Encode(contentA, qr.M, qr.Auto)
+	case 2:
+		qrCode, _ = qr.Encode(contentA, qr.Q, qr.Auto)
+	case 3:
+		qrCode, _ = qr.Encode(contentA, qr.H, qr.Auto)
+	default:
+		qrCode, _ = qr.Encode(contentA, qr.M, qr.Auto)
+	}
+
+	qrCode, _ = barcode.Scale(qrCode, GetSwitchWithDefaultIntValue(optsA, "-width=", 500), GetSwitchWithDefaultIntValue(optsA, "-height=", 500))
+
+	return qrCode, nil
+}
+
+var GenerateQR = TKX.GenerateQR
 
 func (pA *TK) GetZipArchiver(argsA ...string) *archiver.Zip {
 	z := &archiver.Zip{

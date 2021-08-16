@@ -6,6 +6,7 @@ require (
 	github.com/aarzilli/sandblast v0.0.0-20151220083925-43f8fb998d06
 	github.com/atotto/clipboard v0.1.2
 	github.com/beevik/etree v1.1.0
+	github.com/boombuler/barcode v1.0.1
 	github.com/jhillyerd/enmime v0.9.1
 	github.com/json-iterator/go v1.1.9
 	github.com/melbahja/goph v1.2.1
