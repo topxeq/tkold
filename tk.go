@@ -2564,7 +2564,8 @@ func (pA *TK) EnsureBasePath(nameA string) (string, error) {
 
 var EnsureBasePath = TKX.EnsureBasePath
 
-func (pA *TK) CreateTempFile(dirA string, patternA string) (string, error) {
+// CreateTempFile dirA如果为空，则在系统临时目录下。patternA 可以是example或example*.txt这样
+func (pA *TK) CreateTempFile(dirA string, patternA string, optsA ...string) (string, error) {
 	content := []byte("")
 	tmpfile, err := os.CreateTemp(dirA, patternA)
 	if err != nil {
@@ -3105,6 +3106,12 @@ func (pA *TK) GetEnv(keyA string) string {
 }
 
 var GetEnv = TKX.GetEnv
+
+func (pA *TK) SetEnv(keyA string, valueA string) string {
+	return ErrToErrStr(os.Setenv(keyA, valueA))
+}
+
+var SetEnv = TKX.SetEnv
 
 // JoinPath same as filepath.Join
 func (pA *TK) JoinPath(elemA ...string) string {
@@ -4799,6 +4806,62 @@ func (pA *TK) RemoveFile(filePathT string) error {
 }
 
 var RemoveFile = TKX.RemoveFile
+
+func (pA *TK) CreateFile(filePathT string, optsA ...string) error {
+	overwriteT := IfSwitchExistsWhole(optsA, "-overwrite")
+
+	if !overwriteT {
+		if IfFileExists(filePathT) {
+			return Errf("file already exists")
+		}
+	}
+
+	fileT, errT := os.Create(filePathT)
+
+	if errT != nil {
+		return errT
+	}
+
+	fileT.Close()
+
+	return nil
+}
+
+var CreateFile = TKX.CreateFile
+
+func (pA *TK) RenameFile(filePathT string, destFilePathT string, optsA ...string) error {
+	if !IfFileExists(filePathT) {
+		return Errf("file not exists")
+	}
+
+	errT := os.Rename(filePathT, destFilePathT)
+
+	if errT != nil {
+		return errT
+	}
+
+	return nil
+}
+
+var RenameFile = TKX.RenameFile
+
+//
+// func (pA *TK) CreateTempFile(dirT string, patternT string, optsA ...string) error {
+// 	f, err := os.CreateTemp(dirT, patternT)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	defer os.Remove(f.Name()) // clean up
+
+// 	if _, err := f.Write([]byte("content")); err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	if err := f.Close(); err != nil {
+// 		log.Fatal(err)
+// 	}
+// }
+
+// var CreateTempFile = TKX.CreateTempFile
 
 func (pA *TK) GetFileSize(filePathA string) (int64, error) {
 	fi, err := os.Stat(filePathA)
@@ -7884,6 +7947,16 @@ func (pA *TK) ErrorToString(errA error) string {
 }
 
 var ErrorToString = TKX.ErrorToString
+
+func (pA *TK) ErrToErrStr(errA error) string {
+	if errA == nil {
+		return ""
+	}
+
+	return GenerateErrorString(errA.Error())
+}
+
+var ErrToErrStr = TKX.ErrToErrStr
 
 func (pA *TK) EncryptFileByTXDEFS(fileNameA, codeA, outputFileA string) string {
 	return ErrorToString(EncryptFileByTXDEF(fileNameA, codeA, outputFileA))
