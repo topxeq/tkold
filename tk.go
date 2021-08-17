@@ -309,6 +309,30 @@ var HasGlobalEnv = TKX.HasGlobalEnv
 
 // 字符串相关函数 string related
 
+func (pA *TK) FindSubStringAll(strA string, subStrA string) [][]int {
+	bufT := make([][]int, 0, 100)
+
+	subLenT := len(subStrA)
+
+	for start := 0; start < len(strA); {
+		remaining := strA[start:] // slicing the string is cheap
+		loc := strings.Index(remaining, subStrA)
+		if loc < 0 {
+			return bufT
+		}
+		// loc[0] is the start index of the match,
+		// loc[1] is the end index (exclusive)
+
+		bufT = append(bufT, []int{loc + start, loc + subLenT + start})
+
+		start += loc + subLenT
+	}
+
+	return bufT
+}
+
+var FindSubStringAll = TKX.FindSubStringAll
+
 func (pA *TK) IsEmptyTrim(strA string) bool {
 	return (Trim(strA) == "")
 }
