@@ -533,6 +533,18 @@ func (pA *TK) TrimCharSet(strA string, charSetA string) string {
 
 var TrimCharSet = TKX.TrimCharSet
 
+func (pA *TK) InterfaceToStringArray(aryT []interface{}) []string {
+	bufT := make([]string, len(aryT))
+
+	for _, v := range aryT {
+		bufT = append(bufT, fmt.Sprintf("%v", v))
+	}
+
+	return bufT
+}
+
+var InterfaceToStringArray = TKX.InterfaceToStringArray
+
 // InStrings 第一个可变参数如果以“-”开头，将表示参数开关，-it表示忽略大小写，并且trim再比较（strA并不trim）
 func (pA *TK) InStrings(strA string, argsA ...string) bool {
 	ignoreCaseT := false
