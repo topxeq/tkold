@@ -7103,6 +7103,16 @@ func (pA *TK) MD5Encrypt(strA string) string {
 
 var MD5Encrypt = TKX.MD5Encrypt
 
+func (pA *TK) MD5EncryptToBytes(strA string) []byte {
+	tmpb := md5.Sum([]byte(strA))
+
+	tmpbb := tmpb[:]
+
+	return tmpbb
+}
+
+var MD5EncryptToBytes = TKX.MD5EncryptToBytes
+
 // 加密解密相关
 
 func (pA *TK) BytesToHex(bufA []byte) string {
