@@ -63,6 +63,12 @@ import (
 
 	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/qr"
+
+	"github.com/skx/evalfilter/v2"
+	"github.com/skx/evalfilter/v2/object"
+
+	"github.com/antonmedv/expr"
+	"github.com/antonmedv/expr/vm"
 )
 
 var versionG = "0.95a"
@@ -3761,6 +3767,29 @@ func (pA *TK) IfSwitchExistsWholeI(argsA []interface{}, switchStrA string) bool 
 var IfSwitchExistsWholeI = TKX.IfSwitchExistsWholeI
 
 // 各种转换 conversion related
+
+func (pA *TK) MSI2MSS(vA map[string]interface{}) map[string]string {
+	mssT := make(map[string]string, len(vA))
+	for k, v := range vA {
+		vv, ok := v.(string)
+		if ok {
+			mssT[k] = vv
+		}
+	}
+	return mssT
+}
+
+var MSI2MSS = TKX.MSI2MSS
+
+func (pA *TK) MSS2MSI(vA map[string]string) map[string]interface{} {
+	msiT := make(map[string]interface{}, len(vA))
+	for k, v := range vA {
+		msiT[k] = v
+	}
+	return msiT
+}
+
+var MSS2MSI = TKX.MSS2MSI
 
 func (pA *TK) ToInterface(vA interface{}) interface{} {
 	return vA
@@ -12105,3 +12134,117 @@ func (c *Pop3Client) Dele(msg int) error {
 	}
 	return nil
 }
+
+// script related
+
+func (pA *TK) NewScript(scriptA string, argsA ...string) (*evalfilter.Eval, error) {
+	evalT := evalfilter.New(scriptA)
+
+	errT := evalT.Prepare()
+	if errT != nil {
+		return nil, errT
+	}
+
+	evalT.AddFunction("length",
+		func(args []object.Object) object.Object {
+			sum := 0
+			for _, e := range args {
+				sum += len(e.Inspect())
+			}
+			return &object.Integer{Value: int64(sum)}
+		})
+
+	evalT.AddFunction("getNowStr",
+		func(args []object.Object) object.Object {
+			return &object.String{Value: GetNowTimeStringFormal()}
+		})
+
+	evalT.SetVariable("inputG", &object.String{Value: GetSwitch(argsA, "-input=")})
+	evalT.SetVariable("argsG", &object.String{Value: GetSwitch(argsA, "-args=")})
+	evalT.SetVariable("objectG", &object.String{Value: GetSwitch(argsA, "-object=")})
+
+	return evalT, nil
+}
+
+var NewScript = TKX.NewScript
+
+func (pA *TK) SetScriptValue(scriptA *evalfilter.Eval, keyA string, valueA interface{}) error {
+	switch nv := valueA.(type) {
+	case string:
+		scriptA.SetVariable(keyA, &object.String{Value: nv})
+	case int:
+		scriptA.SetVariable(keyA, &object.Integer{Value: int64(nv)})
+	case int64:
+		scriptA.SetVariable(keyA, &object.Integer{Value: nv})
+	case float64:
+		scriptA.SetVariable(keyA, &object.Float{Value: nv})
+	case bool:
+		scriptA.SetVariable(keyA, &object.Boolean{Value: nv})
+	default:
+		return Errf("unknown type")
+	}
+
+	return nil
+}
+
+var SetScriptValue = TKX.SetScriptValue
+
+func (pA *TK) GetScriptValue(scriptA *evalfilter.Eval, keyA string) interface{} {
+	resultT := scriptA.GetVariable(keyA)
+
+	typeT := resultT.Type()
+
+	if typeT == object.NULL {
+		return nil
+	} else if typeT == object.STRING {
+		return resultT.(*object.String).Value
+	} else if typeT == object.BOOLEAN {
+		return resultT.(*object.Boolean).Value
+	} else if typeT == object.INTEGER {
+		return resultT.(*object.Integer).Value
+	} else if typeT == object.FLOAT {
+		return resultT.(*object.Float).Value
+	} else {
+		return resultT
+	}
+
+	return nil
+}
+
+var GetScriptValue = TKX.GetScriptValue
+
+func (pA *TK) NewEval(codeA string, envA map[string]interface{}) interface{} {
+	if envA == nil {
+		programT, errT := expr.Compile(codeA, expr.Env(map[string]interface{}{}))
+		if errT != nil {
+			return errT
+		}
+
+		return programT
+	}
+
+	programT, errT := expr.Compile(codeA, expr.Env(envA))
+	if errT != nil {
+		return errT
+	}
+
+	return programT
+}
+
+var NewEval = TKX.NewEval
+
+func (pA *TK) RunEval(programA interface{}, envA map[string]interface{}) (interface{}, error) {
+	if vmT, ok := programA.(*vm.Program); ok {
+		output, err := expr.Run(vmT, envA)
+
+		return output, err
+	}
+
+	if errT, ok := programA.(error); ok {
+		return nil, errT
+	}
+
+	return programA, nil
+}
+
+var RunEval = TKX.RunEval
