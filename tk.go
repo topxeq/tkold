@@ -5094,11 +5094,36 @@ type FileInfo struct {
 	Time  string
 }
 
+type MSSArraySorter struct {
+	KeyM  string
+	DescM bool
+	AryM  []map[string]string
+}
+
+func (s MSSArraySorter) Len() int {
+	return len(s.AryM)
+}
+
+func (s MSSArraySorter) Swap(i, j int) {
+	s.AryM[i], s.AryM[j] = s.AryM[j], s.AryM[i]
+}
+
+func (s MSSArraySorter) Less(i, j int) bool {
+	if s.DescM {
+		return s.AryM[i][s.KeyM] > s.AryM[j][s.KeyM]
+	}
+
+	return s.AryM[i][s.KeyM] < s.AryM[j][s.KeyM]
+}
+
 func (pA *TK) GetFileList(dirA string, argsA ...string) []map[string]string {
 
 	verboseT := IfSwitchExistsWhole(argsA, "-verbose")
 
 	recursiveT := IfSwitchExistsWhole(argsA, "-recursive")
+
+	sortT := GetSwitch(argsA, "-sort=", "")
+	sortKeyT := GetSwitch(argsA, "-sortKey=", "Time")
 
 	withDirectoryT := IfSwitchExistsWhole(argsA, "-withDir")
 
@@ -5223,6 +5248,18 @@ func (pA *TK) GetFileList(dirA string, argsA ...string) []map[string]string {
 
 		return nil
 	}
+
+	if sortT == "" {
+		return mapListT
+	}
+
+	sortStructT := MSSArraySorter{
+		KeyM:  sortKeyT,
+		DescM: sortT == "desc",
+		AryM:  mapListT,
+	}
+
+	sort.Sort(sortStructT)
 
 	return mapListT
 }
@@ -8539,6 +8576,81 @@ func (pA *TK) DownloadPageUTF8(urlA string, postDataA url.Values, customHeaders 
 }
 
 var DownloadPageUTF8 = TKX.DownloadPageUTF8
+
+func (pA *TK) DownloadWebPage(urlA string, postDataA map[string]string, customHeadersA map[string]string, optsA ...string) string {
+	timeoutStrT := GetSwitch(optsA, "-timeout=", "15")
+
+	encodingT := GetSwitch(optsA, "-encoding=", "")
+
+	timeoutSecsT := time.Second * time.Duration(StrToInt(timeoutStrT, 15))
+
+	client := &http.Client{
+		//CheckRedirect: redirectPolicyFunc,
+		Timeout: time.Second * timeoutSecsT,
+	}
+
+	var urlT string
+	if !StartsWithIgnoreCase(urlA, "http") {
+		urlT = "http://" + urlA
+	} else {
+		urlT = urlA
+	}
+
+	var respT *http.Response
+	var errT error
+	var req *http.Request
+
+	reqTypeT := GetSwitch(optsA, "-method=", "GET")
+
+	if postDataA != nil && reqTypeT == "GET" {
+		reqTypeT = "POST"
+	}
+
+	req, errT = http.NewRequest(reqTypeT, urlT, nil)
+
+	if postDataA != nil {
+		req.PostForm = MapToPostData(postDataA)
+	}
+
+	if customHeadersA != nil {
+		for k, v := range customHeadersA {
+			req.Header.Add(k, v)
+		}
+	}
+
+	if IfSwitchExistsWhole(optsA, "-verbose") {
+		Pl("REQ: %v", req)
+	}
+
+	respT, errT = client.Do(req)
+
+	if errT == nil {
+		defer respT.Body.Close()
+		if respT.StatusCode != 200 {
+			if IfSwitchExistsWhole(optsA, "-detail") {
+				Pl("response status: %v (%v)", respT.StatusCode, respT)
+			}
+
+			return GenerateErrorStringF("response status: %v", respT.StatusCode)
+		} else {
+			body, errT := io.ReadAll(respT.Body)
+
+			if errT != nil {
+				return GenerateErrorString(errT.Error())
+			}
+
+			if (encodingT == "") || (strings.ToLower(encodingT) == "utf-8") {
+				return string(body)
+			} else {
+				return ConvertToUTF8(body, encodingT)
+			}
+		}
+	} else {
+		return GenerateErrorString(errT.Error())
+	}
+}
+
+var DownloadWebPage = TKX.DownloadWebPage
 
 // DownloadPage download page with any encoding and convert to UTF-8
 func (pA *TK) DownloadPage(urlA string, originalEncodingA string, postDataA url.Values, customHeaders string, timeoutSecsA time.Duration) string {
