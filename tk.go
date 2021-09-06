@@ -779,6 +779,28 @@ func (pA *TK) Replace(strA, findA, replaceA string) string {
 
 var Replace = TKX.Replace
 
+func (pA *TK) ReplaceHtmlByMap(strA string, mapA map[string]string) string {
+	if mapA == nil {
+		return strA
+	}
+
+	for k, v := range mapA {
+		strA = Replace(strA, "TX_"+k+"_XT", v)
+	}
+
+	return strA
+}
+
+var ReplaceHtmlByMap = TKX.ReplaceHtmlByMap
+
+func (pA *TK) CleanHtmlPlaceholders(strA string) string {
+	strA = RegReplace(strA, `TX_.*?_XT`, "")
+
+	return strA
+}
+
+var CleanHtmlPlaceholders = TKX.CleanHtmlPlaceholders
+
 func (pA *TK) StringReplace(strA string, argsA ...string) string {
 	if len(argsA) < 2 {
 		return strA
