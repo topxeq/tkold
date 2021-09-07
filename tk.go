@@ -8509,6 +8509,27 @@ var GetDebug = TKX.GetDebug
 
 // http/web service related
 
+func (pA *TK) SetResponseHeader(resA http.ResponseWriter, keyA string, valueA string) error {
+	resA.Header().Set(keyA, valueA)
+
+	return nil
+}
+
+var SetResponseHeader = TKX.SetResponseHeader
+
+func (pA *TK) WriteResponseHeader(resA http.ResponseWriter, argsA ...interface{}) error {
+	defaultT := "200"
+	if len(argsA) > 0 {
+		defaultT = fmt.Sprintf("%v", argsA[0])
+	}
+
+	resA.WriteHeader(StrToIntWithDefaultValue(defaultT, 200))
+
+	return nil
+}
+
+var WriteResponseHeader = TKX.WriteResponseHeader
+
 func (pA *TK) WriteResponse(resA http.ResponseWriter, strA string) error {
 	_, errT := resA.Write([]byte(strA))
 
