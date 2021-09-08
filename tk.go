@@ -2650,7 +2650,7 @@ func (pA *TK) CreateTempFile(dirA string, patternA string, optsA ...string) (str
 var CreateTempFile = TKX.CreateTempFile
 
 //
-func (pA *TK) CopyFile(src, dst string, forceA bool, bufferSizeA int) error {
+func (pA *TK) CopyFile(src, dst string, optsA ...string) error {
 
 	srcFileStat, err := os.Stat(src)
 	if err != nil {
@@ -2674,9 +2674,10 @@ func (pA *TK) CopyFile(src, dst string, forceA bool, bufferSizeA int) error {
 
 	defer source.Close()
 
-	if !forceA {
-		_, err = os.Stat(dst)
-		if err != nil {
+	forceT := IfSwitchExists(optsA, "-force")
+
+	if !forceT {
+		if IfFileExists(dst) {
 			return fmt.Errorf("file %s already exists", dst)
 		}
 	}
@@ -2688,11 +2689,13 @@ func (pA *TK) CopyFile(src, dst string, forceA bool, bufferSizeA int) error {
 
 	defer destination.Close()
 
-	if bufferSizeA <= 0 {
-		bufferSizeA = 1000000
+	bufferSizeT := GetSwitchWithDefaultIntValue(optsA, "-bufferSize=", 1000000)
+
+	if bufferSizeT <= 0 {
+		bufferSizeT = 1000000
 	}
 
-	buf := make([]byte, bufferSizeA)
+	buf := make([]byte, bufferSizeT)
 	for {
 		n, err := source.Read(buf)
 
@@ -4765,6 +4768,24 @@ func (pA *TK) IfFileExists(fileNameA string) bool {
 }
 
 var IfFileExists = TKX.IfFileExists
+
+func (pA *TK) GetFileInfo(filePathA string) (map[string]string, error) {
+	fi, errT := os.Stat(filePathA)
+	if errT != nil && !os.IsExist(errT) {
+		return nil, errT
+	}
+
+	absPathT, errT := filepath.Abs(filePathA)
+	if errT != nil {
+		return nil, errT
+	}
+
+	mapT := map[string]string{"Path": filePathA, "Abs": absPathT, "Name": filepath.Base(filePathA), "Ext": filepath.Ext(filePathA), "Size": Int64ToStr(fi.Size()), "IsDir": BoolToStr(fi.IsDir()), "Time": FormatTime(fi.ModTime(), TimeFormatCompact), "Mode": fmt.Sprintf("%v", fi.Mode())}
+
+	return mapT, nil
+}
+
+var GetFileInfo = TKX.GetFileInfo
 
 // IsFile if is file
 func (pA *TK) IsFile(fileNameA string) bool {
