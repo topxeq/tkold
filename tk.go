@@ -521,8 +521,12 @@ func (pA *TK) EndsWithIgnoreCase(strA string, subStrA string) bool {
 var EndsWithIgnoreCase = TKX.EndsWithIgnoreCase
 
 // Trim 仅仅封装了strings.TrimSpace
-func (pA *TK) Trim(strA string) string {
-	return strings.TrimSpace(strA)
+func (pA *TK) Trim(strA string, cutSetA ...string) string {
+	if len(cutSetA) < 1 {
+		return strings.TrimSpace(strA)
+	}
+
+	return strings.Trim(strA, cutSetA[0])
 }
 
 var Trim = TKX.Trim
@@ -2244,6 +2248,103 @@ func (pA *TK) CompareTimeString(str1A, str2A, formatA string) (int, error) {
 
 var CompareTimeString = TKX.CompareTimeString
 
+func (pA *TK) ToTime(timeA interface{}, defaultA ...interface{}) time.Time {
+	timeT, ok := timeA.(time.Time)
+	if ok {
+		return timeT
+	}
+
+	var defaultT time.Time = time.Now()
+	ifLocalT := true
+
+	formatT := ""
+
+	for _, v := range defaultA {
+		nv, ok := v.(time.Time)
+		if ok {
+			defaultT = nv
+			continue
+		}
+
+		argT, ok := v.(string)
+		if !ok {
+			continue
+		}
+
+		if argT == "-global" {
+			ifLocalT = false
+			continue
+		}
+
+		if StartsWith(argT, "-format=") {
+			tmpStrT := argT[len("-format="):]
+			if StartsWith(tmpStrT, "\"") && EndsWith(tmpStrT, "\"") {
+				formatT = tmpStrT[1 : len(tmpStrT)-1]
+			} else {
+				formatT = tmpStrT
+			}
+
+			continue
+		}
+
+	}
+
+	strT, ok := timeA.(string)
+	if !ok {
+		return defaultT
+	}
+
+	var t time.Time
+	var err error
+
+	if formatT != "" {
+		if ifLocalT {
+			t, err = time.ParseInLocation(formatT, strT, time.Local)
+			if err == nil {
+				return t
+			}
+		} else {
+			t, err = time.Parse(formatT, strT)
+			if err == nil {
+				return t
+			}
+		}
+
+		return defaultT
+	}
+
+	if ifLocalT {
+		t, err = time.ParseInLocation(TimeFormat, strT, time.Local)
+	} else {
+		t, err = time.Parse(TimeFormat, strT)
+	}
+	if err == nil {
+		return t
+	}
+
+	if ifLocalT {
+		t, err = time.ParseInLocation(TimeFormatCompact, strT, time.Local)
+	} else {
+		t, err = time.Parse(TimeFormatCompact, strT)
+	}
+	if err == nil {
+		return t
+	}
+
+	if ifLocalT {
+		t, err = time.ParseInLocation(TimeFormatMS, strT, time.Local)
+	} else {
+		t, err = time.Parse(TimeFormatMS, strT)
+	}
+	if err == nil {
+		return t
+	}
+
+	return defaultT
+}
+
+var ToTime = TKX.ToTime
+
 func (pA *TK) StrToTime(strA string, defaultA time.Time) time.Time {
 	t, err := time.Parse(TimeFormat, strA)
 	if err != nil {
@@ -3665,9 +3766,14 @@ func (pA *TK) GetSwitchI(argsA []interface{}, switchStrA string, defaultA string
 	}
 
 	tmpStrT := ""
-	for _, argT := range argsA {
-		if StartsWith(argT.(string), switchStrA) {
-			tmpStrT = argT.(string)[len(switchStrA):]
+	for _, argIT := range argsA {
+		argT, ok := argIT.(string)
+		if !ok {
+			continue
+		}
+
+		if StartsWith(argT, switchStrA) {
+			tmpStrT = argT[len(switchStrA):]
 			if StartsWith(tmpStrT, "\"") && EndsWith(tmpStrT, "\"") {
 				return tmpStrT[1 : len(tmpStrT)-1]
 			}
