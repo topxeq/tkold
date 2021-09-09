@@ -2599,6 +2599,18 @@ func (pA *TK) ContainsIn(strA string, subStrsA ...string) bool {
 
 var ContainsIn = TKX.ContainsIn
 
+func (pA *TK) RegContainsIn(strA string, subStrsA ...string) bool {
+	for _, v := range subStrsA {
+		if RegContainsX(strA, v) {
+			return true
+		}
+	}
+
+	return false
+}
+
+var RegContainsIn = TKX.RegContainsIn
+
 func (pA *TK) ContainsInStringList(strA string, strListA []string) bool {
 	if strListA == nil {
 		return false
