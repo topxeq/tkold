@@ -246,6 +246,7 @@ var TXResultFromStringSafely = TKX.TXResultFromStringSafely
 var logFileG = "c:\\tk.log"
 var TimeFormat = "2006-01-02 15:04:05"
 var TimeFormatMS = "2006-01-02 15:04:05.000"
+var TimeFormatMSCompact = "20060102150405.000"
 var TimeFormatCompact = "20060102150405"
 var TimeFormatCompact2 = "2006/01/02 15:04:05"
 var GlobalEnvSetG *TXCollection = nil
