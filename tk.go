@@ -1844,6 +1844,73 @@ func (pA *TK) GenerateRandomString(minCharA, maxCharA int, hasUpperA, hasLowerA,
 
 var GenerateRandomString = TKX.GenerateRandomString
 
+func (pA *TK) GenerateRandomStringX(argsA ...string) string {
+	Randomize()
+
+	minCharA := GetSwitchWithDefaultIntValue(argsA, "-min=", 6)
+
+	if minCharA <= 0 {
+		return ""
+	}
+
+	maxCharA := GetSwitchWithDefaultIntValue(argsA, "-max=", 6)
+
+	if maxCharA <= 0 {
+		return ""
+	}
+
+	if minCharA > maxCharA {
+		return ""
+	}
+
+	countT := minCharA + rand.Intn(maxCharA+1-minCharA)
+
+	baseT := ""
+
+	hasUpperA := !IfSwitchExists(argsA, "-noUpper")
+
+	if hasUpperA {
+		baseT += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	}
+
+	hasLowerA := !IfSwitchExists(argsA, "-noLower")
+	if hasLowerA {
+		baseT += "abcdefghijklmnopqrstuvwxyz"
+	}
+
+	hasDigitA := !IfSwitchExists(argsA, "-noDigit")
+	if hasDigitA {
+		baseT += "0123456789"
+	}
+
+	hasSpecialCharA := IfSwitchExists(argsA, "-special")
+	if hasSpecialCharA {
+		baseT += "!@#$%^&*-=[]{}."
+	}
+
+	hasSpaceA := IfSwitchExists(argsA, "-space")
+	if hasSpaceA {
+		baseT += " "
+	}
+
+	hasInvalidChars := IfSwitchExists(argsA, "-invalid")
+	if hasInvalidChars {
+		baseT += "/\\:*\"<>|(),+?;"
+	}
+
+	rStrT := ""
+	var idxT int
+
+	for i := 0; i < countT; i++ {
+		idxT = rand.Intn(len(baseT))
+		rStrT += baseT[idxT:(idxT + 1)]
+	}
+
+	return rStrT
+}
+
+var GenerateRandomStringX = TKX.GenerateRandomStringX
+
 // RandomX 是一个线程不安全的随机数产生器
 type RandomX struct {
 	r uint64
