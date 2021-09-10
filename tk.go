@@ -2171,9 +2171,21 @@ var GetNowTimeString = TKX.GetNowTimeString
 
 // GetNowTimeStringFormat GetNowTimeStringFormat
 // "2006-01-02 15:04:05.000"
-func (pA *TK) GetNowTimeStringFormat(formatA string) string {
+func (pA *TK) GetNowTimeStringFormat(formatA ...string) string {
+	var formatT string
+
+	if len(formatA) < 1 {
+		formatT = TimeFormat
+	} else if formatA[0] == "" || formatA[0] == "formal" {
+		formatT = TimeFormat
+	} else if formatA[0] == "compact" {
+		formatT = TimeFormatCompact
+	} else {
+		formatT = formatA[0]
+	}
+
 	t := time.Now()
-	return t.Format(formatA)
+	return t.Format(formatT)
 }
 
 var GetNowTimeStringFormat = TKX.GetNowTimeStringFormat
