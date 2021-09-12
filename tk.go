@@ -28,6 +28,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -39,6 +40,7 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	"unicode"
 	"unsafe"
 
 	"github.com/topxeq/regexpx"
@@ -1757,6 +1759,16 @@ func (pA *TK) GetRandomIntLessThan(maxA int) int {
 }
 
 var GetRandomIntLessThan = TKX.GetRandomIntLessThan
+
+func (pA *TK) GetRandomFloat() float64 {
+	Randomize()
+
+	randT := rand.Float64()
+
+	return randT
+}
+
+var GetRandomFloat = TKX.GetRandomFloat
 
 func (pA *TK) GetRandomInt64LessThan(maxA int64) int64 {
 	Randomize()
@@ -12501,4 +12513,224 @@ func (c *Pop3Client) Dele(msg int) error {
 		return fmt.Errorf("failed at DELE command: %w", err)
 	}
 	return nil
+}
+
+const fileScheme = "file"
+
+// URI represents the full URI for a file.
+type URI string
+
+func (uri URI) IsFile() bool {
+	return strings.HasPrefix(string(uri), "file://")
+}
+
+// Filename returns the file path for the given URI.
+// It is an error to call this on a URI that is not a valid filename.
+func (uri URI) Filename() string {
+	filename, err := filename(uri)
+	if err != nil {
+		panic(err)
+	}
+	return filepath.FromSlash(filename)
+}
+
+func filename(uri URI) (string, error) {
+	if uri == "" {
+		return "", nil
+	}
+	u, err := url.ParseRequestURI(string(uri))
+	if err != nil {
+		return "", err
+	}
+	if u.Scheme != fileScheme {
+		return "", fmt.Errorf("only file URIs are supported, got %q from %q", u.Scheme, uri)
+	}
+	// If the URI is a Windows URI, we trim the leading "/" and uppercase
+	// the drive letter, which will never be case sensitive.
+	if isWindowsDriveURIPath(u.Path) {
+		u.Path = strings.ToUpper(string(u.Path[1])) + u.Path[2:]
+	}
+	return u.Path, nil
+}
+
+func URIFromURI(s string) URI {
+	if !strings.HasPrefix(s, "file://") {
+		return URI(s)
+	}
+
+	if !strings.HasPrefix(s, "file:///") {
+		// VS Code sends URLs with only two slashes, which are invalid. golang/go#39789.
+		s = "file:///" + s[len("file://"):]
+	}
+	// Even though the input is a URI, it may not be in canonical form. VS Code
+	// in particular over-escapes :, @, etc. Unescape and re-encode to canonicalize.
+	path, err := url.PathUnescape(s[len("file://"):])
+	if err != nil {
+		panic(err)
+	}
+
+	// File URIs from Windows may have lowercase drive letters.
+	// Since drive letters are guaranteed to be case insensitive,
+	// we change them to uppercase to remain consistent.
+	// For example, file:///c:/x/y/z becomes file:///C:/x/y/z.
+	if isWindowsDriveURIPath(path) {
+		path = path[:1] + strings.ToUpper(string(path[1])) + path[2:]
+	}
+	u := url.URL{Scheme: fileScheme, Path: path}
+	return URI(u.String())
+}
+
+func CompareURI(a, b URI) int {
+	if equalURI(a, b) {
+		return 0
+	}
+	if a < b {
+		return -1
+	}
+	return 1
+}
+
+func equalURI(a, b URI) bool {
+	if a == b {
+		return true
+	}
+	// If we have the same URI basename, we may still have the same file URIs.
+	if !strings.EqualFold(path.Base(string(a)), path.Base(string(b))) {
+		return false
+	}
+	fa, err := filename(a)
+	if err != nil {
+		return false
+	}
+	fb, err := filename(b)
+	if err != nil {
+		return false
+	}
+	// Stat the files to check if they are equal.
+	infoa, err := os.Stat(filepath.FromSlash(fa))
+	if err != nil {
+		return false
+	}
+	infob, err := os.Stat(filepath.FromSlash(fb))
+	if err != nil {
+		return false
+	}
+	return os.SameFile(infoa, infob)
+}
+
+// URIFromPath returns a span URI for the supplied file path.
+// It will always have the file scheme.
+func URIFromPath(path string) URI {
+	if path == "" {
+		return ""
+	}
+	// Handle standard library paths that contain the literal "$GOROOT".
+	// TODO(rstambler): The go/packages API should allow one to determine a user's $GOROOT.
+	// const prefix = "$GOROOT"
+	// if len(path) >= len(prefix) && strings.EqualFold(prefix, path[:len(prefix)]) {
+	// 	suffix := path[len(prefix):]
+	// 	path = runtime.GOROOT() + suffix
+	// }
+	if !isWindowsDrivePath(path) {
+		if abs, err := filepath.Abs(path); err == nil {
+			path = abs
+		}
+	}
+	// Check the file path again, in case it became absolute.
+	if isWindowsDrivePath(path) {
+		path = "/" + strings.ToUpper(string(path[0])) + path[1:]
+	}
+	path = filepath.ToSlash(path)
+	u := url.URL{
+		Scheme: fileScheme,
+		Path:   path,
+	}
+	return URI(u.String())
+}
+
+func (pA *TK) PathToURI(path string) string {
+	if path == "" {
+		return ""
+	}
+
+	if !isWindowsDrivePath(path) {
+		if abs, err := filepath.Abs(path); err == nil {
+			path = abs
+		}
+	}
+
+	if isWindowsDrivePath(path) {
+		path = "/" + strings.ToUpper(string(path[0])) + path[1:]
+	}
+
+	path = filepath.ToSlash(path)
+	u := url.URL{
+		Scheme: fileScheme,
+		Path:   path,
+	}
+
+	return u.String()
+}
+
+var PathToURI = TKX.PathToURI
+
+func getUrifilename(uri string) string {
+	if uri == "" {
+		return ""
+	}
+	u, err := url.ParseRequestURI(uri)
+	if err != nil {
+		return ErrToStr(err)
+	}
+	if u.Scheme != fileScheme {
+		return ErrStrf("only file URIs are supported, got %q from %q", u.Scheme, uri)
+	}
+	// If the URI is a Windows URI, we trim the leading "/" and uppercase
+	// the drive letter, which will never be case sensitive.
+	if isWindowsDriveURIPath(u.Path) {
+		u.Path = strings.ToUpper(string(u.Path[1])) + u.Path[2:]
+	}
+	return u.Path
+}
+
+func (pA *TK) URIToPath(uri string) string {
+	if uri == "" {
+		return ""
+	}
+	u, err := url.ParseRequestURI(uri)
+	if err != nil {
+		return ErrToStr(err)
+	}
+	if u.Scheme != fileScheme {
+		return ErrStrf("only file URIs are supported, got %q from %q", u.Scheme, uri)
+	}
+	// If the URI is a Windows URI, we trim the leading "/" and uppercase
+	// the drive letter, which will never be case sensitive.
+	if isWindowsDriveURIPath(u.Path) {
+		u.Path = strings.ToUpper(string(u.Path[1])) + u.Path[2:]
+	}
+
+	return filepath.FromSlash(u.Path)
+}
+
+var URIToPath = TKX.URIToPath
+
+// isWindowsDrivePath returns true if the file path is of the form used by
+// Windows. We check if the path begins with a drive letter, followed by a ":".
+// For example: C:/x/y/z.
+func isWindowsDrivePath(path string) bool {
+	if len(path) < 3 {
+		return false
+	}
+	return unicode.IsLetter(rune(path[0])) && path[1] == ':'
+}
+
+// isWindowsDriveURI returns true if the file URI is of the format used by
+// Windows URIs. The url.Parse package does not specially handle Windows paths
+// (see golang/go#6027), so we check if the URI path has a drive prefix (e.g. "/C:").
+func isWindowsDriveURIPath(uri string) bool {
+	if len(uri) < 4 {
+		return false
+	}
+	return uri[0] == '/' && unicode.IsLetter(rune(uri[1])) && uri[2] == ':'
 }
