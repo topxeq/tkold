@@ -65,6 +65,8 @@ import (
 
 	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/qr"
+
+	zipx "github.com/yeka/zip"
 )
 
 var versionG = "0.95a"
@@ -10891,6 +10893,18 @@ func (pA *TK) GetZipArchiver(argsA ...string) *archiver.Zip {
 
 var GetZipArchiver = TKX.GetZipArchiver
 var GetZip = TKX.GetZipArchiver
+
+func (pA *TK) GetEncZipReader(filePathA string) (*zipx.ReadCloser, error) {
+	return zipx.OpenReader(filePathA)
+}
+
+var GetEncZipReader = TKX.GetEncZipReader
+
+func (pA *TK) GetEncZipWriter(wA io.Writer) *zipx.Writer {
+	return zipx.NewWriter(wA)
+}
+
+var GetEncZipWriter = TKX.GetEncZipWriter
 
 func (pA *TK) TableToMSSArray(tableA [][]string) []map[string]string {
 	if tableA == nil {
