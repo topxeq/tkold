@@ -344,6 +344,12 @@ func (pA *TK) IsEmptyTrim(strA string) bool {
 
 var IsEmptyTrim = TKX.IsEmptyTrim
 
+func (pA *TK) RuneLen(strA string) int {
+	return len([]rune(strA))
+}
+
+var RuneLen = TKX.RuneLen
+
 func (pA *TK) JoinList(aryA interface{}, sepA string, defaultA ...string) string {
 	var defaultT string = ""
 	if (defaultA != nil) && (len(defaultA) > 0) {
