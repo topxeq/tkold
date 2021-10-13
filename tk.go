@@ -1667,6 +1667,23 @@ func (pA *TK) RegFindFirstIndexX(strA, patternA string) (int, int) {
 
 var RegFindFirstIndexX = TKX.RegFindFirstIndexX
 
+func (pA *TK) RegFindAllIndexX(strA, patternA string) [][]int {
+	regexpT, errT := regexpx.Compile(patternA)
+
+	if errT != nil {
+		return nil
+	}
+
+	rT := regexpT.FindAllStringSubmatchIndex(strA, -1)
+	if rT == nil {
+		return nil
+	}
+
+	return rT
+}
+
+var RegFindAllIndexX = TKX.RegFindAllIndexX
+
 func (pA *TK) RegStartsWith(strA, patternA string) bool {
 	startT, _ := RegFindFirstIndex(strA, patternA)
 
