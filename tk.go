@@ -5394,6 +5394,16 @@ func (s MSSArraySorter) Less(i, j int) bool {
 	return s.AryM[i][s.KeyM] < s.AryM[j][s.KeyM]
 }
 
+func SortMSSArray(aryA []map[string]string, keyA string, descA bool) {
+	sortStructT := MSSArraySorter{
+		KeyM:  keyA,
+		DescM: descA,
+		AryM:  aryA,
+	}
+
+	sort.Sort(sortStructT)
+}
+
 func (pA *TK) GetFileList(dirA string, argsA ...string) []map[string]string {
 
 	verboseT := IfSwitchExistsWhole(argsA, "-verbose")
