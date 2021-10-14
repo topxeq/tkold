@@ -2213,9 +2213,9 @@ func (pA *TK) GetNowTimeStringFormat(formatA ...string) string {
 
 	if len(formatA) < 1 {
 		formatT = TimeFormat
-	} else if formatA[0] == "" || formatA[0] == "formal" {
+	} else if formatA[0] == "" || formatA[0] == "formal" || formatA[0] == "-formal" {
 		formatT = TimeFormat
-	} else if formatA[0] == "compact" {
+	} else if formatA[0] == "compact" || formatA[0] == "-compact" {
 		formatT = TimeFormatCompact
 	} else {
 		formatT = formatA[0]
