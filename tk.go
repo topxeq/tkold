@@ -10802,6 +10802,16 @@ func (pA *TK) Pass() {
 
 var Pass = TKX.Pass
 
+func (pA *TK) WrapError(vA interface{}, errA error) interface{} {
+	if errA == nil {
+		return vA
+	}
+
+	return errA
+}
+
+var WrapError = TKX.WrapError
+
 func (pA *TK) IsNil(v interface{}) bool {
 	if v == nil {
 		return true
