@@ -11232,9 +11232,15 @@ func (pA *TK) CheckErrorFunc(errA error, funcA func()) {
 
 var CheckErrorFunc = TKX.CheckErrorFunc
 
-func (pA *TK) CheckError(errA error, funcsA ...(func())) {
-	if errA != nil {
-		PlErr(errA)
+func (pA *TK) CheckError(errA interface{}, funcsA ...(func())) {
+
+	errT, ok := errA.(error)
+	if !ok {
+		return
+	}
+
+	if errT != nil {
+		PlErr(errT)
 
 		if funcsA != nil {
 			for _, v := range funcsA {
