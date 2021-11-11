@@ -8961,6 +8961,84 @@ func (pA *TK) DownloadWebPage(urlA string, postDataA map[string]string, customHe
 
 var DownloadWebPage = TKX.DownloadWebPage
 
+func (pA *TK) DownloadWebBytes(urlA string, postDataA map[string]string, customHeadersA map[string]string, optsA ...string) ([]byte, map[string]string, error) {
+	timeoutStrT := GetSwitch(optsA, "-timeout=", "15")
+
+	// encodingT := GetSwitch(optsA, "-encoding=", "")
+
+	timeoutSecsT := time.Second * time.Duration(StrToInt(timeoutStrT, 15))
+
+	client := &http.Client{
+		//CheckRedirect: redirectPolicyFunc,
+		Timeout: time.Second * timeoutSecsT,
+	}
+
+	var urlT string
+	if !StartsWithIgnoreCase(urlA, "http") {
+		urlT = "http://" + urlA
+	} else {
+		urlT = urlA
+	}
+
+	var respT *http.Response
+	var errT error
+	var req *http.Request
+
+	reqTypeT := GetSwitch(optsA, "-method=", "GET")
+
+	if postDataA != nil && reqTypeT == "GET" {
+		reqTypeT = "POST"
+	}
+
+	req, errT = http.NewRequest(reqTypeT, urlT, nil)
+
+	if postDataA != nil {
+		req.PostForm = MapToPostData(postDataA)
+	}
+
+	if customHeadersA != nil {
+		for k, v := range customHeadersA {
+			req.Header.Add(k, v)
+		}
+	}
+
+	if IfSwitchExistsWhole(optsA, "-verbose") {
+		Pl("REQ: %v", req)
+	}
+
+	respT, errT = client.Do(req)
+
+	if errT == nil {
+		defer respT.Body.Close()
+		if respT.StatusCode != 200 {
+			if IfSwitchExistsWhole(optsA, "-detail") {
+				Pl("response status: %v (%v)", respT.StatusCode, respT)
+			}
+
+			return nil, nil, Errf("response status: %v", respT.StatusCode)
+		} else {
+			body, errT := io.ReadAll(respT.Body)
+
+			if errT != nil {
+				return nil, nil, errT
+			}
+
+			mapT := make(map[string]string, 0)
+			formT := respT.Header
+
+			for k, v := range formT {
+				mapT[k] = v[0]
+			}
+
+			return body, mapT, nil
+		}
+	} else {
+		return nil, nil, errT
+	}
+}
+
+var DownloadWebBytes = TKX.DownloadWebBytes
+
 // DownloadPage download page with any encoding and convert to UTF-8
 func (pA *TK) DownloadPage(urlA string, originalEncodingA string, postDataA url.Values, customHeaders string, timeoutSecsA time.Duration) string {
 	client := &http.Client{
