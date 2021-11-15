@@ -8928,7 +8928,7 @@ func (pA *TK) DownloadWebPage(urlA string, postDataA map[string]string, customHe
 
 	reqTypeT := GetSwitch(optsA, "-method=", "GET")
 
-	if postDataA != nil && reqTypeT == "GET" {
+	if postDataA != nil && len(postDataA) > 0 && reqTypeT == "GET" {
 		reqTypeT = "POST"
 	}
 
@@ -8938,7 +8938,7 @@ func (pA *TK) DownloadWebPage(urlA string, postDataA map[string]string, customHe
 		req.PostForm = MapToPostData(postDataA)
 	}
 
-	if customHeadersA != nil {
+	if customHeadersA != nil && len(customHeadersA) > 0 {
 		for k, v := range customHeadersA {
 			req.Header.Add(k, v)
 		}
@@ -9003,7 +9003,7 @@ func (pA *TK) DownloadWebBytes(urlA string, postDataA map[string]string, customH
 
 	reqTypeT := GetSwitch(optsA, "-method=", "GET")
 
-	if postDataA != nil && reqTypeT == "GET" {
+	if postDataA != nil && len(postDataA) > 0 && reqTypeT == "GET" {
 		reqTypeT = "POST"
 	}
 
@@ -9013,7 +9013,7 @@ func (pA *TK) DownloadWebBytes(urlA string, postDataA map[string]string, customH
 		req.PostForm = MapToPostData(postDataA)
 	}
 
-	if customHeadersA != nil {
+	if customHeadersA != nil && len(customHeadersA) > 0 {
 		for k, v := range customHeadersA {
 			req.Header.Add(k, v)
 		}
