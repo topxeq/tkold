@@ -2524,24 +2524,41 @@ var IsYesterday = TKX.IsYesterday
 
 // 切片、数组相关 slice related and array related
 
-func (pA *TK) SafelyGetStringInArray(aryA []interface{}, idxA int, optionsA ...string) string {
+func (pA *TK) SafelyGetStringInArray(aryA interface{}, idxA int, optionsA ...string) string {
 	defaultT := GetSwitch(optionsA, "-default=", "")
 
 	if aryA == nil {
 		return defaultT
 	}
 
-	lenT := len(aryA)
+	switch nv := aryA.(type) {
+	case []string:
+		lenT := len(nv)
 
-	if (idxA >= lenT) || (idxA < 0) {
-		return defaultT
+		if (idxA >= lenT) || (idxA < 0) {
+			return defaultT
+		}
+
+		if IfSwitchExists(optionsA, "-nofloat") {
+			return NilEmptyStringNoFloat(nv[idxA])
+		}
+
+		return NilToEmptyStr(nv[idxA])
+	case []interface{}:
+		lenT := len(nv)
+
+		if (idxA >= lenT) || (idxA < 0) {
+			return defaultT
+		}
+
+		if IfSwitchExists(optionsA, "-nofloat") {
+			return NilEmptyStringNoFloat(nv[idxA])
+		}
+
+		return NilToEmptyStr(nv[idxA])
 	}
 
-	if IfSwitchExists(optionsA, "-nofloat") {
-		return NilEmptyStringNoFloat(aryA[idxA])
-	}
-
-	return NilToEmptyStr(aryA[idxA])
+	return defaultT
 }
 
 var SafelyGetStringInArray = TKX.SafelyGetStringInArray
