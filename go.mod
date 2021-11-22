@@ -11,10 +11,8 @@ require (
 	github.com/jhillyerd/enmime v0.9.1
 	github.com/json-iterator/go v1.1.9
 	github.com/melbahja/goph v1.2.1
-	github.com/mholt/archiver v3.1.1+incompatible // indirect
-	github.com/mholt/archiver/v3 v3.5.0
+	github.com/mholt/archiver/v3 v3.5.1
 	github.com/nwaples/rardecode v1.1.2 // indirect
-	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/topxeq/mahonia v0.0.0-20190828060648-12b0599ddd1a
 	github.com/topxeq/regexpx v0.0.0-20200814082553-4bffc7d07029
