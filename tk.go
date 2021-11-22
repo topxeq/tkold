@@ -16,6 +16,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"image/color"
 	"io"
 	"math"
 	"math/big"
@@ -10918,6 +10919,12 @@ func (pA *TK) IsNil(v interface{}) bool {
 		return true
 	}
 
+	// tmps = fmt.Sprintf("%#v", v)
+	// Pl("tmps:%v", tmps)
+	// if EndsWith(tmps, "(nil)") {
+	// 	return true
+	// }
+
 	return false
 }
 
@@ -11719,6 +11726,34 @@ func (pA *TK) ParseHexColor(x string) (r, g, b, a int) {
 }
 
 var ParseHexColor = TKX.ParseHexColor
+
+func (pA *TK) HexToColor(strA string, optsA ...string) color.Color {
+	r, g, b, a := ParseHexColor(strA)
+
+	formatT := GetSwitch(optsA, "-format=", "")
+
+	if formatT == "NRGBA" {
+		return color.NRGBA{uint8(r), uint8(g), uint8(b), uint8(a)}
+	}
+
+	return color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)}
+}
+
+var HexToColor = TKX.HexToColor
+
+func (pA *TK) ColorToHex(colorA color.Color, optsA ...string) string {
+
+	r, g, b, a := colorA.RGBA()
+
+	if IfSwitchExists(optsA, "-withAlpha") {
+
+		return fmt.Sprintf("%02X%02X%02X%02X", uint8(r), uint8(g), uint8(b), uint8(a))
+	}
+
+	return fmt.Sprintf("%02X%02X%02X", uint8(r), uint8(g), uint8(b))
+}
+
+var ColorToHex = TKX.ColorToHex
 
 // DeepClone deep copies original and returns the copy as an interface.
 func (pA *TK) DeepClone(original interface{}) (copy interface{}) {
