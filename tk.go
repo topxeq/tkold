@@ -8933,10 +8933,12 @@ func (pA *TK) DownloadWebPage(urlA string, postDataA map[string]string, customHe
 		reqTypeT = "POST"
 	}
 
-	req, errT = http.NewRequest(reqTypeT, urlT, nil)
-
-	if postDataA != nil {
-		req.PostForm = MapToPostData(postDataA)
+	if reqTypeT == "POST" {
+		req, errT = http.NewRequest(reqTypeT, urlT, bytes.NewBufferString(MapToPostData(postDataA).Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded; param=value")
+		// req.PostForm = MapToPostData(postDataA)
+	} else {
+		req, errT = http.NewRequest(reqTypeT, urlT, nil)
 	}
 
 	if customHeadersA != nil && len(customHeadersA) > 0 {
