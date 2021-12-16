@@ -4027,7 +4027,12 @@ func (pA *TK) IfSwitchExistsWholeI(argsA []interface{}, switchStrA string) bool 
 	}
 
 	for _, argT := range argsA {
-		if argT.(string) == switchStrA {
+		s, ok := argT.(string)
+		if !ok {
+			continue
+		}
+
+		if s == switchStrA {
 			return true
 		}
 
@@ -8981,6 +8986,156 @@ func (pA *TK) DownloadWebPage(urlA string, postDataA map[string]string, customHe
 
 var DownloadWebPage = TKX.DownloadWebPage
 
+func (pA *TK) DownloadWebPageX(urlA string, optsA ...interface{}) string {
+	timeoutStrT := GetSwitchI(optsA, "-timeout=", "15")
+
+	encodingT := GetSwitchI(optsA, "-encoding=", "")
+
+	timeoutSecsT := time.Second * time.Duration(StrToInt(timeoutStrT, 15))
+
+	client := &http.Client{
+		//CheckRedirect: redirectPolicyFunc,
+		Timeout: time.Second * timeoutSecsT,
+	}
+
+	var urlT string
+	if !StartsWithIgnoreCase(urlA, "http") {
+		urlT = "http://" + urlA
+	} else {
+		urlT = urlA
+	}
+
+	var respT *http.Response
+	var errT error
+	var req *http.Request
+
+	reqTypeT := GetSwitchI(optsA, "-method=", "GET")
+
+	var postDataT url.Values = nil
+
+	postStrT := GetSwitchI(optsA, "-post=", "")
+
+	var postBytesT []byte = nil
+
+	if postStrT != "" {
+		postObjT, errT := FromJSON(postStrT)
+
+		if errT == nil {
+			postMapT, ok := postObjT.(map[string]interface{})
+
+			if ok {
+				postDataT = MapToPostDataI(postMapT)
+			}
+		}
+	}
+
+	if postDataT == nil {
+		for _, v := range optsA {
+			rv, ok := v.(url.Values)
+
+			if ok {
+				postDataT = rv
+				break
+			}
+
+			rv2, ok := v.(map[string]string)
+
+			if ok {
+				postDataT = MapToPostData(rv2)
+				break
+			}
+
+			rv3, ok := v.(map[string]interface{})
+
+			if ok {
+				postDataT = MapToPostDataI(rv3)
+				break
+			}
+
+			rv4, ok := v.([]byte)
+
+			if ok {
+				postBytesT = rv4
+				break
+			}
+		}
+	}
+
+	postBodyT := GetSwitchI(optsA, "-postBody=", "")
+
+	if (postDataT != nil && len(postDataT) > 0) || postBodyT != "" || postBytesT != nil {
+		reqTypeT = "POST"
+	}
+
+	if reqTypeT == "POST" {
+		if postBytesT != nil {
+			req, errT = http.NewRequest(reqTypeT, urlT, bytes.NewReader(postBytesT))
+
+		} else if postBodyT != "" {
+			req, errT = http.NewRequest(reqTypeT, urlT, strings.NewReader(postBodyT))
+
+		} else {
+			req, errT = http.NewRequest(reqTypeT, urlT, bytes.NewBufferString(postDataT.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded; param=value")
+		}
+		// req.PostForm = MapToPostData(postDataA)
+	} else {
+		req, errT = http.NewRequest(reqTypeT, urlT, nil)
+	}
+
+	customHeadersStrT := Trim(GetSwitchI(optsA, "-headers=", ""))
+
+	if customHeadersStrT != "" {
+		headerObjT, errT := FromJSON(customHeadersStrT)
+
+		if errT == nil {
+			headerMapT, ok := headerObjT.(map[string]interface{})
+
+			if ok {
+				for k, v := range headerMapT {
+					s, ok := v.(string)
+					if ok {
+						req.Header.Add(k, s)
+					}
+				}
+			}
+		}
+	}
+
+	if IfSwitchExistsWholeI(optsA, "-verbose") {
+		Pl("REQ: %v", req)
+	}
+
+	respT, errT = client.Do(req)
+
+	if errT == nil {
+		defer respT.Body.Close()
+		if respT.StatusCode != 200 {
+			if IfSwitchExistsWholeI(optsA, "-detail") {
+				Pl("response status: %v (%v)", respT.StatusCode, respT)
+			}
+
+			return GenerateErrorStringF("response status: %v", respT.StatusCode)
+		} else {
+			body, errT := io.ReadAll(respT.Body)
+
+			if errT != nil {
+				return GenerateErrorString(errT.Error())
+			}
+
+			if (encodingT == "") || (strings.ToLower(encodingT) == "utf-8") {
+				return string(body)
+			} else {
+				return ConvertToUTF8(body, encodingT)
+			}
+		}
+	} else {
+		return GenerateErrorString(errT.Error())
+	}
+}
+
+var DownloadWebPageX = TKX.DownloadWebPageX
+
 func (pA *TK) DownloadWebBytes(urlA string, postDataA map[string]string, customHeadersA map[string]string, optsA ...string) ([]byte, map[string]string, error) {
 	timeoutStrT := GetSwitch(optsA, "-timeout=", "15")
 
@@ -9212,6 +9367,22 @@ func (pA *TK) MapToPostData(postDataA map[string]string) url.Values {
 }
 
 var MapToPostData = TKX.MapToPostData
+
+func (pA *TK) MapToPostDataI(postDataA map[string]interface{}) url.Values {
+	postDataT := url.Values{}
+
+	for k, v := range postDataA {
+		s, ok := v.(string)
+
+		if ok {
+			postDataT.Set(k, s)
+		}
+	}
+
+	return postDataT
+}
+
+var MapToPostDataI = TKX.MapToPostDataI
 
 func (pA *TK) DownloadPageByMap(urlA string, originalEncodingA string, postDataA map[string]string, customHeaders string, timeoutSecsA time.Duration) string {
 	if postDataA == nil {
