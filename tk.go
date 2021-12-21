@@ -315,6 +315,31 @@ var HasGlobalEnv = TKX.HasGlobalEnv
 
 // 字符串相关函数 string related
 
+func (pA *TK) PadString(strA string, lenA int, optsA ...string) string {
+	fillStrT := GetSwitch(optsA, "-fill=", "0")
+
+	ifRightT := GetSwitch(optsA, "-right=", "") == "true"
+
+	lenT := len(strA)
+
+	diffT := lenA - lenT
+
+	if diffT <= 0 {
+		return strA
+	}
+
+	len2T := len(fillStrT)
+
+	if ifRightT {
+		return strA + strings.Repeat(fillStrT, diffT/len2T)
+	}
+
+	return strings.Repeat(fillStrT, diffT/len2T) + strA
+
+}
+
+var PadString = TKX.PadString
+
 func (pA *TK) FindSubStringAll(strA string, subStrA string) [][]int {
 	bufT := make([][]int, 0, 100)
 
