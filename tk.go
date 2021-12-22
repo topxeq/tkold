@@ -4463,6 +4463,8 @@ func (pA *TK) NilToEmptyStr(vA interface{}) string {
 	switch vA.(type) {
 	case string:
 		return vA.(string)
+	case error:
+		return ""
 	case float64:
 		return Float64ToStr(vA.(float64))
 	default:
@@ -4485,6 +4487,11 @@ func (pA *TK) NilEmptyStringNoFloat(vA interface{}) string {
 	vs, ok := vA.(string)
 	if ok {
 		return vs
+	}
+
+	_, ok = vA.(error)
+	if ok {
+		return ""
 	}
 
 	return fmt.Sprintf("%v", vA)
@@ -10629,6 +10636,102 @@ func (pA *TK) GetMSSFromXML(xmlA string, nodeA string) (map[string]string, error
 
 var GetMSSFromXML = TKX.GetMSSFromXML
 
+func (pA *TK) ToXML(vA interface{}, optsA ...interface{}) interface{} {
+	var errT error
+
+	strT, ok := vA.(string)
+	if ok {
+		return EncodeToXMLString(strT)
+	}
+
+	defaultT := GetSwitchI(optsA, "-default=", "TXERROR:no default")
+
+	rootNameT := GetSwitchI(optsA, "-root=", "")
+
+	etreeNodeT, ok := vA.(*etree.Element)
+	if ok {
+		indentT := StrToInt(GetSwitchI(optsA, "-indent=", "2"), 2)
+		newDocT := etree.NewDocument()
+		newDocT.SetRoot(etreeNodeT)
+		newDocT.Indent(indentT)
+		xmlStrT, errT := newDocT.WriteToString()
+
+		if errT != nil {
+			if !IsErrStr(defaultT) {
+				return defaultT
+			}
+
+			return errT
+		}
+
+		return xmlStrT
+	}
+
+	if !IfSwitchExistsWholeI(optsA, "-nomsi") {
+		// msiT, ok := vA.(map[string]interface{})
+
+		// if !ok {
+		// 	if rootNameT == "" {
+		// 		rootNameT = "root"
+		// 	}
+
+		// 	msiT = map[string]interface{}{
+		// 		rootNameT: vA,
+		// 	}
+		// }
+
+		indentT := StrToInt(GetSwitchI(optsA, "-indent=", "0"), 0)
+		// ifIndentT := IfSwitchExistsWholeI(optsA, "-indent")
+		ifCdataT := IfSwitchExistsWholeI(optsA, "-cdata")
+		rootAttrsT := GetSwitchI(optsA, "-rootAttr=", "")
+
+		var rootAttrMapT map[string]string = nil
+		if rootAttrsT != "" {
+			rootAttrMapT = JSONToMapStringString(rootAttrsT)
+		}
+
+		config := NewXMLFromAny(vA)
+
+		if indentT > 0 {
+			config.WithIndent("", strings.Repeat(" ", indentT))
+		}
+
+		if ifCdataT {
+			config.AsCData()
+		}
+
+		if rootNameT != "" {
+			config.WithRoot(rootNameT, rootAttrMapT)
+		}
+
+		rsT, errT := config.MarshalToString()
+
+		if errT != nil {
+			if !IsErrStr(defaultT) {
+				return defaultT
+			}
+
+			return errT
+		}
+
+		return rsT
+
+	}
+
+	bufT, errT := xml.Marshal(vA)
+	if errT != nil {
+		if !IsErrStr(defaultT) {
+			return defaultT
+		}
+
+		return errT
+	}
+
+	return string(bufT)
+}
+
+var ToXML = TKX.ToXML
+
 func (pA *TK) GetNodeStringFromXML(xmlA string, nodeA string) (string, error) {
 	var errT error
 
@@ -10656,6 +10759,44 @@ func (pA *TK) GetNodeStringFromXML(xmlA string, nodeA string) (string, error) {
 }
 
 var GetNodeStringFromXML = TKX.GetNodeStringFromXML
+
+func (pA *TK) FromXMLX(xmlA string, nodeA ...interface{}) interface{} {
+	var errT error
+
+	treeT := etree.NewDocument()
+
+	if treeT == nil {
+		return Errf("create XML tree failed")
+	}
+
+	errT = treeT.ReadFromString(xmlA)
+
+	if errT != nil {
+		return Errf("invalid XML: %v", errT)
+	}
+
+	if len(nodeA) < 1 {
+		return treeT.Root()
+	}
+
+	strT, ok := nodeA[0].(string)
+
+	if !ok {
+		return treeT.Root()
+	}
+
+	nodeT := treeT.FindElement(strT)
+
+	if nodeT == nil {
+		return Errf("node not found: %v", nodeA)
+	}
+
+	// Pl("xmlnode: %v, %v", stringNodeT, stringNodeT.FullTag())
+
+	return nodeT
+}
+
+var FromXMLX = TKX.FromXMLX
 
 func (pA *TK) GetMSSArrayFromXML(xmlA string, nodeA string) ([]map[string]string, error) {
 	var errT error
@@ -13124,4 +13265,263 @@ func isWindowsDriveURIPath(uri string) bool {
 		return false
 	}
 	return uri[0] == '/' && unicode.IsLetter(rune(uri[1])) && uri[2] == ':'
+}
+
+// start of encoding xml from map[string]interface{}
+
+type Indentation struct {
+	Prefix string
+	Indent string
+}
+
+type Root struct {
+	Name          *xml.Name
+	XMLAttributes *[]xml.Attr
+	Attributes    map[string]string
+}
+
+type StructMap struct {
+	CData  bool
+	Map    map[string]interface{}
+	Indent *Indentation
+	Root   *Root
+}
+
+type StructAny struct {
+	CData  bool
+	Value  interface{}
+	Indent *Indentation
+	Root   *Root
+}
+
+type xmlMapEntry struct {
+	XMLName    xml.Name
+	Value      interface{} `xml:",innerxml"`
+	CDataValue interface{} `xml:",cdata"`
+}
+
+//Initializes the builder. Required to do anything with this library
+func (pA *TK) NewXMLFromMSI(input map[string]interface{}) *StructMap {
+	return &StructMap{Map: input}
+}
+
+var NewXMLFromMSI = TKX.NewXMLFromMSI
+
+func (pA *TK) NewXMLFromAny(input interface{}) *StructAny {
+	return &StructAny{Value: input}
+}
+
+var NewXMLFromAny = TKX.NewXMLFromAny
+
+//Add indentation to your xml
+func (smap *StructMap) WithIndent(prefix string, indent string) *StructMap {
+	smap.Indent = &Indentation{Prefix: prefix, Indent: indent}
+	return smap
+}
+
+func (p *StructAny) WithIndent(prefix string, indent string) *StructAny {
+	p.Indent = &Indentation{Prefix: prefix, Indent: indent}
+	return p
+}
+
+//Add a root node to your xml
+func (smap *StructMap) WithRoot(name string, attributes map[string]string) *StructMap {
+	attr := []xml.Attr{}
+	for k, v := range attributes {
+		attr = append(attr, xml.Attr{Name: xml.Name{Local: k}, Value: v})
+	}
+	smap.Root = &Root{Name: &xml.Name{Local: name}, XMLAttributes: &attr, Attributes: attributes}
+	return smap
+}
+
+func (p *StructAny) WithRoot(name string, attributes map[string]string) *StructAny {
+	attr := []xml.Attr{}
+	for k, v := range attributes {
+		attr = append(attr, xml.Attr{Name: xml.Name{Local: k}, Value: v})
+	}
+	p.Root = &Root{Name: &xml.Name{Local: name}, XMLAttributes: &attr, Attributes: attributes}
+	return p
+}
+
+//Add CDATA tags to all nodes
+func (smap *StructMap) AsCData() *StructMap {
+	smap.CData = true
+	return smap
+}
+
+func (p *StructAny) AsCData() *StructAny {
+	p.CData = true
+	return p
+}
+
+//Prints your configuration in json format
+func (smap *StructMap) Print() *StructMap {
+	var indent interface{} = smap.Indent
+	var root interface{}
+	if smap.Indent != nil {
+		indent = map[string]int{"indent_spaces": len(*&smap.Indent.Indent), "prefix_spaces": len(*&smap.Indent.Prefix)}
+	}
+	if root = smap.Root; root != nil {
+		root = map[string]interface{}{"name": *&smap.Root.Name.Local, "attributes": smap.Root.Attributes}
+	}
+	b, _ := json.MarshalIndent(map[string]interface{}{"root": root, "cdata": smap.CData, "indent": indent}, " ", "  ")
+	fmt.Println(string(b))
+	return smap
+}
+
+//Builds XML as bytes
+func (smap *StructMap) Marshal() ([]byte, error) {
+	if smap.Indent == nil {
+		return xml.Marshal(smap)
+	} else {
+		return xml.MarshalIndent(smap, smap.Indent.Prefix, smap.Indent.Indent)
+	}
+}
+
+func (p *StructAny) Marshal() ([]byte, error) {
+	if p.Indent == nil {
+		return xml.Marshal(p)
+	} else {
+		return xml.MarshalIndent(p, p.Indent.Prefix, p.Indent.Indent)
+	}
+}
+
+//Builds XML as string
+func (smap *StructMap) MarshalToString() (string, error) {
+	xmlBytes, err := smap.Marshal()
+	return string(xmlBytes), err
+}
+
+func (p *StructAny) MarshalToString() (string, error) {
+	xmlBytes, err := p.Marshal()
+	return string(xmlBytes), err
+}
+
+func (smap StructMap) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if len(smap.Map) == 0 {
+		return nil
+	}
+	if smap.Root != nil {
+		start = xml.StartElement{Name: *smap.Root.Name, Attr: *smap.Root.XMLAttributes}
+		if err := e.EncodeToken(start); err != nil {
+			return err
+		}
+	}
+
+	for k, v := range smap.Map {
+		if err := handleChildren(e, k, v, smap.CData); err != nil {
+			return err
+		}
+	}
+
+	if smap.Root != nil {
+		return e.EncodeToken(start.End())
+	}
+	return nil
+}
+
+func (p StructAny) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if p.Value == nil {
+		return nil
+	}
+
+	if p.Root != nil {
+		start = xml.StartElement{Name: *p.Root.Name, Attr: *p.Root.XMLAttributes}
+		if err := e.EncodeToken(start); err != nil {
+			return err
+		}
+	}
+
+	// for k, v := range p.Value {
+	err := handleChildren(e, "", p.Value, p.CData)
+	if err != nil {
+		return err
+	}
+	// }
+
+	if p.Root != nil {
+		return e.EncodeToken(start.End())
+	}
+
+	return nil
+}
+
+func handleChildren(e *xml.Encoder, fieldName string, v interface{}, cdata bool) error {
+	var errT error
+
+	if reflect.TypeOf(v) == nil {
+		if fieldName == "" {
+			return nil
+		}
+
+		return e.Encode(xmlMapEntry{XMLName: xml.Name{Local: fieldName}, Value: ""})
+	} else if reflect.TypeOf(v).Kind() == reflect.Map {
+		if fieldName != "" {
+			errT = e.EncodeToken(xml.StartElement{Name: xml.Name{Local: fieldName}})
+
+			if errT != nil {
+				return errT
+			}
+		}
+
+		for key, val := range v.(map[string]interface{}) {
+			if key == "xml_child_name" {
+				continue
+			}
+
+			errT = handleChildren(e, key, val, cdata)
+
+			if errT != nil {
+				return errT
+			}
+		}
+
+		if fieldName != "" {
+			return e.EncodeToken(xml.EndElement{Name: xml.Name{Local: fieldName}})
+		}
+
+		return nil
+
+	} else if reflect.TypeOf(v).Kind() == reflect.Slice {
+		if fieldName != "" {
+			e.EncodeToken(xml.StartElement{Name: xml.Name{Local: fieldName}})
+		}
+		// childName := fieldName + "_child"
+		childName := "item"
+		vs, ok := v.([]interface{})
+		if ok {
+			// if _, hasChildName := vs[0].(map[string]interface{})["xml_child_name"]; hasChildName {
+			// 	childName = vs[0].(map[string]interface{})["xml_child_name"].(string)
+			// }
+			for _, elem := range vs {
+				handleChildren(e, childName, elem, cdata)
+			}
+		} else {
+			if _, hasChildName := v.([]map[string]interface{})[0]["xml_child_name"]; hasChildName {
+				childName = v.([]map[string]interface{})[0]["xml_child_name"].(string)
+			}
+			for _, elem := range v.([]map[string]interface{}) {
+				handleChildren(e, childName, elem, cdata)
+			}
+		}
+		if fieldName != "" {
+			return e.EncodeToken(xml.EndElement{Name: xml.Name{Local: fieldName}})
+		}
+
+		return nil
+	}
+
+	if cdata {
+		if fieldName != "" {
+			return e.Encode(xmlMapEntry{XMLName: xml.Name{Local: fieldName}, CDataValue: v})
+		}
+
+		return e.Encode(v)
+	} else {
+		if fieldName != "" {
+			return e.Encode(xmlMapEntry{XMLName: xml.Name{Local: fieldName}, Value: fmt.Sprintf("%v", v)})
+		}
+
+		return e.Encode(v)
+	}
 }
