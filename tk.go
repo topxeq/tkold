@@ -4070,6 +4070,16 @@ var IfSwitchExistsWholeI = TKX.IfSwitchExistsWholeI
 
 // 各种转换 conversion related
 
+func (pA *TK) BoolToInt(b bool) int {
+	if b {
+		return 1
+	}
+
+	return 0
+}
+
+var BoolToInt = TKX.BoolToInt
+
 func (pA *TK) MSI2MSS(vA map[string]interface{}) map[string]string {
 	mssT := make(map[string]string, len(vA))
 	for k, v := range vA {
@@ -4634,6 +4644,14 @@ func (pA *TK) ToFloat(v interface{}, defaultA ...float64) (result float64) {
 	}()
 
 	switch v.(type) {
+	case bool:
+		if v.(bool) {
+			result = float64(1)
+		} else {
+			result = float64(0)
+		}
+
+		return
 	case int:
 		result = float64(v.(int))
 		return
@@ -4648,6 +4666,21 @@ func (pA *TK) ToFloat(v interface{}, defaultA ...float64) (result float64) {
 		return
 	case int64:
 		result = float64(v.(int64))
+		return
+	case uint:
+		result = float64(v.(uint))
+		return
+	case uint8:
+		result = float64(v.(uint8))
+		return
+	case uint16:
+		result = float64(v.(uint16))
+		return
+	case uint32:
+		result = float64(v.(uint32))
+		return
+	case uint64:
+		result = float64(v.(uint64))
 		return
 	case float64:
 		result = v.(float64)
@@ -4697,6 +4730,14 @@ func (pA *TK) ToInt(v interface{}, defaultA ...int) (result int) {
 	}()
 
 	switch v.(type) {
+	case bool:
+		if v.(bool) {
+			result = 1
+		} else {
+			result = 0
+		}
+
+		return
 	case int:
 		result = v.(int)
 		return
@@ -4711,6 +4752,21 @@ func (pA *TK) ToInt(v interface{}, defaultA ...int) (result int) {
 		return
 	case int64:
 		result = int(v.(int64))
+		return
+	case uint:
+		result = int(v.(int))
+		return
+	case uint8:
+		result = int(v.(uint8))
+		return
+	case uint16:
+		result = int(v.(uint16))
+		return
+	case uint32:
+		result = int(v.(uint32))
+		return
+	case uint64:
+		result = int(v.(uint64))
 		return
 	case float64:
 		result = int(v.(float64))
@@ -5451,6 +5507,39 @@ func (s MSSArraySorter) Less(i, j int) bool {
 
 func SortMSSArray(aryA []map[string]string, keyA string, descA bool) {
 	sortStructT := MSSArraySorter{
+		KeyM:  keyA,
+		DescM: descA,
+		AryM:  aryA,
+	}
+
+	sort.Sort(sortStructT)
+}
+
+type MSIArraySorter struct {
+	KeyM  string
+	DescM bool
+	AryM  []map[string]interface{}
+}
+
+func (s MSIArraySorter) Len() int {
+	return len(s.AryM)
+}
+
+func (s MSIArraySorter) Swap(i, j int) {
+	s.AryM[i], s.AryM[j] = s.AryM[j], s.AryM[i]
+}
+
+func (s MSIArraySorter) Less(i, j int) bool {
+	rsT := LessI(s.AryM[i][s.KeyM], s.AryM[j][s.KeyM])
+	if s.DescM {
+		return !rsT
+	}
+
+	return rsT
+}
+
+func SortMSIArray(aryA []map[string]interface{}, keyA string, descA bool) {
+	sortStructT := MSIArraySorter{
 		KeyM:  keyA,
 		DescM: descA,
 		AryM:  aryA,
@@ -11247,6 +11336,762 @@ func (pA *TK) WrapError(vA interface{}, errA error) interface{} {
 
 var WrapError = TKX.WrapError
 
+type SortStruct struct {
+	Value    interface{}
+	Key      string
+	Desc     bool
+	LenFunc  (func() int)
+	LessFunc (func(i, j int) bool)
+	SwapFunc (func(i, j int))
+}
+
+func (p *SortStruct) Len() int {
+	if p.LenFunc != nil {
+		return p.LenFunc()
+	}
+
+	if p == nil {
+		return 0
+	}
+
+	switch nv := p.Value.(type) {
+	case int, int8, int16, int32, int64:
+		return 0
+	case uint, uint8, uint16, uint32, uint64:
+		return 0
+	case float32, float64:
+		return 0
+	case complex64, complex128:
+		return 0
+	case bool:
+		return 0
+	case string:
+		return len(nv)
+	case []int:
+		return len(nv)
+	case []int8:
+		return len(nv)
+	case []int16:
+		return len(nv)
+	case []int32:
+		return len(nv)
+	case []int64:
+		return len(nv)
+	case []uint:
+		return len(nv)
+	case []uint8:
+		return len(nv)
+	case []uint16:
+		return len(nv)
+	case []uint32:
+		return len(nv)
+	case []uint64:
+		return len(nv)
+	case []float64:
+		return len(nv)
+	case []string:
+		return len(nv)
+	case []interface{}:
+		return len(nv)
+	case []map[string]string:
+		return len(nv)
+	case []map[string]interface{}:
+		return len(nv)
+	}
+
+	return 0
+}
+
+func (pA *TK) LessI(v1, v2 interface{}, optsA ...interface{}) bool {
+	// Pl("%#v, %#v", v1, v2)
+	if v1 == nil {
+		if v2 == nil {
+			return false
+		}
+
+		return true
+	} else if v2 == nil {
+		return false
+	}
+
+	switch nv1 := v1.(type) {
+	case bool:
+		nv1i := BoolToInt(nv1)
+		switch nv2 := v2.(type) {
+		case bool:
+			return nv1i < BoolToInt(nv2)
+		case int:
+			return nv1i < nv2
+		case int8:
+			return nv1i < int(nv2)
+		case int16:
+			return nv1i < int(nv2)
+		case int32:
+			return nv1i < int(nv2)
+		case int64:
+			return nv1i < int(nv2)
+		case uint:
+			return nv1i < int(nv2)
+		case uint8:
+			return nv1i < int(nv2)
+		case uint16:
+			return nv1i < int(nv2)
+		case uint32:
+			return nv1i < int(nv2)
+		case uint64:
+			return nv1i < int(nv2)
+		case float32:
+			return float64(nv1i) < float64(nv2)
+		case float64:
+			return float64(nv1i) < nv2
+		case string:
+			return float64(nv1i) < ToFloat(nv2)
+		}
+	case int:
+		switch nv2 := v2.(type) {
+		case bool:
+			return nv1 < BoolToInt(nv2)
+		case int:
+			return nv1 < nv2
+		case int8:
+			return nv1 < int(nv2)
+		case int16:
+			return nv1 < int(nv2)
+		case int32:
+			return nv1 < int(nv2)
+		case int64:
+			return nv1 < int(nv2)
+		case uint:
+			return nv1 < int(nv2)
+		case uint8:
+			return nv1 < int(nv2)
+		case uint16:
+			return nv1 < int(nv2)
+		case uint32:
+			return nv1 < int(nv2)
+		case uint64:
+			return nv1 < int(nv2)
+		case float32:
+			return float64(nv1) < float64(nv2)
+		case float64:
+			return float64(nv1) < nv2
+		case string:
+			return float64(nv1) < ToFloat(nv2)
+		}
+	case int8:
+		switch nv2 := v2.(type) {
+		case bool:
+			return int(nv1) < BoolToInt(nv2)
+		case int:
+			return int(nv1) < nv2
+		case int8:
+			return nv1 < nv2
+		case int16:
+			return int(nv1) < int(nv2)
+		case int32:
+			return int(nv1) < int(nv2)
+		case int64:
+			return int(nv1) < int(nv2)
+		case uint:
+			return int(nv1) < int(nv2)
+		case uint8:
+			return int(nv1) < int(nv2)
+		case uint16:
+			return int(nv1) < int(nv2)
+		case uint32:
+			return int(nv1) < int(nv2)
+		case uint64:
+			return int(nv1) < int(nv2)
+		case float32:
+			return float64(nv1) < float64(nv2)
+		case float64:
+			return float64(nv1) < nv2
+		case string:
+			return float64(nv1) < ToFloat(nv2)
+		}
+	case int16:
+		switch nv2 := v2.(type) {
+		case bool:
+			return int(nv1) < BoolToInt(nv2)
+		case int:
+			return int(nv1) < nv2
+		case int8:
+			return int(nv1) < int(nv2)
+		case int16:
+			return int(nv1) < int(nv2)
+		case int32:
+			return int(nv1) < int(nv2)
+		case int64:
+			return int(nv1) < int(nv2)
+		case uint:
+			return int(nv1) < int(nv2)
+		case uint8:
+			return int(nv1) < int(nv2)
+		case uint16:
+			return int(nv1) < int(nv2)
+		case uint32:
+			return int(nv1) < int(nv2)
+		case uint64:
+			return int(nv1) < int(nv2)
+		case float32:
+			return float64(nv1) < float64(nv2)
+		case float64:
+			return float64(nv1) < nv2
+		case string:
+			return float64(nv1) < ToFloat(nv2)
+		}
+	case int32:
+		switch nv2 := v2.(type) {
+		case bool:
+			return int(nv1) < BoolToInt(nv2)
+		case int:
+			return int(nv1) < nv2
+		case int8:
+			return int(nv1) < int(nv2)
+		case int16:
+			return int(nv1) < int(nv2)
+		case int32:
+			return int(nv1) < int(nv2)
+		case int64:
+			return int(nv1) < int(nv2)
+		case uint:
+			return int(nv1) < int(nv2)
+		case uint8:
+			return int(nv1) < int(nv2)
+		case uint16:
+			return int(nv1) < int(nv2)
+		case uint32:
+			return int(nv1) < int(nv2)
+		case uint64:
+			return int(nv1) < int(nv2)
+		case float32:
+			return float64(nv1) < float64(nv2)
+		case float64:
+			return float64(nv1) < nv2
+		case string:
+			return float64(nv1) < ToFloat(nv2)
+		}
+	case int64:
+		switch nv2 := v2.(type) {
+		case bool:
+			return int(nv1) < BoolToInt(nv2)
+		case int:
+			return int(nv1) < nv2
+		case int8:
+			return int(nv1) < int(nv2)
+		case int16:
+			return int(nv1) < int(nv2)
+		case int32:
+			return int(nv1) < int(nv2)
+		case int64:
+			return int(nv1) < int(nv2)
+		case uint:
+			return int(nv1) < int(nv2)
+		case uint8:
+			return int(nv1) < int(nv2)
+		case uint16:
+			return int(nv1) < int(nv2)
+		case uint32:
+			return int(nv1) < int(nv2)
+		case uint64:
+			return int(nv1) < int(nv2)
+		case float32:
+			return float64(nv1) < float64(nv2)
+		case float64:
+			return float64(nv1) < nv2
+		case string:
+			return float64(nv1) < ToFloat(nv2)
+		}
+	case uint:
+		switch nv2 := v2.(type) {
+		case bool:
+			return int(nv1) < BoolToInt(nv2)
+		case int:
+			return int(nv1) < nv2
+		case int8:
+			return int(nv1) < int(nv2)
+		case int16:
+			return int(nv1) < int(nv2)
+		case int32:
+			return int(nv1) < int(nv2)
+		case int64:
+			return int(nv1) < int(nv2)
+		case uint:
+			return int(nv1) < int(nv2)
+		case uint8:
+			return int(nv1) < int(nv2)
+		case uint16:
+			return int(nv1) < int(nv2)
+		case uint32:
+			return int(nv1) < int(nv2)
+		case uint64:
+			return int(nv1) < int(nv2)
+		case float32:
+			return float64(nv1) < float64(nv2)
+		case float64:
+			return float64(nv1) < nv2
+		case string:
+			return float64(nv1) < ToFloat(nv2)
+		}
+	case uint8:
+		switch nv2 := v2.(type) {
+		case bool:
+			return int(nv1) < BoolToInt(nv2)
+		case int:
+			return int(nv1) < nv2
+		case int8:
+			return int(nv1) < int(nv2)
+		case int16:
+			return int(nv1) < int(nv2)
+		case int32:
+			return int(nv1) < int(nv2)
+		case int64:
+			return int(nv1) < int(nv2)
+		case uint:
+			return int(nv1) < int(nv2)
+		case uint8:
+			return int(nv1) < int(nv2)
+		case uint16:
+			return int(nv1) < int(nv2)
+		case uint32:
+			return int(nv1) < int(nv2)
+		case uint64:
+			return int(nv1) < int(nv2)
+		case float32:
+			return float64(nv1) < float64(nv2)
+		case float64:
+			return float64(nv1) < nv2
+		case string:
+			return float64(nv1) < ToFloat(nv2)
+		}
+	case uint16:
+		switch nv2 := v2.(type) {
+		case bool:
+			return int(nv1) < BoolToInt(nv2)
+		case int:
+			return int(nv1) < nv2
+		case int8:
+			return int(nv1) < int(nv2)
+		case int16:
+			return int(nv1) < int(nv2)
+		case int32:
+			return int(nv1) < int(nv2)
+		case int64:
+			return int(nv1) < int(nv2)
+		case uint:
+			return int(nv1) < int(nv2)
+		case uint8:
+			return int(nv1) < int(nv2)
+		case uint16:
+			return int(nv1) < int(nv2)
+		case uint32:
+			return int(nv1) < int(nv2)
+		case uint64:
+			return int(nv1) < int(nv2)
+		case float32:
+			return float64(nv1) < float64(nv2)
+		case float64:
+			return float64(nv1) < nv2
+		case string:
+			return float64(nv1) < ToFloat(nv2)
+		}
+	case uint32:
+		switch nv2 := v2.(type) {
+		case bool:
+			return int(nv1) < BoolToInt(nv2)
+		case int:
+			return int(nv1) < nv2
+		case int8:
+			return int(nv1) < int(nv2)
+		case int16:
+			return int(nv1) < int(nv2)
+		case int32:
+			return int(nv1) < int(nv2)
+		case int64:
+			return int(nv1) < int(nv2)
+		case uint:
+			return int(nv1) < int(nv2)
+		case uint8:
+			return int(nv1) < int(nv2)
+		case uint16:
+			return int(nv1) < int(nv2)
+		case uint32:
+			return int(nv1) < int(nv2)
+		case uint64:
+			return int(nv1) < int(nv2)
+		case float32:
+			return float64(nv1) < float64(nv2)
+		case float64:
+			return float64(nv1) < nv2
+		case string:
+			return float64(nv1) < ToFloat(nv2)
+		}
+	case uint64:
+		switch nv2 := v2.(type) {
+		case bool:
+			return int(nv1) < BoolToInt(nv2)
+		case int:
+			return int(nv1) < nv2
+		case int8:
+			return int(nv1) < int(nv2)
+		case int16:
+			return int(nv1) < int(nv2)
+		case int32:
+			return int(nv1) < int(nv2)
+		case int64:
+			return int(nv1) < int(nv2)
+		case uint:
+			return int(nv1) < int(nv2)
+		case uint8:
+			return int(nv1) < int(nv2)
+		case uint16:
+			return int(nv1) < int(nv2)
+		case uint32:
+			return int(nv1) < int(nv2)
+		case uint64:
+			return int(nv1) < int(nv2)
+		case float32:
+			return float64(nv1) < float64(nv2)
+		case float64:
+			return float64(nv1) < nv2
+		case string:
+			return float64(nv1) < ToFloat(nv2)
+		}
+	case float32:
+		switch nv2 := v2.(type) {
+		case bool:
+			return float64(nv1) < float64(BoolToInt(nv2))
+		case int:
+			return float64(nv1) < float64(nv2)
+		case int8:
+			return float64(nv1) < float64(nv2)
+		case int16:
+			return float64(nv1) < float64(nv2)
+		case int32:
+			return float64(nv1) < float64(nv2)
+		case int64:
+			return float64(nv1) < float64(nv2)
+		case uint:
+			return float64(nv1) < float64(nv2)
+		case uint8:
+			return float64(nv1) < float64(nv2)
+		case uint16:
+			return float64(nv1) < float64(nv2)
+		case uint32:
+			return float64(nv1) < float64(nv2)
+		case uint64:
+			return float64(nv1) < float64(nv2)
+		case float32:
+			return nv1 < nv2
+		case float64:
+			return float64(nv1) < nv2
+		case string:
+			return float64(nv1) < ToFloat(nv2)
+		}
+	case float64:
+		switch nv2 := v2.(type) {
+		case bool:
+			return nv1 < float64(BoolToInt(nv2))
+		case int:
+			return nv1 < float64(nv2)
+		case int8:
+			return nv1 < float64(nv2)
+		case int16:
+			return nv1 < float64(nv2)
+		case int32:
+			return nv1 < float64(nv2)
+		case int64:
+			return nv1 < float64(nv2)
+		case uint:
+			return nv1 < float64(nv2)
+		case uint8:
+			return nv1 < float64(nv2)
+		case uint16:
+			return nv1 < float64(nv2)
+		case uint32:
+			return nv1 < float64(nv2)
+		case uint64:
+			return nv1 < float64(nv2)
+		case float32:
+			return nv1 < float64(nv2)
+		case float64:
+			return nv1 < nv2
+		case string:
+			return nv1 < ToFloat(nv2)
+		}
+	case string:
+		switch nv2 := v2.(type) {
+		case bool:
+			return ToFloat(nv1) < float64(BoolToInt(nv2))
+		case int:
+			return ToFloat(nv1) < float64(nv2)
+		case int8:
+			return ToFloat(nv1) < float64(nv2)
+		case int16:
+			return ToFloat(nv1) < float64(nv2)
+		case int32:
+			return ToFloat(nv1) < float64(nv2)
+		case int64:
+			return ToFloat(nv1) < float64(nv2)
+		case uint:
+			return ToFloat(nv1) < float64(nv2)
+		case uint8:
+			return ToFloat(nv1) < float64(nv2)
+		case uint16:
+			return ToFloat(nv1) < float64(nv2)
+		case uint32:
+			return ToFloat(nv1) < float64(nv2)
+		case uint64:
+			return ToFloat(nv1) < float64(nv2)
+		case float32:
+			return ToFloat(nv1) < float64(nv2)
+		case float64:
+			return ToFloat(nv1) < nv2
+		case string:
+			return nv1 < nv2
+		}
+	case map[string]string:
+		nv2, ok := v2.(map[string]string)
+
+		if ok {
+			keyT := GetSwitchI(optsA, "-key=", "")
+			if keyT != "" {
+				return nv1[keyT] < nv2[keyT]
+			}
+		}
+	case map[string]interface{}:
+		nv2, ok := v2.(map[string]interface{})
+
+		if ok {
+			keyT := GetSwitchI(optsA, "-key=", "")
+			if keyT != "" {
+				return TKX.LessI(nv1[keyT], nv2[keyT])
+			}
+		}
+		// case interface{}:
+		// 	nv2, ok := v2.(interface{})
+
+		// 	if ok {
+		// 		keyT := GetSwitchI(optsA, "-key=", "")
+		// 		if keyT != "" {
+		// 			return TKX.LessI(nv1[keyT], nv2[keyT])
+		// 		}
+		// 	}
+
+	}
+
+	return false
+
+	// type1 := fmt.Sprintf("%T", v1)
+	// type2 := fmt.Sprintf("%T", v2)
+
+	// if type1 == type2 {
+	// 	if StartsWith(type1, "bool") {
+	// 		return v1.(bool) < v2.(bool)
+	// 	} else if StartsWith(type1, "int") {
+	// 		return ToInt(v1) < ToInt(v2)
+	// 	} else if StartsWith(type1, "float") {
+	// 		return ToFloat(v1) < ToFloat(v2)
+	// 	} else if StartsWith(type1, "string") {
+	// 		return ToFloat(v1) < ToFloat(v2)
+	// 	}
+	// }
+
+	// if type1 == "string" {
+	// 	if type2 == "string" {
+	// 		return v1.(string) < v2.(string)
+	// 	}
+	// }
+
+	// return false
+}
+
+var LessI = TKX.LessI
+
+func (p *SortStruct) Less(i, j int) bool {
+	if p.LessFunc != nil {
+		return p.LessFunc(i, j)
+	}
+
+	if p == nil {
+		return false
+	}
+
+	switch nv := p.Value.(type) {
+	case int, int8, int16, int32, int64:
+		return false
+	case uint, uint8, uint16, uint32, uint64:
+		return false
+	case float32, float64:
+		return false
+	case complex64, complex128:
+		return false
+	case bool:
+		return false
+	case string:
+		return false
+	case []int:
+		return BitXor(p.Desc, nv[i] < nv[j]).(bool)
+	case []int8:
+		return BitXor(p.Desc, nv[i] < nv[j]).(bool)
+	case []int16:
+		return BitXor(p.Desc, nv[i] < nv[j]).(bool)
+	case []int32:
+		return BitXor(p.Desc, nv[i] < nv[j]).(bool)
+	case []int64:
+		return BitXor(p.Desc, nv[i] < nv[j]).(bool)
+	case []uint:
+		return BitXor(p.Desc, nv[i] < nv[j]).(bool)
+	case []uint8:
+		return BitXor(p.Desc, nv[i] < nv[j]).(bool)
+	case []uint16:
+		return BitXor(p.Desc, nv[i] < nv[j]).(bool)
+	case []uint32:
+		return BitXor(p.Desc, nv[i] < nv[j]).(bool)
+	case []uint64:
+		return BitXor(p.Desc, nv[i] < nv[j]).(bool)
+	case []float64:
+		return BitXor(p.Desc, nv[i] < nv[j]).(bool)
+	case []string:
+		return BitXor(p.Desc, nv[i] < nv[j]).(bool)
+	case []interface{}:
+		return BitXor(p.Desc, LessI(nv[i], nv[j], "-key="+p.Key)).(bool)
+	case []map[string]string:
+		return BitXor(p.Desc, LessI(nv[i], nv[j], "-key="+p.Key)).(bool)
+	case []map[string]interface{}:
+		return BitXor(p.Desc, LessI(nv[i], nv[j], "-key="+p.Key)).(bool)
+	}
+
+	return false
+}
+
+func (p *SortStruct) Swap(i, j int) {
+	if p.SwapFunc != nil {
+		p.SwapFunc(i, j)
+		return
+	}
+
+	if p == nil {
+		return
+	}
+
+	switch nv := p.Value.(type) {
+	case int, int8, int16, int32, int64:
+		return
+	case uint, uint8, uint16, uint32, uint64:
+		return
+	case float32, float64:
+		return
+	case complex64, complex128:
+		return
+	case bool:
+		return
+	case string:
+		return
+	case []int:
+		nv[i], nv[j] = nv[j], nv[i]
+		return
+	case []int8:
+		nv[i], nv[j] = nv[j], nv[i]
+		return
+	case []int16:
+		nv[i], nv[j] = nv[j], nv[i]
+		return
+	case []int32:
+		nv[i], nv[j] = nv[j], nv[i]
+		return
+	case []int64:
+		nv[i], nv[j] = nv[j], nv[i]
+		return
+	case []uint:
+		nv[i], nv[j] = nv[j], nv[i]
+		return
+	case []uint8:
+		nv[i], nv[j] = nv[j], nv[i]
+		return
+	case []uint16:
+		nv[i], nv[j] = nv[j], nv[i]
+		return
+	case []uint32:
+		nv[i], nv[j] = nv[j], nv[i]
+		return
+	case []uint64:
+		nv[i], nv[j] = nv[j], nv[i]
+		return
+	case []float64:
+		nv[i], nv[j] = nv[j], nv[i]
+		return
+	case []string:
+		nv[i], nv[j] = nv[j], nv[i]
+		return
+	case []interface{}:
+		nv[i], nv[j] = nv[j], nv[i]
+		return
+	case []map[string]string:
+		nv[i], nv[j] = nv[j], nv[i]
+		return
+	case []map[string]interface{}:
+		nv[i], nv[j] = nv[j], nv[i]
+		return
+	}
+
+	return
+}
+
+func (pA *TK) Sort(vA interface{}, optsA ...interface{}) interface{} {
+	if vA == nil {
+		return vA
+	}
+
+	keyT := GetSwitchI(optsA, "-key=", "")
+	ifDescT := IfSwitchExistsWholeI(optsA, "-desc")
+
+	var lenFuncT (func() int) = nil
+	var lessFuncT (func(i, j int) bool) = nil
+	var swapFuncT (func(i, j int)) = nil
+
+	for _, v := range optsA {
+		nv1, ok := v.((func() int))
+		if ok {
+			lenFuncT = nv1
+		}
+
+		nv2, ok := v.((func(i, j int) bool))
+		if ok {
+			lessFuncT = nv2
+		}
+
+		nv3, ok := v.((func(i, j int)))
+		if ok {
+			swapFuncT = nv3
+		}
+	}
+
+	// switch nv := vA.(type) {
+	// case []map[string]string:
+	// 	SortMSSArray(nv, keyT, ifDescT)
+	// 	return nv
+	// 	// case []map[string]interface{}:
+	// 	// 	SortMSIArray(nv, keyT, ifDescT)
+	// 	// 	return nv
+	// }
+
+	sortStructT := &SortStruct{
+		Value:    vA,
+		Key:      keyT,
+		Desc:     ifDescT,
+		LenFunc:  lenFuncT,
+		LessFunc: lessFuncT,
+		SwapFunc: swapFuncT,
+	}
+
+	sort.Sort(sortStructT)
+
+	return sortStructT.Value
+}
+
+var Sort = TKX.Sort
+
 func (pA *TK) IsNil(v interface{}) bool {
 	if v == nil {
 		return true
@@ -12002,7 +12847,13 @@ func (pA *TK) RemoveIntInArray(sliceA []int, idxA int) []int {
 var RemoveIntInArray = TKX.RemoveIntInArray
 
 func (pA *TK) BitXor(p interface{}, v interface{}) interface{} {
-	switch p.(type) {
+	switch nv := p.(type) {
+	case bool:
+		if nv {
+			return !(v.(bool))
+		}
+
+		return v.(bool)
 	case int:
 		return p.(int) ^ v.(int)
 	case int64:
