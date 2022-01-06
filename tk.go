@@ -2278,7 +2278,11 @@ var GetTimeFromUnixTimeStamp = TKX.GetTimeFromUnixTimeStamp
 
 func (pA *TK) GetTimeFromUnixTimeStampMid(timeStampStrA string) time.Time {
 	if len(timeStampStrA) < 13 {
-		return time.Time{}
+		if len(timeStampStrA) == 10 {
+			timeStampStrA = timeStampStrA + "000"
+		} else {
+			return time.Time{}
+		}
 	}
 
 	return time.Unix(StrToInt64WithDefaultValue(timeStampStrA[:10], 0), StrToInt64WithDefaultValue(timeStampStrA[10:], 0))
@@ -2521,6 +2525,8 @@ func (pA *TK) FormatTime(timeA time.Time, formatA ...string) string {
 
 	if formatT == "" {
 		formatT = "2006-01-02 15:04:05"
+	} else if formatT == "compact" {
+		formatT = TimeFormatCompact
 	}
 
 	return timeA.Format(formatT)
