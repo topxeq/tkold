@@ -6796,6 +6796,26 @@ func (pA *TK) EncodeToBase64(bufA []byte) string {
 
 var EncodeToBase64 = TKX.EncodeToBase64
 
+func (pA *TK) ToBase64(vA interface{}) string {
+	if vA == nil {
+		return ""
+	}
+
+	b1, ok := vA.([]byte)
+	if ok {
+		return base64.StdEncoding.EncodeToString(b1)
+	}
+
+	b2, ok := vA.(string)
+	if ok {
+		return base64.StdEncoding.EncodeToString([]byte(b2))
+	}
+
+	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%v", vA)))
+}
+
+var ToBase64 = TKX.ToBase64
+
 func (pA *TK) EncodeHTML(strA string) string {
 	return html.EscapeString(strA)
 }
@@ -9239,7 +9259,12 @@ func (pA *TK) DownloadWebPageX(urlA string, optsA ...interface{}) string {
 		defer respT.Body.Close()
 		if respT.StatusCode != 200 {
 			if IfSwitchExistsWholeI(optsA, "-detail") {
-				Pl("response status: %v (%v)", respT.StatusCode, respT)
+				body, errT := io.ReadAll(respT.Body)
+
+				if errT != nil {
+					body = []byte(errT.Error())
+				}
+				Pl("response status: %v (%v) body: %v", respT.StatusCode, respT, string(body))
 			}
 
 			return GenerateErrorStringF("response status: %v", respT.StatusCode)
@@ -9314,7 +9339,12 @@ func (pA *TK) DownloadWebBytes(urlA string, postDataA map[string]string, customH
 		defer respT.Body.Close()
 		if respT.StatusCode != 200 {
 			if IfSwitchExistsWhole(optsA, "-detail") {
-				Pl("response status: %v (%v)", respT.StatusCode, respT)
+				body, errT := io.ReadAll(respT.Body)
+
+				if errT != nil {
+					body = []byte(errT.Error())
+				}
+				Pl("response status: %v (%v) body: %v", respT.StatusCode, respT, string(body))
 			}
 
 			return nil, nil, Errf("response status: %v", respT.StatusCode)
@@ -12167,6 +12197,10 @@ func (pA *TK) TrimSafely(vA interface{}, defaultA ...string) string {
 var TrimSafely = TKX.TrimSafely
 
 func (pA *TK) IsError(vA interface{}) bool {
+	if vA == nil {
+		return false
+	}
+
 	_, ok := vA.(error)
 	if ok {
 		return true
