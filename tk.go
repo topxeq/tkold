@@ -44,6 +44,11 @@ import (
 	"unicode"
 	"unsafe"
 
+	"github.com/topxeq/gods/lists/arraylist"
+	"github.com/topxeq/gods/lists/doublylinkedlist"
+	"github.com/topxeq/gods/sets/hashset"
+	"github.com/topxeq/gods/sets/linkedhashset"
+	"github.com/topxeq/gods/stacks/linkedliststack"
 	"github.com/topxeq/regexpx"
 	"github.com/topxeq/xmlx"
 
@@ -12126,7 +12131,7 @@ func (pA *TK) Sort(vA interface{}, optsA ...interface{}) interface{} {
 	return sortStructT.Value
 }
 
-var Sort = TKX.Sort
+var SortX = TKX.Sort
 
 func (pA *TK) IsNil(v interface{}) bool {
 	if v == nil {
@@ -14416,3 +14421,32 @@ func handleChildren(e *xml.Encoder, fieldName string, v interface{}, cdata bool)
 		return e.Encode(v)
 	}
 }
+
+// Data struct related
+
+func (pA *TK) NewObject(argsA ...interface{}) interface{} {
+	lenT := len(argsA)
+
+	if lenT < 1 {
+		return Errf("not enough parameters")
+	}
+
+	typeT := ToLower(ToStr(argsA[0]))
+
+	switch typeT {
+	case "stack":
+		return linkedliststack.New()
+	case "list", "arraylist":
+		return arraylist.New()
+	case "linklist", "linkedlist":
+		return doublylinkedlist.New()
+	case "set", "hashset":
+		return hashset.New()
+	case "treeset":
+		return linkedhashset.New()
+	}
+
+	return Errf("unknown object type")
+}
+
+var NewObject = TKX.NewObject

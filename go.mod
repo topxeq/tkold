@@ -12,6 +12,7 @@ require (
 	github.com/json-iterator/go v1.1.9
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/nwaples/rardecode v1.1.2 // indirect
+	github.com/topxeq/gods v0.0.0
 	github.com/topxeq/goph v0.0.0
 	github.com/topxeq/mahonia v0.0.0-20190828060648-12b0599ddd1a
 	github.com/topxeq/regexpx v0.0.0-20200814082553-4bffc7d07029
@@ -27,3 +28,6 @@ require (
 replace github.com/topxeq/charlang v0.0.0 => ../charlang
 
 replace github.com/topxeq/goph v0.0.0 => ../goph
+
+replace github.com/topxeq/gods v0.0.0 => ../gods
+
