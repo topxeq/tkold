@@ -6571,16 +6571,38 @@ func (pA *TK) LoadSimpleMapFromFileE(fileNameA string) (map[string]string, error
 
 var LoadSimpleMapFromFileE = TKX.LoadSimpleMapFromFileE
 
-func (pA *TK) SimpleMapToString(mapA map[string]string) string {
-	strListT := make([]string, 0, len(mapA)+1)
+func (pA *TK) SimpleMapToString(mapA interface{}) string {
+
+	map1, ok := mapA.(map[string]string)
 
 	var kk string
-	for k, v := range mapA {
-		kk = Replace(k, "=", "`EQ`")
-		strListT = append(strListT, kk+"="+ReplaceLineEnds(v, "#CR#"))
+
+	if ok {
+		strListT := make([]string, 0, len(map1)+1)
+
+		for k, v := range map1 {
+			kk = Replace(k, "=", "`EQ`")
+			strListT = append(strListT, kk+"="+ReplaceLineEnds(v, "#CR#"))
+		}
+
+		return JoinLines(strListT)
 	}
 
-	return JoinLines(strListT)
+	map2, ok := mapA.(map[string]interface{})
+
+	if ok {
+		strListT := make([]string, 0, len(map2)+1)
+
+		for k, v := range map2 {
+			vs := ToStr(v)
+			kk = Replace(k, "=", "`EQ`")
+			strListT = append(strListT, kk+"="+ReplaceLineEnds(vs, "#CR#"))
+		}
+
+		return JoinLines(strListT)
+	}
+
+	return ""
 }
 
 var SimpleMapToString = TKX.SimpleMapToString
