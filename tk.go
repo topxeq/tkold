@@ -49,6 +49,7 @@ import (
 	"github.com/topxeq/gods/sets/hashset"
 	"github.com/topxeq/gods/sets/linkedhashset"
 	"github.com/topxeq/gods/stacks/linkedliststack"
+	"github.com/topxeq/gods/trees/btree"
 	"github.com/topxeq/regexpx"
 	"github.com/topxeq/xmlx"
 
@@ -14455,7 +14456,16 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 
 	typeT := ToLower(ToStr(argsA[0]))
 
+	// need lower case
 	switch typeT {
+	case "nil":
+		return nil
+	case "bytesbuffer":
+		var bufT bytes.Buffer
+		return bufT
+	case "stringbuffer", "stringbuilder":
+		var bufT strings.Builder
+		return bufT
 	case "stack":
 		return linkedliststack.New()
 	case "list", "arraylist":
@@ -14466,6 +14476,24 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		return hashset.New()
 	case "treeset":
 		return linkedhashset.New()
+	case "error", "err":
+		if lenT > 1 {
+			return fmt.Errorf(ToStr(argsA[1]), argsA[2:]...)
+		}
+
+		return fmt.Errorf("")
+	case "errorstring", "errstr":
+		if lenT > 1 {
+			return GenerateErrorStringF(ToStr(argsA[1]), argsA[2:]...)
+		}
+
+		return GenerateErrorStringF("")
+	case "tree", "btree":
+		if lenT < 2 {
+			return Errf("not enough parameters")
+		}
+
+		return btree.NewWithIntComparator(ToInt(argsA[1]))
 	}
 
 	return Errf("unknown object type")
