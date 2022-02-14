@@ -11400,6 +11400,22 @@ func (pA *TK) WrapError(vA interface{}, errA error) interface{} {
 
 var WrapError = TKX.WrapError
 
+func (pA *TK) ObjectsToS(aryA ...interface{}) []string {
+	if aryA == nil {
+		return nil
+	}
+
+	rs := make([]string, 0, len(aryA))
+
+	for _, v := range aryA {
+		rs = append(rs, ToStr(v))
+	}
+
+	return rs
+}
+
+var ObjectsToS = TKX.ObjectsToS
+
 type SortStruct struct {
 	Value    interface{}
 	Key      string
@@ -14461,11 +14477,31 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 	case "nil":
 		return nil
 	case "bytesbuffer":
-		var bufT bytes.Buffer
-		return bufT
+		if lenT > 1 {
+			nv, ok := argsA[1].([]byte)
+
+			if ok {
+				return bytes.NewBuffer(nv)
+			}
+
+			return bytes.NewBufferString(ToStr(argsA[1]))
+		}
+		// var bufT bytes.Buffer
+		return new(bytes.Buffer)
 	case "stringbuffer", "stringbuilder":
-		var bufT strings.Builder
+
+		var bufT = new(strings.Builder)
+		if lenT > 1 {
+			bufT.WriteString(ToStr(argsA[1]))
+		}
+
 		return bufT
+	case "stringreader":
+		if lenT > 1 {
+			return strings.NewReader(ToStr(argsA[1]))
+		}
+
+		return strings.NewReader("")
 	case "stack":
 		return linkedliststack.New()
 	case "list", "arraylist":
