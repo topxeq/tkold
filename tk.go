@@ -3068,13 +3068,15 @@ func (pA *TK) SystemCmd(cmdA string, argsA ...string) string {
 var SystemCmd = TKX.SystemCmd
 
 // NewSSHClient create SSH client with fewer settings
-func (pA *TK) NewSSHClient(hostA string, portA int, userA string, passA string) (*goph.Client, error) {
+func (pA *TK) NewSSHClient(hostA string, portA interface{}, userA string, passA string) (*goph.Client, error) {
 	authT := goph.Password(passA)
+
+	portT := ToStr(portA)
 
 	clientT, errT := goph.NewConn(&goph.Config{
 		User:     userA,
 		Addr:     hostA,
-		Port:     uint(portA),
+		Port:     uint(StrToInt(portT)),
 		Auth:     authT,
 		Timeout:  goph.DefaultTimeout,
 		Callback: ssh.InsecureIgnoreHostKey(),
@@ -9884,14 +9886,14 @@ func (pA *TK) PostRequestBytesX(urlA string, reqBodyA []byte, customHeadersA str
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return []byte(Spr("%#v", resp)), err
 	}
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return body, err
 	}
 
 	return body, nil
@@ -10096,7 +10098,7 @@ func (pA *TK) GenerateJSONPResponse(statusA string, valueA string, reqA *http.Re
 		mT["Status"] = statusA
 		mT["Value"] = valueA
 
-		if argsA != nil {
+		if argsA != nil && len(argsA) > 0 {
 			lenT := len(argsA) / 2
 
 			for i := 0; i < lenT; i++ {
@@ -10169,7 +10171,11 @@ func (pA *TK) GenerateJSONPResponseMix(statusA string, valueA string, reqA *http
 var GenerateJSONPResponseMix = TKX.GenerateJSONPResponseMix
 
 func (pA *TK) GenerateJSONPResponseWithMore(statusA string, valueA string, reqA *http.Request, argsA ...string) string {
-	_, valueOnlyT := reqA.Form["valueonly"]
+	var valueOnlyT bool = false
+
+	if reqA != nil {
+		_, valueOnlyT = reqA.Form["valueonly"]
+	}
 
 	if valueOnlyT {
 		if _, withErrorT := reqA.Form["witherror"]; withErrorT {
@@ -10192,13 +10198,24 @@ func (pA *TK) GenerateJSONPResponseWithMore(statusA string, valueA string, reqA 
 			}
 		}
 
-		returnValue, ifReturnValue := reqA.Form["returnvalue"]
+		var returnValue []string
+		var ifReturnValue bool = false
+
+		if reqA != nil {
+			returnValue, ifReturnValue = reqA.Form["returnvalue"]
+		}
 
 		if ifReturnValue {
 			mT["ReturnValue"] = returnValue[0]
 		}
 
-		name, ok := reqA.Form["callback"]
+		var name []string
+		var ok bool = false
+
+		if reqA != nil {
+			name, ok = reqA.Form["callback"]
+		}
+
 		if ok {
 			if valueOnlyT {
 				return fmt.Sprintf("%v(%v);", name[0], valueA)
@@ -10345,6 +10362,51 @@ func (pA *TK) GetSuccessValue(strA string) string {
 }
 
 var GetSuccessValue = TKX.GetSuccessValue
+
+func (pA *TK) JSONResponseToHTML(jsonA string) string {
+	rv := JSONToMapStringString(jsonA)
+	if rv == nil {
+		return ""
+	}
+
+	statusT := rv["Status"]
+
+	if statusT == "success" {
+		statusT = "操作成功"
+	} else if statusT == "fail" {
+		statusT = "操作失败"
+	} else {
+		statusT = "未知操作状态"
+	}
+
+	valueT := rv["Value"]
+
+	tmplT := `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+</head>
+<body>
+<div style="display:table; width: 100%;">
+	<div style="display: table-cell; vertical-align: middle; text-align:center; height: 500px;">
+		<div style="margin-left:auto; margin-right:auto; font-size: 1.5em; font-weight: bold; color: red;"><span>TX_STATUS_XT</span></div>
+		<div style="margin-left:auto; margin-right:auto; margin-top: 3.0em;"><span>TX_VALUE_XT</span></div>
+	</div>
+</div>
+</body>
+</html>
+
+	`
+
+	tmplT = Replace(tmplT, "TX_STATUS_XT", EncodeHTML(statusT))
+	tmplT = Replace(tmplT, "TX_VALUE_XT", EncodeHTML(valueT))
+
+	return tmplT
+}
+
+var JSONResponseToHTML = TKX.JSONResponseToHTML
 
 // 数学相关 math related
 
