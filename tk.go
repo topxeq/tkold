@@ -324,7 +324,7 @@ var HasGlobalEnv = TKX.HasGlobalEnv
 func (pA *TK) PadString(strA string, lenA int, optsA ...string) string {
 	fillStrT := GetSwitch(optsA, "-fill=", "0")
 
-	ifRightT := GetSwitch(optsA, "-right=", "") == "true"
+	ifRightT := IfSwitchExists(optsA, "-right") || (GetSwitch(optsA, "-right=", "") == "true")
 
 	lenT := len(strA)
 
@@ -10395,12 +10395,16 @@ func (pA *TK) JSONResponseToHTML(jsonA string) string {
 
 	statusT := rv["Status"]
 
+	colorT := "auto"
+
 	if statusT == "success" {
 		statusT = "操作成功"
 	} else if statusT == "fail" {
 		statusT = "操作失败"
+		colorT = "red"
 	} else {
 		statusT = "未知操作状态"
+		colorT = "orange"
 	}
 
 	valueT := rv["Value"]
@@ -10415,7 +10419,7 @@ func (pA *TK) JSONResponseToHTML(jsonA string) string {
 <body>
 <div style="display:table; width: 100%;">
 	<div style="display: table-cell; vertical-align: middle; text-align:center; height: 500px;">
-		<div style="margin-left:auto; margin-right:auto; font-size: 1.5em; font-weight: bold; color: red;"><span>TX_STATUS_XT</span></div>
+		<div style="margin-left:auto; margin-right:auto; font-size: 1.5em; font-weight: bold; color: TX_COLOR_XT;"><span>TX_STATUS_XT</span></div>
 		<div style="margin-left:auto; margin-right:auto; margin-top: 3.0em;"><span>TX_VALUE_XT</span></div>
 	</div>
 </div>
@@ -10426,6 +10430,7 @@ func (pA *TK) JSONResponseToHTML(jsonA string) string {
 
 	tmplT = Replace(tmplT, "TX_STATUS_XT", EncodeHTML(statusT))
 	tmplT = Replace(tmplT, "TX_VALUE_XT", EncodeHTML(valueT))
+	tmplT = Replace(tmplT, "TX_COLOR_XT", colorT)
 
 	return tmplT
 }
