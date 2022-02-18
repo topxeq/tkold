@@ -321,6 +321,27 @@ var HasGlobalEnv = TKX.HasGlobalEnv
 
 // 字符串相关函数 string related
 
+func (pA *TK) LimitString(strA string, lenA int, optsA ...string) string {
+	if lenA < 0 {
+		return strA
+	}
+
+	suffixT := GetSwitch(optsA, "-suffix=", "...")
+
+	lenT := len(strA)
+
+	diffT := lenT - lenA
+
+	if diffT <= 0 {
+		return strA
+	}
+
+	return strA[:lenA] + suffixT
+
+}
+
+var LimitString = TKX.LimitString
+
 func (pA *TK) PadString(strA string, lenA int, optsA ...string) string {
 	fillStrT := GetSwitch(optsA, "-fill=", "0")
 
