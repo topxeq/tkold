@@ -44,6 +44,7 @@ import (
 	"unicode"
 	"unsafe"
 
+	"github.com/eiannone/keyboard"
 	"github.com/topxeq/gods/lists/arraylist"
 	"github.com/topxeq/gods/lists/doublylinkedlist"
 	"github.com/topxeq/gods/sets/hashset"
@@ -1181,8 +1182,17 @@ func (p *TXString) Length() int {
 	return len(p.string)
 }
 
+func (p *TXString) Len() int {
+	return len(p.string)
+}
+
 func (p *TXString) CutToLen(lenA int) string {
-	p.string = p.string[:lenA]
+	lenT := len(p.string)
+
+	if lenT > lenA {
+		p.string = p.string[:lenA]
+	}
+
 	return p.string
 }
 
@@ -1190,14 +1200,15 @@ func (p *TXString) Error() string {
 	return p.Err
 }
 
-func (p *TXString) JSONString() string {
-	return ObjectToJSON(p)
+func (p *TXString) JSONString(optsA ...string) string {
+	return ToJSONX(p, optsA...)
 }
 
 func (p *TXString) StringEmptyIfError() string {
 	if p.IsError() {
 		return ""
 	}
+
 	return p.string
 }
 
@@ -1213,8 +1224,8 @@ func (p *TXString) Set(strA string) *TXString {
 	return p
 }
 
-func (p *TXString) Trim() *TXString {
-	p.string = Trim(p.string)
+func (p *TXString) Trim(cutSetA ...string) *TXString {
+	p.string = Trim(p.string, cutSetA...)
 	return p
 }
 
@@ -1265,7 +1276,7 @@ func (p *TXString) Contains(patternA string) bool {
 }
 
 func (p *TXString) RegReplace(patternA string, replacementA string) *TXString {
-	p.string = RegReplace(p.string, patternA, replacementA)
+	p.string = RegReplaceX(p.string, patternA, replacementA)
 
 	return p
 }
@@ -1277,11 +1288,11 @@ func (p *TXString) RegReplaceX(patternA string, replacementA string) *TXString {
 }
 
 func (p *TXString) RegFindAll(patternA string, groupA int) []string {
-	return RegFindAll(p.string, patternA, groupA)
+	return RegFindAllX(p.string, patternA, groupA)
 }
 
 func (p *TXString) RegFindFirst(patternA string, groupA int) string {
-	return RegFindFirst(p.string, patternA, groupA)
+	return RegFindFirstX(p.string, patternA, groupA)
 }
 
 func (p *TXString) RegFindFirstX(patternA string, groupA int) string {
@@ -2867,6 +2878,18 @@ func (pA *TK) GetValueOfMSS(mapA map[string]string, keyA string, defaultA string
 var GetValueOfMSS = TKX.GetValueOfMSS
 
 // 系统相关函数 system related
+
+func (pA *TK) GetChar() interface{} {
+	char, key, err := keyboard.GetSingleKey()
+	if err != nil {
+		return err
+	}
+	// fmt.Printf("You pressed: %q\r\n", char)
+
+	return fmt.Sprintf("%v+%v", key, char)
+}
+
+var GetChar = TKX.GetChar
 
 // GetOSArgs return os.Args
 func (pA *TK) GetOSArgs() []string {
@@ -8586,6 +8609,21 @@ func (pA *TK) ErrorToString(errA error) string {
 }
 
 var ErrorToString = TKX.ErrorToString
+
+func (pA *TK) ErrorToEmptyString(vA interface{}) string {
+	if vA == nil {
+		return ""
+	}
+
+	_, ok := vA.(error)
+	if ok {
+		return ""
+	}
+
+	return ToStr(vA)
+}
+
+var ErrorToEmptyString = TKX.ErrorToEmptyString
 
 func (pA *TK) ErrToErrStr(errA error) string {
 	if errA == nil {
@@ -14588,6 +14626,12 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 	switch typeT {
 	case "nil":
 		return nil
+	case "string":
+		if lenT > 1 {
+			return CreateStringSimple(ToStr(argsA[1]))
+		}
+
+		return CreateStringEmpty()
 	case "bytesbuffer":
 		if lenT > 1 {
 			nv, ok := argsA[1].([]byte)
