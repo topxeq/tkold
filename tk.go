@@ -44,6 +44,8 @@ import (
 	"unicode"
 	"unsafe"
 
+	"golang.org/x/term"
+
 	"github.com/eiannone/keyboard"
 	"github.com/topxeq/gods/lists/arraylist"
 	"github.com/topxeq/gods/lists/doublylinkedlist"
@@ -2890,6 +2892,25 @@ func (pA *TK) GetChar() interface{} {
 }
 
 var GetChar = TKX.GetChar
+
+func (pA *TK) GetChar2() interface{} {
+	// switch stdin into 'raw' mode
+	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	if err != nil {
+		return err
+	}
+	defer term.Restore(int(os.Stdin.Fd()), oldState)
+
+	b := make([]byte, 1)
+	_, err = os.Stdin.Read(b)
+	if err != nil {
+		return err
+	}
+
+	return ToStr(int(b[0]))
+}
+
+var GetChar2 = TKX.GetChar2
 
 // GetOSArgs return os.Args
 func (pA *TK) GetOSArgs() []string {
