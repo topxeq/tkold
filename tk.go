@@ -4623,6 +4623,7 @@ func (pA *TK) ToBool(vA interface{}) bool {
 		return false
 	}
 
+	// Z...
 	return true
 }
 
