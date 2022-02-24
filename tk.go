@@ -4603,6 +4603,7 @@ func (pA *TK) StrToBool(strA string) bool {
 
 var StrToBool = TKX.StrToBool
 
+// like javascript, no value -> false, other true
 func (pA *TK) ToBool(vA interface{}) bool {
 	if IsNil(vA) {
 		return false
