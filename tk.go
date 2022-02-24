@@ -4603,6 +4603,31 @@ func (pA *TK) StrToBool(strA string) bool {
 
 var StrToBool = TKX.StrToBool
 
+func (pA *TK) ToBool(vA interface{}) bool {
+	if IsNil(vA) {
+		return false
+	}
+
+	strT, ok := vA.(string)
+
+	if ok {
+		lowerStr := strings.ToLower(strT)
+		if lowerStr == "yes" || lowerStr == "true" {
+			return true
+		}
+
+		if lowerStr == "no" || lowerStr == "false" {
+			return false
+		}
+
+		return false
+	}
+
+	return true
+}
+
+var ToBool = TKX.ToBool
+
 func (pA *TK) BoolToStr(vA bool) string {
 	if vA {
 		return "true"
