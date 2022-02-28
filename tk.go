@@ -79,7 +79,7 @@ import (
 	zipx "github.com/yeka/zip"
 )
 
-var versionG = "v0.9.8"
+var versionG = "v0.9.8b"
 
 type TK struct {
 	Version string
