@@ -5663,6 +5663,7 @@ func (pA *TK) GetFileList(dirA string, argsA ...string) []map[string]string {
 	compactT := IfSwitchExistsWhole(argsA, "-compact")
 
 	minSizeT := int64(GetSwitchWithDefaultIntValue(argsA, "-minSize=", -1))
+	maxSizeT := int64(GetSwitchWithDefaultIntValue(argsA, "-maxSize=", MAX_INT))
 
 	sortT := GetSwitch(argsA, "-sort=", "")
 	sortKeyT := GetSwitch(argsA, "-sortKey=", "Time")
@@ -5773,7 +5774,7 @@ func (pA *TK) GetFileList(dirA string, argsA ...string) []map[string]string {
 
 		matchedT, errTI := filepath.Match(patternT, filepath.Base(path))
 		if errTI == nil {
-			if matchedT && f.Size() >= minSizeT {
+			if matchedT && f.Size() >= minSizeT && f.Size() <= maxSizeT {
 				if exclusivePatternT != "" {
 					matched2T, err2TI := filepath.Match(exclusivePatternT, filepath.Base(path))
 					if err2TI == nil {
@@ -10547,6 +10548,8 @@ func (pA *TK) JSONResponseToHTML(jsonA string) string {
 var JSONResponseToHTML = TKX.JSONResponseToHTML
 
 // 数学相关 math related
+
+const MAX_INT = int(^uint(0) >> 1)
 
 func (pA *TK) LimitPrecision(nA interface{}, digitA int) error {
 	switch t := nA.(type) {
