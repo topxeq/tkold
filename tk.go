@@ -10549,6 +10549,7 @@ var JSONResponseToHTML = TKX.JSONResponseToHTML
 
 // 数学相关 math related
 
+// max integer
 const MAX_INT = int(^uint(0) >> 1)
 
 func (pA *TK) LimitPrecision(nA interface{}, digitA int) error {
