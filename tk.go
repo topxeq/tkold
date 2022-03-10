@@ -930,6 +930,53 @@ func (pA *TK) SplitN(strA string, sepA string, countA int) []string {
 
 var SplitN = TKX.SplitN
 
+func (pA *TK) SplitByLen(strA string, lenA int) []string {
+	if len(strA) == 0 {
+		return nil
+	}
+	if lenA >= len(strA) {
+		return []string{strA}
+	}
+	var chunks []string = make([]string, 0, (len(strA)-1)/lenA+1)
+	currentLen := 0
+	currentStart := 0
+	for i := range strA {
+		if currentLen == lenA {
+			chunks = append(chunks, strA[currentStart:i])
+			currentLen = 0
+			currentStart = i
+		}
+		currentLen++
+	}
+	chunks = append(chunks, strA[currentStart:])
+	return chunks
+}
+
+var SplitByLen = TKX.SplitByLen
+
+func (pA *TK) SplitByLenRune(s string, chunkSize int) []string {
+	if chunkSize >= len(s) {
+		return []string{s}
+	}
+	var chunks []string
+	chunk := make([]rune, chunkSize)
+	len := 0
+	for _, r := range s {
+		chunk[len] = r
+		len++
+		if len == chunkSize {
+			chunks = append(chunks, string(chunk))
+			len = 0
+		}
+	}
+	if len > 0 {
+		chunks = append(chunks, string(chunk[:len]))
+	}
+	return chunks
+}
+
+var SplitByLenRune = TKX.SplitByLenRune
+
 func (pA *TK) JoinLines(strListA []string) string {
 	if strListA == nil {
 		return GenerateErrorString("nil list")
