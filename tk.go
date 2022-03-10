@@ -930,19 +930,46 @@ func (pA *TK) SplitN(strA string, sepA string, countA int) []string {
 
 var SplitN = TKX.SplitN
 
-func (pA *TK) SplitByLen(strA string, lenA int) []string {
+func (pA *TK) SplitByLen(strA string, lenA int, byteLimitA ...interface{}) []string {
 	if len(strA) == 0 {
 		return nil
 	}
 	if lenA >= len(strA) {
 		return []string{strA}
 	}
+
+	ifByteLimitT := len(byteLimitA) > 0
+
+	var byteLimitT int
+
+	if ifByteLimitT {
+		byteLimitT = ToInt(byteLimitA[0])
+
+		if byteLimitT <= 0 {
+			byteLimitT = lenA
+		}
+	}
+
+	var byteLenT int
+	var curStrT string
+
 	var chunks []string = make([]string, 0, (len(strA)-1)/lenA+1)
 	currentLen := 0
 	currentStart := 0
 	for i := range strA {
+		curStrT = strA[currentStart:i]
+		if ifByteLimitT {
+			byteLenT = len([]byte(curStrT))
+			if byteLenT >= byteLimitT {
+				chunks = append(chunks, curStrT)
+				currentLen = 0
+				currentStart = i
+			}
+			currentLen++
+			continue
+		}
 		if currentLen == lenA {
-			chunks = append(chunks, strA[currentStart:i])
+			chunks = append(chunks, curStrT)
 			currentLen = 0
 			currentStart = i
 		}
