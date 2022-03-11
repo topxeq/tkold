@@ -939,8 +939,10 @@ func (pA *TK) SplitByLen(strA string, lenA int, byteLimitA ...interface{}) []str
 	}
 
 	ifByteLimitT := len(byteLimitA) > 0
+	ifSepT := len(byteLimitA) > 1
 
 	var byteLimitT int
+	var sepT string = ""
 
 	if ifByteLimitT {
 		byteLimitT = ToInt(byteLimitA[0])
@@ -950,28 +952,49 @@ func (pA *TK) SplitByLen(strA string, lenA int, byteLimitA ...interface{}) []str
 		}
 	}
 
+	if ifSepT {
+		sepT = ToStr(byteLimitA[1])
+	}
+
+	var sepStartT int
+
 	var byteLenT int
 	var curStrT string
 
 	var chunks []string = make([]string, 0, (len(strA)-1)/lenA+1)
 	currentLen := 0
+	sepStartT = 0
 	currentStart := 0
 	for i := range strA {
+		if sepT != "" && i > 0 {
+			if strings.ContainsAny(strA[i-1:i], sepT) {
+				// chunks = append(chunks, curStrT)
+				currentLen = 0
+				sepStartT = i
+				// currentStart = i
+
+				// currentLen++
+				// continue
+			}
+		}
+
 		curStrT = strA[currentStart:i]
 		if ifByteLimitT {
-			byteLenT = len([]byte(curStrT))
+			byteLenT = len([]byte(strA[sepStartT:i]))
 			if byteLenT >= byteLimitT {
 				chunks = append(chunks, curStrT)
 				currentLen = 0
 				currentStart = i
+				sepStartT = i
+				currentLen++
+				continue
 			}
-			currentLen++
-			continue
 		}
 		if currentLen == lenA {
 			chunks = append(chunks, curStrT)
 			currentLen = 0
 			currentStart = i
+			sepStartT = i
 		}
 		currentLen++
 	}
