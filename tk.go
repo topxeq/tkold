@@ -1172,6 +1172,27 @@ func (p *StringRing) Push(strA string) {
 	p.MutexM.Unlock()
 }
 
+func (p *StringRing) Get(indexA ...int) string {
+	var idxT int
+	var rs string
+
+	p.MutexM.Lock()
+	if len(indexA) > 0 {
+		idxT = indexA[0]
+	} else {
+		idxT = p.Start
+	}
+
+	if idxT < 0 || idxT >= len(p.Buf) {
+		return ErrStrf("out of range")
+	}
+
+	rs = p.Buf[idxT]
+	p.MutexM.Unlock()
+
+	return rs
+}
+
 func (v StringRing) GetList() []string {
 	v.MutexM.Lock()
 	bufT := make([]string, 0, len(v.Buf))
@@ -14809,6 +14830,12 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		}
 
 		return strings.NewReader("")
+	case "stringring":
+		if lenT > 1 {
+			return NewStringRing(ToInt(argsA[1]))
+		}
+
+		return NewStringRing()
 	case "stack":
 		return linkedliststack.New()
 	case "list", "arraylist":
