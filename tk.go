@@ -14785,6 +14785,74 @@ func handleChildren(e *xml.Encoder, fieldName string, v interface{}, cdata bool)
 
 // Data struct related
 
+type SimpleStack struct {
+	Items []interface{}
+}
+
+func (p *SimpleStack) Reset(sizeA ...int) {
+	sizeT := 10
+
+	if len(sizeA) > 0 {
+		sizeT = sizeA[0]
+	}
+
+	p.Items = make([]interface{}, 0, sizeT)
+}
+
+func (p *SimpleStack) Push(vA interface{}) {
+	if p.Items == nil {
+		p.Reset()
+	}
+
+	p.Items = append(p.Items, vA)
+}
+
+func (p *SimpleStack) Pop() interface{} {
+	if p.Items == nil {
+		p.Reset()
+
+		return nil
+	}
+
+	lenT := len(p.Items)
+
+	if lenT < 1 {
+		return nil
+	}
+
+	rs := p.Items[lenT-1]
+
+	p.Items = p.Items[0 : lenT-1]
+
+	return rs
+}
+
+func (p *SimpleStack) Peek() interface{} {
+	if p.Items == nil {
+		p.Reset()
+
+		return nil
+	}
+
+	lenT := len(p.Items)
+
+	if lenT < 1 {
+		return nil
+	}
+
+	return p.Items[lenT-1]
+}
+
+func (pA *TK) NewSimpleStack(sizeA ...int) *SimpleStack {
+	rs := &SimpleStack{}
+
+	rs.Reset(sizeA...)
+
+	return rs
+}
+
+var NewSimpleStack = TKX.NewSimpleStack
+
 func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 	lenT := len(argsA)
 
@@ -14836,6 +14904,8 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		}
 
 		return NewStringRing()
+	case "simplestack":
+		return NewSimpleStack()
 	case "stack":
 		return linkedliststack.New()
 	case "list", "arraylist":
