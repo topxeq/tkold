@@ -4727,6 +4727,12 @@ func (pA *TK) ToBool(vA interface{}) bool {
 		return false
 	}
 
+	boolT, ok := vA.(bool)
+
+	if ok {
+		return boolT
+	}
+
 	strT, ok := vA.(string)
 
 	if ok {
