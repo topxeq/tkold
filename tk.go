@@ -5027,6 +5027,45 @@ func (pA *TK) ToInt(v interface{}, defaultA ...int) (result int) {
 
 var ToInt = TKX.ToInt
 
+func (pA *TK) StrToIntQuick(strA string) (int, error) {
+	var n uint64
+	var v byte
+
+	lenT := len(strA)
+
+	firstT := true
+
+	minusT := false
+
+	for i := 0; i < lenT; i++ {
+		d := strA[i]
+
+		if firstT && d == '-' {
+			minusT = true
+			firstT = false
+			continue
+		}
+
+		if '0' <= d && d <= '9' {
+			v = d - '0'
+			firstT = false
+		} else {
+			return 0, Errf("invalid int")
+		}
+
+		n *= uint64(10)
+		n += uint64(v)
+	}
+
+	if minusT {
+		return -int(n), nil
+	}
+
+	return int(n), nil
+}
+
+var StrToIntQuick = TKX.StrToIntQuick
+
 // StrToIntWithDefaultValue 字符串转整数，如果有问题则返回默认数值
 func (pA *TK) StrToIntWithDefaultValue(strA string, defaultA ...int) int {
 	defaultT := -1
