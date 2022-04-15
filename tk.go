@@ -4919,7 +4919,7 @@ func (pA *TK) ToFloat(v interface{}, defaultA ...float64) (result float64) {
 		result = float64(v.(float32))
 		return
 	case string:
-		nT, errT := strconv.ParseFloat(v.(string), 64)
+		nT, errT := strconv.ParseFloat(strings.TrimSpace(v.(string)), 64)
 		if errT != nil {
 			result = defaultT
 			return
@@ -5005,7 +5005,7 @@ func (pA *TK) ToInt(v interface{}, defaultA ...int) (result int) {
 		result = int(v.(float32))
 		return
 	case string:
-		nT, errT := strconv.ParseInt(v.(string), 10, 0)
+		nT, errT := strconv.ParseInt(strings.TrimSpace(v.(string)), 10, 0)
 		if errT != nil {
 			result = defaultT
 			return
