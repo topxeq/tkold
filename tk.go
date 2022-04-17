@@ -747,6 +747,18 @@ func (pA *TK) IsErrStr(errStrA string) bool {
 
 var IsErrStr = TKX.IsErrStr
 
+func (pA *TK) IsErrStrX(errStrA interface{}) bool {
+	nv, ok := errStrA.(string)
+
+	if !ok {
+		return false
+	}
+
+	return StartsWith(nv, "TXERROR:")
+}
+
+var IsErrStrX = TKX.IsErrStrX
+
 // GetErrorString 获取出错字符串中的出错原因部分
 func (pA *TK) GetErrorString(errStrA string) string {
 	if StartsWith(errStrA, "TXERROR:") {
