@@ -3922,6 +3922,45 @@ func (pA *TK) GetParameterByIndexWithDefaultValue(argsA []string, idxA int, defa
 
 var GetParameterByIndexWithDefaultValue = TKX.GetParameterByIndexWithDefaultValue
 
+func (pA *TK) GetParamI(argsA []interface{}, idxA int, defaultA ...string) string {
+	defaultT := ""
+
+	if len(defaultA) > 0 {
+		defaultT = defaultA[0]
+	}
+
+	if idxA == -1 {
+		idxA = 1
+	}
+
+	if (idxA >= len(argsA)) || (idxA < 0) {
+		return defaultT
+	}
+
+	var cnt int
+	for _, argT := range argsA {
+		strT := ToStr(argT)
+		if StartsWith(strT, "-") {
+			continue
+		}
+
+		if cnt == idxA {
+			if StartsWith(strT, "\"") && EndsWith(strT, "\"") {
+				return strT[1 : len(strT)-1]
+			}
+
+			return strT
+		}
+
+		cnt++
+
+	}
+
+	return defaultT
+}
+
+var GetParamI = TKX.GetParamI
+
 func (pA *TK) GetParameter(argsA []string, idxA int) string {
 	return GetParameterByIndexWithDefaultValue(argsA, idxA, ErrStrF("failed"))
 }
