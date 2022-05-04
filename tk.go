@@ -5078,6 +5078,92 @@ func (pA *TK) ToInt(v interface{}, defaultA ...int) (result int) {
 
 var ToInt = TKX.ToInt
 
+func (pA *TK) ToRune(v interface{}, defaultA ...rune) (result rune) {
+	var defaultT rune
+
+	if defaultA == nil || len(defaultA) < 1 {
+		defaultT = 0
+	} else {
+		defaultT = defaultA[0]
+	}
+
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = defaultT
+			return
+		}
+	}()
+
+	switch v.(type) {
+	case bool:
+		if v.(bool) {
+			result = 1
+		} else {
+			result = 0
+		}
+
+		return
+	case int:
+		result = rune(v.(int))
+		return
+	case int8:
+		result = rune(v.(int8))
+		return
+	case int16:
+		result = rune(v.(int16))
+		return
+	case int32:
+		result = v.(int32)
+		return
+	case int64:
+		result = rune(v.(int64))
+		return
+	case uint:
+		result = rune(v.(int))
+		return
+	case uint8:
+		result = rune(v.(uint8))
+		return
+	case uint16:
+		result = rune(v.(uint16))
+		return
+	case uint32:
+		result = rune(v.(uint32))
+		return
+	case uint64:
+		result = rune(v.(uint64))
+		return
+	case float64:
+		result = rune(v.(float64))
+		return
+	case float32:
+		result = rune(v.(float32))
+		return
+	case string:
+		nT, errT := strconv.ParseInt(strings.TrimSpace(v.(string)), 10, 0)
+		if errT != nil {
+			result = defaultT
+			return
+		}
+
+		result = rune(nT)
+		return
+	default:
+		nT, errT := strconv.ParseInt(fmt.Sprintf("%v", v), 10, 0)
+		if errT != nil {
+			result = defaultT
+			return
+		}
+
+		result = rune(nT)
+		return
+	}
+}
+
+var ToRune = TKX.ToRune
+
 func (pA *TK) StrToIntQuick(strA string) (int, error) {
 	var n uint64
 	var v byte
