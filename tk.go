@@ -10852,6 +10852,12 @@ var JSONResponseToHTML = TKX.JSONResponseToHTML
 // max integer
 const MAX_INT = int(^uint(0) >> 1)
 
+func (pA *TK) AdjustFloat(nA float64, digitA int) float64 {
+	return math.Round(nA*math.Pow10(digitA)) / math.Pow10(digitA)
+}
+
+var AdjustFloat = TKX.AdjustFloat
+
 func (pA *TK) LimitPrecision(nA interface{}, digitA int) error {
 	switch t := nA.(type) {
 	case *float64:
@@ -14968,7 +14974,8 @@ func handleChildren(e *xml.Encoder, fieldName string, v interface{}, cdata bool)
 // Data struct related
 
 type SimpleStack struct {
-	Items []interface{}
+	Items   []interface{}
+	Pointer int
 }
 
 func (p *SimpleStack) Reset(sizeA ...int) {
@@ -14979,50 +14986,77 @@ func (p *SimpleStack) Reset(sizeA ...int) {
 	}
 
 	p.Items = make([]interface{}, 0, sizeT)
+
+	p.Pointer = 0
 }
 
 func (p *SimpleStack) Push(vA interface{}) {
-	if p.Items == nil {
-		p.Reset()
+	// if p.Items == nil {
+	// 	p.Reset()
+	// }
+
+	lenT := len(p.Items)
+
+	if p.Pointer >= lenT {
+		p.Items = append(p.Items, vA)
+	} else {
+		p.Items[p.Pointer] = vA
 	}
 
-	p.Items = append(p.Items, vA)
+	p.Pointer++
+
+	// p.Items = append(p.Items, vA)
 }
 
 func (p *SimpleStack) Pop() interface{} {
-	if p.Items == nil {
-		p.Reset()
-
+	if p.Pointer < 1 {
 		return nil
 	}
 
-	lenT := len(p.Items)
-
-	if lenT < 1 {
-		return nil
-	}
-
-	rs := p.Items[lenT-1]
-
-	p.Items = p.Items[0 : lenT-1]
-
+	p.Pointer--
+	rs := p.Items[p.Pointer]
 	return rs
+	// if p.Items == nil {
+	// 	p.Reset()
+
+	// 	return nil
+	// }
+
+	// lenT := len(p.Items)
+
+	// if lenT < 1 {
+	// 	return nil
+	// }
+
+	// rs := p.Items[lenT-1]
+
+	// p.Items = p.Items[0 : lenT-1]
+
+	// return rs
 }
 
 func (p *SimpleStack) Peek() interface{} {
-	if p.Items == nil {
-		p.Reset()
-
+	if p.Pointer < 1 {
 		return nil
 	}
 
-	lenT := len(p.Items)
+	// p.StackPointerM--
+	rs := p.Items[p.Pointer-1]
 
-	if lenT < 1 {
-		return nil
-	}
+	return rs
+	// if p.Items == nil {
+	// 	p.Reset()
 
-	return p.Items[lenT-1]
+	// 	return nil
+	// }
+
+	// lenT := len(p.Items)
+
+	// if lenT < 1 {
+	// 	return nil
+	// }
+
+	// return p.Items[lenT-1]
 }
 
 func (pA *TK) NewSimpleStack(sizeA ...int) *SimpleStack {
