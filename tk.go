@@ -76,6 +76,9 @@ import (
 	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/qr"
 
+	"github.com/yuin/goldmark"
+	highlighting "github.com/yuin/goldmark-highlighting"
+
 	zipx "github.com/yeka/zip"
 )
 
@@ -11892,6 +11895,25 @@ func (pA *TK) HTMLToText(htmlA string, optionsA ...string) (result string) {
 
 var HTMLToText = TKX.HTMLToText
 
+// Markdown Related
+
+func (pA *TK) RenderMarkdown(markdownA string) string {
+	markdownT := goldmark.New(
+		goldmark.WithExtensions(
+			highlighting.Highlighting,
+		),
+	)
+
+	var buf bytes.Buffer
+	if err := markdownT.Convert([]byte(markdownA), &buf); err != nil {
+		return ErrToStr(err)
+	}
+
+	return string(buf.Bytes())
+}
+
+var RenderMarkdown = TKX.RenderMarkdown
+
 // Misc Related
 
 func (pA *TK) Pass() {
@@ -12765,6 +12787,52 @@ func (pA *TK) IsError(vA interface{}) bool {
 
 var IsError = TKX.IsError
 
+func (pA *TK) IsErrX(vA interface{}) bool {
+	if vA == nil {
+		return false
+	}
+
+	_, ok := vA.(error)
+
+	if ok {
+		return true
+	}
+
+	nv2, ok := vA.(string)
+
+	if ok {
+		return IsErrStr(nv2)
+	}
+
+	return false
+}
+
+var IsErrX = TKX.IsErrX
+
+func (pA *TK) GetErrStrX(vA interface{}) string {
+	if vA == nil {
+		return ""
+	}
+
+	nv1, ok := vA.(error)
+
+	if ok {
+		return nv1.Error()
+	}
+
+	nv2, ok := vA.(string)
+
+	if ok {
+		if IsErrStr(nv2) {
+			return GetErrStr(nv2)
+		}
+	}
+
+	return ""
+}
+
+var GetErrStrX = TKX.GetErrStrX
+
 func (pA *TK) IfThenElse(condA bool, thenA interface{}, elseA interface{}) interface{} {
 	if condA {
 		return thenA
@@ -12774,6 +12842,58 @@ func (pA *TK) IfThenElse(condA bool, thenA interface{}, elseA interface{}) inter
 }
 
 var IfThenElse = TKX.IfThenElse
+
+func (pA *TK) GenerateToken(appCodeA string, userIDA string, roleA string, optsA ...string) string {
+	secretT := GetSwitch(optsA, "-secret=", "is_Token")
+
+	strT := appCodeA + "|" + userIDA + "|" + roleA + "|" + GetNowTimeString()
+
+	return EncryptStringByTXDEF(strT, secretT)
+}
+
+var GenerateToken = TKX.GenerateToken
+
+func (pA *TK) CheckToken(tokenA string, optsA ...string) string {
+	appT := GetSwitch(optsA, "-app=", "")
+
+	secretT := GetSwitch(optsA, "-secret=", "is_Token")
+
+	tokenExpireT := time.Duration(ToInt(GetSwitch(optsA, "-expire=", "1440")))
+
+	strT := DecryptStringByTXDEF(tokenA, secretT)
+
+	if StartsWith(tokenA, "RAW:") {
+		strT = tokenA[4:]
+	}
+
+	listT := Split(strT, "|")
+
+	if len(listT) < 4 {
+		return ErrStrf("invalid token(len)")
+	}
+
+	if appT != "" {
+		if appT != listT[0] {
+			return ErrStrf("invalid token(app)")
+		}
+
+	}
+
+	timeT, errT := StrToTimeByFormat(listT[3], TimeFormatCompact)
+	if errT != nil {
+		return ErrStrf("invalid token(time)")
+	}
+
+	expectTimeT := timeT.Add(time.Minute * time.Duration(tokenExpireT))
+
+	if expectTimeT.Before(time.Now()) {
+		return ErrStrf("token expired")
+	}
+
+	return listT[0] + "|" + listT[1] + "|" + listT[2] + "|" + ""
+}
+
+var CheckToken = TKX.CheckToken
 
 // GenerateQR default -level=1, 4 indicates more error tolerance
 func (pA *TK) GenerateQR(contentA string, optsA ...string) (barcode.Barcode, error) {

@@ -29,6 +29,8 @@ require (
 	github.com/topxeq/xmlx v0.2.0
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/yeka/zip v0.0.0-20180914125537-d046722c6feb
+	github.com/yuin/goldmark v1.4.12
+	github.com/yuin/goldmark-highlighting v0.0.0-20220208100518-594be1970594
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
 	golang.org/x/sys v0.0.0-20220224003255-dbe011f71a99 // indirect
