@@ -12846,6 +12846,10 @@ var IfThenElse = TKX.IfThenElse
 func (pA *TK) GenerateToken(appCodeA string, userIDA string, roleA string, optsA ...string) string {
 	secretT := GetSwitch(optsA, "-secret=", "is_Token")
 
+	if secretT == "" {
+		secretT = "is_Token"
+	}
+
 	strT := appCodeA + "|" + userIDA + "|" + roleA + "|" + GetNowTimeString()
 
 	return EncryptStringByTXDEF(strT, secretT)
