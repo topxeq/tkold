@@ -3816,6 +3816,17 @@ func (pA *TK) GetCurrentDir() string {
 
 var GetCurrentDir = TKX.GetCurrentDir
 
+func (pA *TK) SetCurrentDir(dirA string) string {
+	errT := os.Chdir(dirA)
+	if errT != nil {
+		return ErrToStr(errT)
+	}
+
+	return ""
+}
+
+var SetCurrentDir = TKX.SetCurrentDir
+
 func (pA *TK) GetApplicationPath() string {
 	file, _ := exec.LookPath(os.Args[0])
 	pathT, _ := filepath.Abs(file)
