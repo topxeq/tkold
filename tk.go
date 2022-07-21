@@ -80,6 +80,8 @@ import (
 	highlighting "github.com/yuin/goldmark-highlighting"
 
 	zipx "github.com/yeka/zip"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 var versionG = "v1.0.0"
@@ -7326,6 +7328,30 @@ func (pA *TK) ToJSON(objA interface{}) (string, error) {
 }
 
 var ToJSON = TKX.ToJSON
+
+type UnaStruct1 func() (io.ReadCloser, error)
+
+func (a UnaStruct1) MarshalJSON() ([]byte, error) {
+
+	return []byte{}, nil
+}
+
+// func (a func() (io.ReadCloser, error)) MarshalJSON() ([]byte, error) {
+
+// 	return []byte{}, nil
+// }
+
+func (pA *TK) Sdump(objsA ...interface{}) string {
+	return spew.Sdump(objsA...)
+}
+
+var Sdump = TKX.Sdump
+
+func (pA *TK) Sdumpf(formatA string, objsA ...interface{}) string {
+	return spew.Sprintf(formatA, objsA...)
+}
+
+var Sdumpf = TKX.Sdumpf
 
 func (pA *TK) ToJSONX(objA interface{}, optsA ...string) string {
 	var errT error

@@ -8,6 +8,7 @@ require (
 	github.com/atotto/clipboard v0.1.4
 	github.com/beevik/etree v1.1.0
 	github.com/boombuler/barcode v1.0.1
+	github.com/davecgh/go-spew v1.1.1
 	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
 	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f // indirect
 	github.com/golang/snappy v0.0.4 // indirect
