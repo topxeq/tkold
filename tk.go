@@ -7353,6 +7353,18 @@ func (pA *TK) Sdumpf(formatA string, objsA ...interface{}) string {
 
 var Sdumpf = TKX.Sdumpf
 
+func (pA *TK) Dump(objsA ...interface{}) {
+	spew.Dump(objsA...)
+}
+
+var Dump = TKX.Dump
+
+func (pA *TK) Dumpf(formatA string, objsA ...interface{}) {
+	spew.Printf(formatA+"\n", objsA...)
+}
+
+var Dumpf = TKX.Dumpf
+
 func (pA *TK) ToJSONX(objA interface{}, optsA ...string) string {
 	var errT error
 
