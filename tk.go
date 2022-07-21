@@ -511,9 +511,14 @@ func (pA *TK) JoinList(aryA interface{}, sepA string, defaultA ...string) string
 var JoinList = TKX.JoinList
 
 // StartsWith 检查字符串strA开始是否是subStrA
-func (pA *TK) StartsWith(strA string, subStrA string) bool {
+func (pA *TK) StartsWith(strA string, subStrA ...string) bool {
+	for _, v := range subStrA {
+		if strings.HasPrefix(strA, v) {
+			return true
+		}
+	}
 
-	return strings.HasPrefix(strA, subStrA)
+	return false
 }
 
 var StartsWith = TKX.StartsWith
@@ -577,9 +582,14 @@ func (pA *TK) ToUpper(strA string) string {
 var ToUpper = TKX.ToUpper
 
 // EndsWith 检查字符串strA结尾是否是subStrA
-func (pA *TK) EndsWith(strA string, subStrA string) bool {
+func (pA *TK) EndsWith(strA string, subStrA ...string) bool {
+	for _, v := range subStrA {
+		if strings.HasSuffix(strA, v) {
+			return true
+		}
+	}
 
-	return strings.HasSuffix(strA, subStrA)
+	return false
 }
 
 var EndsWith = TKX.EndsWith
