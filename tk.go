@@ -7359,11 +7359,17 @@ func (pA *TK) ToJSONX(objA interface{}, optsA ...string) string {
 	}
 
 	if errT != nil {
-		if ifDefaultT {
-			return GetSwitchWithDefaultValue(optsA, "-default=", GenerateErrorString(errT.Error()))
+
+		rs, errT = json.Marshal(objA)
+
+		if errT != nil {
+			if ifDefaultT {
+				return GetSwitchWithDefaultValue(optsA, "-default=", GenerateErrorString(errT.Error()))
+			}
+
+			return GenerateErrorString(errT.Error())
 		}
 
-		return GenerateErrorString(errT.Error())
 	}
 
 	return string(rs)
