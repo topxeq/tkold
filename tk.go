@@ -1976,9 +1976,17 @@ var RegMatchX = TKX.RegMatchX
 var ifRandomizedG = false
 
 // Randomize 初始化随机数种子
-func (pA *TK) Randomize() {
+func (pA *TK) Randomize(seedA ...int) {
+	var seedT int64
+
+	if len(seedA) > 0 {
+		seedT = int64(seedA[0])
+	} else {
+		seedT = time.Now().Unix()
+	}
+
 	if !ifRandomizedG {
-		rand.Seed(time.Now().Unix())
+		rand.Seed(seedT)
 		ifRandomizedG = true
 	}
 }
