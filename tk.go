@@ -5094,6 +5094,9 @@ func (pA *TK) ToInt(v interface{}, defaultA ...int) (result int) {
 
 		result = int(nT)
 		return
+	case time.Duration:
+		result = int(v.(time.Duration))
+		return
 	default:
 		nT, errT := strconv.ParseInt(fmt.Sprintf("%v", v), 10, 0)
 		if errT != nil {
