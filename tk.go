@@ -2684,7 +2684,33 @@ func (pA *TK) ToTime(timeA interface{}, defaultA ...interface{}) interface{} {
 		return t
 	}
 
-	return defaultT
+	lenT := len(strT)
+
+	if lenT == 10 {
+		strT = strT + "000"
+	}
+
+	if len(strT) != 13 {
+		return defaultT
+	}
+
+	maxT := int64(MAX_INT)
+
+	tickT := StrToInt64(strT[:10], maxT)
+
+	if tickT == maxT {
+		return defaultT
+	}
+
+	tick2T := StrToInt64(strT[10:], maxT)
+
+	if tick2T == maxT {
+		return defaultT
+	}
+
+	return time.Unix(tickT, tick2T)
+
+	// return defaultT
 }
 
 var ToTime = TKX.ToTime
