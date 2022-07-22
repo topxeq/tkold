@@ -2580,13 +2580,13 @@ func (pA *TK) CompareTimeString(str1A, str2A, formatA string) (int, error) {
 
 var CompareTimeString = TKX.CompareTimeString
 
-func (pA *TK) ToTime(timeA interface{}, defaultA ...interface{}) time.Time {
+func (pA *TK) ToTime(timeA interface{}, defaultA ...interface{}) interface{} {
 	timeT, ok := timeA.(time.Time)
 	if ok {
 		return timeT
 	}
 
-	var defaultT time.Time = time.Now()
+	var defaultT interface{} = ErrStrf("failed to convert to time")
 	ifLocalT := true
 
 	formatT := ""
@@ -2606,6 +2606,10 @@ func (pA *TK) ToTime(timeA interface{}, defaultA ...interface{}) time.Time {
 		if argT == "-global" {
 			ifLocalT = false
 			continue
+		}
+
+		if argT == "-defaultNow" {
+			defaultT = time.Now()
 		}
 
 		if StartsWith(argT, "-format=") {
