@@ -2594,7 +2594,7 @@ func (pA *TK) ToTime(timeA interface{}, defaultA ...interface{}) interface{} {
 		return timeT
 	}
 
-	var defaultT interface{} = ErrStrf("failed to convert to time")
+	var defaultT interface{} = Errf("failed to convert to time")
 	ifLocalT := true
 
 	formatT := ""
