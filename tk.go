@@ -2638,6 +2638,14 @@ func (pA *TK) ToTime(timeA interface{}, defaultA ...interface{}) interface{} {
 		return defaultT
 	}
 
+	if strT == "now" {
+		if ifLocalT {
+			return time.Now().Local()
+		} else {
+			return time.Now().UTC()
+		}
+	}
+
 	var t time.Time
 	var err error
 
