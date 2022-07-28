@@ -1666,6 +1666,21 @@ func (pA *TK) RegContainsX(strA, patternA string) bool {
 
 var RegContainsX = TKX.RegContainsX
 
+func (pA *TK) RegCount(strA, patternA string) int {
+	regexpT, errT := regexpx.Compile(patternA)
+
+	if errT != nil {
+		return 0
+	}
+
+	rs := regexpT.FindAllStringSubmatchIndex(strA, -1)
+
+	return len(rs)
+}
+
+var RegCount = TKX.RegCount
+var RegCountX = TKX.RegCount
+
 func (pA *TK) RegFindFirstTX(strA, patternA string, groupA int) *TXString {
 	regexpT, errT := regexp.Compile(patternA)
 
@@ -3332,7 +3347,7 @@ func (pA *TK) NewSSHClient(hostA string, portA interface{}, userA string, passA 
 	clientT, errT := goph.NewConn(&goph.Config{
 		User:     userA,
 		Addr:     hostA,
-		Port:     uint(StrToInt(portT)),
+		Port:     uint(ToInt(portT)),
 		Auth:     authT,
 		Timeout:  goph.DefaultTimeout,
 		Callback: ssh.InsecureIgnoreHostKey(),
