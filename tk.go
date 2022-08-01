@@ -1054,22 +1054,38 @@ func (pA *TK) SplitByLenRune(s string, chunkSize int) []string {
 
 var SplitByLenRune = TKX.SplitByLenRune
 
-func (pA *TK) JoinLines(strListA []string) string {
+func (pA *TK) JoinLines(strListA []string, sepA ...string) string {
 	if strListA == nil {
 		return GenerateErrorString("nil list")
 	}
 
-	return strings.Join(strListA, "\n")
+	var sepT string
+
+	if len(sepA) > 0 {
+		sepT = sepA[0]
+	} else {
+		sepT = "\n"
+	}
+
+	return strings.Join(strListA, sepT)
 }
 
 var JoinLines = TKX.JoinLines
 
-func (pA *TK) JoinLinesBySeparator(strListA []string, sepA string) string {
+func (pA *TK) JoinLinesBySeparator(strListA []string, sepA ...string) string {
 	if strListA == nil {
 		return GenerateErrorString("nil list")
 	}
 
-	return strings.Join(strListA, sepA)
+	var sepT string
+
+	if len(sepA) > 0 {
+		sepT = sepA[0]
+	} else {
+		sepT = "\n"
+	}
+
+	return strings.Join(strListA, sepT)
 }
 
 var JoinLinesBySeparator = TKX.JoinLinesBySeparator
