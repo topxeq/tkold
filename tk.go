@@ -112,6 +112,10 @@ type ExitCallback func()
 
 type TXDelegate func(actionA string, dataA interface{}, paramsA ...interface{}) interface{}
 
+type CompactDelegate func(inputA interface{}) interface{}
+
+type QuickDelegate func(strA string) string
+
 // 自定义集合类型
 
 type TXCollection struct {
