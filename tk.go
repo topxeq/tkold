@@ -108,6 +108,10 @@ var GetVersion = TKX.GetVersion
 
 type ExitCallback func()
 
+// 自定义操作代理类型
+
+type TXDelegate func(actionA string, dataA interface{}, paramsA ...interface{}) interface{}
+
 // 自定义集合类型
 
 type TXCollection struct {
@@ -7422,6 +7426,18 @@ var ToJSON = TKX.ToJSON
 type UnaStruct1 func() (io.ReadCloser, error)
 
 func (a UnaStruct1) MarshalJSON() ([]byte, error) {
+
+	return []byte{}, nil
+}
+
+type UnaStruct2 func(actionA string, dataA interface{}, paramsA ...interface{}) interface{}
+
+func (a UnaStruct2) MarshalJSON() ([]byte, error) {
+
+	return []byte{}, nil
+}
+
+func (a TXDelegate) MarshalJSON() ([]byte, error) {
 
 	return []byte{}, nil
 }
