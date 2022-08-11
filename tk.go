@@ -6083,6 +6083,7 @@ func (pA *TK) GetFileList(dirA string, argsA ...string) []map[string]string {
 	sortKeyT := GetSwitch(argsA, "-sortKey=", "Time")
 
 	withDirectoryT := IfSwitchExistsWhole(argsA, "-withDir")
+	dirOnlyT := IfSwitchExistsWhole(argsA, "-dirOnly")
 
 	patternT := GetSwitch(argsA, "-pattern=", "*")
 
@@ -6107,7 +6108,7 @@ func (pA *TK) GetFileList(dirA string, argsA ...string) []map[string]string {
 
 		if f.IsDir() {
 			if recursiveT {
-				if withDirectoryT {
+				if withDirectoryT || dirOnlyT {
 					matchedT, errTI := filepath.Match(patternT, filepath.Base(path))
 					if errTI == nil {
 						if matchedT {
@@ -6145,7 +6146,7 @@ func (pA *TK) GetFileList(dirA string, argsA ...string) []map[string]string {
 				return nil
 			} else {
 				if path != "." && path != pathT {
-					if withDirectoryT {
+					if withDirectoryT || dirOnlyT {
 						matchedT, errTI := filepath.Match(patternT, filepath.Base(path))
 						if errTI == nil {
 							if matchedT {
@@ -6184,6 +6185,10 @@ func (pA *TK) GetFileList(dirA string, argsA ...string) []map[string]string {
 					return nil
 				}
 			}
+		}
+
+		if dirOnlyT {
+			return nil
 		}
 
 		matchedT, errTI := filepath.Match(patternT, filepath.Base(path))
