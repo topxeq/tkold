@@ -22,7 +22,7 @@ require (
 	github.com/nwaples/rardecode v1.1.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
 	github.com/topxeq/gods v0.0.0-20220125023913-b5718bb0c704
-	github.com/topxeq/goph v0.0.0-20211220083015-7bb0167a87df
+	github.com/topxeq/goph v0.0.0-20220825022255-2ac3766511e0
 	github.com/topxeq/mahonia v0.0.0-20190828060648-12b0599ddd1a
 	github.com/topxeq/regexpx v0.0.0-20200814082553-4bffc7d07029
 	github.com/topxeq/socks v0.0.0-20200812112322-24acb126b5f3
