@@ -276,6 +276,7 @@ var TimeFormatMS = "2006-01-02 15:04:05.000"
 var TimeFormatMSCompact = "20060102150405.000"
 var TimeFormatCompact = "20060102150405"
 var TimeFormatCompact2 = "2006/01/02 15:04:05"
+var TimeFormatDateCompact = "20060102"
 var GlobalEnvSetG *TXCollection = nil
 
 var variableG = make(map[string]interface{})
@@ -2523,13 +2524,16 @@ func (pA *TK) GetTimeFromUnixTimeStampMid(timeStampStrA string) time.Time {
 var GetTimeFromUnixTimeStampMid = TKX.GetTimeFromUnixTimeStampMid
 
 func (pA *TK) GetTimeStamp(timeA time.Time) string {
-	return Int64ToStr(timeA.Unix())
+	return PadString(Int64ToStr(timeA.Unix()), 13)
 }
 
 var GetTimeStamp = TKX.GetTimeStamp
 
 func (pA *TK) GetTimeStampMid(timeA time.Time) string {
-	return Int64ToStr(timeA.UnixNano())[:13]
+	tmps := PadString(Int64ToStr(timeA.UnixNano()), 13)
+	tmps = tmps[:len(tmps)-9]
+	tmps = PadString(tmps, 13)
+	return tmps[:13]
 }
 
 var GetTimeStampMid = TKX.GetTimeStampMid
@@ -2657,6 +2661,17 @@ func (pA *TK) ToTime(timeA interface{}, defaultA ...interface{}) interface{} {
 
 		if argT == "-defaultNow" {
 			defaultT = time.Now()
+			continue
+		}
+
+		if argT == "-defaultErr" {
+			defaultT = fmt.Errorf("failed to convert to time")
+			continue
+		}
+
+		if argT == "-defaultErrStr" {
+			defaultT = ErrStrf("failed to convert to time")
+			continue
 		}
 
 		if StartsWith(argT, "-format=") {
@@ -2667,6 +2682,13 @@ func (pA *TK) ToTime(timeA interface{}, defaultA ...interface{}) interface{} {
 				formatT = tmpStrT
 			}
 
+			continue
+		}
+
+		t := TKX.ToTime(argT)
+
+		if !IsErrX(t) {
+			defaultT = t
 			continue
 		}
 
@@ -2731,28 +2753,58 @@ func (pA *TK) ToTime(timeA interface{}, defaultA ...interface{}) interface{} {
 		return t
 	}
 
-	lenT := len(strT)
-
-	if lenT == 10 {
-		strT = strT + "000"
+	if ifLocalT {
+		t, err = time.ParseInLocation(TimeFormatDateCompact, strT, time.Local)
+	} else {
+		t, err = time.Parse(TimeFormatDateCompact, strT)
+	}
+	if err == nil {
+		return t
 	}
 
-	if len(strT) != 13 {
-		return defaultT
+	// lenT := len(strT)
+
+	// if lenT == 10 {
+	// 	strT = strT + "000"
+	// }
+
+	// if lenT == 17 {
+	// 	strT = strT[:13]
+	// }
+
+	// if len(strT) != 13 {
+	// 	return defaultT
+	// }
+
+	listT := strings.SplitN(strT, ",", 2)
+
+	str1T := listT[0]
+
+	str2T := ""
+
+	if len(listT) > 1 {
+		str2T = strings.TrimSpace(listT[1])
 	}
 
 	maxT := int64(MAX_INT)
 
-	tickT := StrToInt64(strT[:10], maxT)
+	tickT := StrToInt64(str1T, maxT)
 
 	if tickT == maxT {
 		return defaultT
 	}
 
-	tick2T := StrToInt64(strT[10:], maxT)
+	var tick2T int64
 
-	if tick2T == maxT {
-		return defaultT
+	if str2T == "" {
+		tick2T = 0
+	} else {
+		str2T = PadString(str2T, 9, "-right")
+		tick2T = StrToInt64(str2T, maxT)
+
+		if tick2T == maxT {
+			return defaultT
+		}
 	}
 
 	return time.Unix(tickT, tick2T)
