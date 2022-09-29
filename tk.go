@@ -1170,6 +1170,148 @@ func (pA *TK) EnsureValidFileNameX(fileNameA string) string {
 
 var EnsureValidFileNameX = TKX.EnsureValidFileNameX
 
+// SyncMap
+type SyncMap struct {
+	Value map[string]interface{}
+	Lock  *sync.RWMutex
+}
+
+func (pA *TK) NewSyncMap() *SyncMap {
+	mapT := &SyncMap{}
+
+	mapT.Value = map[string]interface{}{}
+	mapT.Lock = new(sync.RWMutex)
+
+	return mapT
+}
+
+var NewSyncMap = TKX.NewSyncMap
+
+func (p *SyncMap) Reset() {
+	p.Value = map[string]interface{}{}
+	p.Lock = new(sync.RWMutex)
+}
+
+func (p *SyncMap) Clear() {
+	p.Lock.Lock()
+	p.Value = map[string]interface{}{}
+	p.Lock.Unlock()
+}
+
+func (p *SyncMap) TryClear() bool {
+	bT := p.Lock.TryLock()
+	if !bT {
+		return false
+	}
+
+	p.Value = map[string]interface{}{}
+	p.Lock.Unlock()
+
+	return true
+}
+
+func (p *SyncMap) Set(keyA string, vA interface{}) {
+	p.Lock.Lock()
+	p.Value[keyA] = vA
+	p.Lock.Unlock()
+}
+
+func (p *SyncMap) TrySet(keyA string, vA interface{}) bool {
+	bT := p.Lock.TryLock()
+	if !bT {
+		return false
+	}
+
+	p.Value[keyA] = vA
+	p.Lock.Unlock()
+
+	return true
+}
+
+func (p *SyncMap) Delete(keyA string) {
+	p.Lock.Lock()
+	delete(p.Value, keyA)
+	p.Lock.Unlock()
+}
+
+func (p *SyncMap) TryDelete(keyA string) bool {
+	bT := p.Lock.TryLock()
+	if !bT {
+		return false
+	}
+
+	delete(p.Value, keyA)
+	p.Lock.Unlock()
+
+	return true
+}
+
+func (p *SyncMap) Get(keyA string, defaultA ...interface{}) interface{} {
+	p.Lock.RLock()
+
+	vA, ok := p.Value[keyA]
+
+	if !ok {
+		if len(defaultA) > 0 {
+			vA = defaultA[0]
+		} else {
+			vA = nil
+		}
+	}
+
+	p.Lock.RUnlock()
+
+	return vA
+}
+
+func (p *SyncMap) TryGet(keyA string, defaultA ...interface{}) interface{} {
+	bT := p.Lock.TryRLock()
+	if !bT {
+		if len(defaultA) > 0 {
+			return defaultA[0]
+		} else {
+			return nil
+		}
+	}
+
+	vA, ok := p.Value[keyA]
+
+	if !ok {
+		if len(defaultA) > 0 {
+			vA = defaultA[0]
+		} else {
+			vA = nil
+		}
+	}
+
+	p.Lock.RUnlock()
+
+	return vA
+}
+
+func (p *SyncMap) Size() int {
+	p.Lock.RLock()
+
+	vA := len(p.Value)
+
+	p.Lock.RUnlock()
+
+	return vA
+}
+
+func (p *SyncMap) TrySize() int {
+	bT := p.Lock.TryRLock()
+	if !bT {
+		return -1
+	}
+
+	vA := len(p.Value)
+
+	p.Lock.RUnlock()
+
+	return vA
+}
+
 // StringRing
 type StringRing struct {
 	Buf    []string
