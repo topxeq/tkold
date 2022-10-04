@@ -13635,6 +13635,33 @@ func (pA *TK) SetVar(nameA string, valueA interface{}) {
 
 var SetVar = TKX.SetVar
 
+func (pA *TK) DeleteVar(nameA string) {
+	varMutexG.Lock()
+	delete(variableG, nameA)
+	varMutexG.Unlock()
+}
+
+var DeleteVar = TKX.DeleteVar
+
+func (pA *TK) ClearVar() {
+	varMutexG.Lock()
+	variableG = make(map[string]interface{})
+	varMutexG.Unlock()
+}
+
+var ClearVar = TKX.ClearVar
+
+func (pA *TK) SizeVar() int {
+	var rs int
+	varMutexG.Lock()
+	rs = len(variableG)
+	varMutexG.Unlock()
+
+	return rs
+}
+
+var SizeVar = TKX.SizeVar
+
 func (pA *TK) GetFileVar(fileNameA string) interface{} {
 	var rs interface{}
 	fileVarMutexG.Lock()
