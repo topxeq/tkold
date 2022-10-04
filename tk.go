@@ -1172,84 +1172,59 @@ var EnsureValidFileNameX = TKX.EnsureValidFileNameX
 
 // SyncMap
 type SyncMap struct {
-	Value map[string]interface{}
-	Lock  *sync.RWMutex
+	ValueM map[string]interface{}
+	LockM  *sync.RWMutex
 }
 
 func (pA *TK) NewSyncMap() *SyncMap {
 	mapT := &SyncMap{}
 
-	mapT.Value = map[string]interface{}{}
-	mapT.Lock = new(sync.RWMutex)
+	mapT.ValueM = map[string]interface{}{}
+	mapT.LockM = new(sync.RWMutex)
 
 	return mapT
 }
 
 var NewSyncMap = TKX.NewSyncMap
 
-func (p *SyncMap) Reset() {
-	p.Value = map[string]interface{}{}
-	p.Lock = new(sync.RWMutex)
+func (p *SyncMap) Lock() {
+	p.LockM.Lock()
 }
 
-func (p *SyncMap) Clear() {
-	p.Lock.Lock()
-	p.Value = map[string]interface{}{}
-	p.Lock.Unlock()
+func (p *SyncMap) TryLock() {
+	p.LockM.TryLock()
 }
 
-func (p *SyncMap) TryClear() bool {
-	bT := p.Lock.TryLock()
-	if !bT {
-		return false
-	}
-
-	p.Value = map[string]interface{}{}
-	p.Lock.Unlock()
-
-	return true
+func (p *SyncMap) Unlock() {
+	p.LockM.Unlock()
 }
 
-func (p *SyncMap) Set(keyA string, vA interface{}) {
-	p.Lock.Lock()
-	p.Value[keyA] = vA
-	p.Lock.Unlock()
+func (p *SyncMap) RLock() {
+	p.LockM.RLock()
 }
 
-func (p *SyncMap) TrySet(keyA string, vA interface{}) bool {
-	bT := p.Lock.TryLock()
-	if !bT {
-		return false
-	}
-
-	p.Value[keyA] = vA
-	p.Lock.Unlock()
-
-	return true
+func (p *SyncMap) TryRLock() {
+	p.LockM.TryRLock()
 }
 
-func (p *SyncMap) Delete(keyA string) {
-	p.Lock.Lock()
-	delete(p.Value, keyA)
-	p.Lock.Unlock()
+func (p *SyncMap) RUnlock() {
+	p.LockM.RUnlock()
 }
 
-func (p *SyncMap) TryDelete(keyA string) bool {
-	bT := p.Lock.TryLock()
-	if !bT {
-		return false
-	}
-
-	delete(p.Value, keyA)
-	p.Lock.Unlock()
-
-	return true
+func (p *SyncMap) QuickClear() {
+	p.ValueM = map[string]interface{}{}
 }
 
-func (p *SyncMap) Get(keyA string, defaultA ...interface{}) interface{} {
-	p.Lock.RLock()
+func (p *SyncMap) QuickSet(keyA string, vA interface{}) {
+	p.ValueM[keyA] = vA
+}
 
-	vA, ok := p.Value[keyA]
+func (p *SyncMap) QuickDelete(keyA string) {
+	delete(p.ValueM, keyA)
+}
+
+func (p *SyncMap) QuickGet(keyA string, defaultA ...interface{}) interface{} {
+	vA, ok := p.ValueM[keyA]
 
 	if !ok {
 		if len(defaultA) > 0 {
@@ -1259,13 +1234,94 @@ func (p *SyncMap) Get(keyA string, defaultA ...interface{}) interface{} {
 		}
 	}
 
-	p.Lock.RUnlock()
+	return vA
+}
+
+func (p *SyncMap) QuickSize() int {
+	vA := len(p.ValueM)
+
+	return vA
+}
+
+func (p *SyncMap) Reset() {
+	p.ValueM = map[string]interface{}{}
+	p.LockM = new(sync.RWMutex)
+}
+
+func (p *SyncMap) Clear() {
+	p.LockM.Lock()
+	p.ValueM = map[string]interface{}{}
+	p.LockM.Unlock()
+}
+
+func (p *SyncMap) TryClear() bool {
+	bT := p.LockM.TryLock()
+	if !bT {
+		return false
+	}
+
+	p.ValueM = map[string]interface{}{}
+	p.LockM.Unlock()
+
+	return true
+}
+
+func (p *SyncMap) Set(keyA string, vA interface{}) {
+	p.LockM.Lock()
+	p.ValueM[keyA] = vA
+	p.LockM.Unlock()
+}
+
+func (p *SyncMap) TrySet(keyA string, vA interface{}) bool {
+	bT := p.LockM.TryLock()
+	if !bT {
+		return false
+	}
+
+	p.ValueM[keyA] = vA
+	p.LockM.Unlock()
+
+	return true
+}
+
+func (p *SyncMap) Delete(keyA string) {
+	p.LockM.Lock()
+	delete(p.ValueM, keyA)
+	p.LockM.Unlock()
+}
+
+func (p *SyncMap) TryDelete(keyA string) bool {
+	bT := p.LockM.TryLock()
+	if !bT {
+		return false
+	}
+
+	delete(p.ValueM, keyA)
+	p.LockM.Unlock()
+
+	return true
+}
+
+func (p *SyncMap) Get(keyA string, defaultA ...interface{}) interface{} {
+	p.LockM.RLock()
+
+	vA, ok := p.ValueM[keyA]
+
+	if !ok {
+		if len(defaultA) > 0 {
+			vA = defaultA[0]
+		} else {
+			vA = nil
+		}
+	}
+
+	p.LockM.RUnlock()
 
 	return vA
 }
 
 func (p *SyncMap) TryGet(keyA string, defaultA ...interface{}) interface{} {
-	bT := p.Lock.TryRLock()
+	bT := p.LockM.TryRLock()
 	if !bT {
 		if len(defaultA) > 0 {
 			return defaultA[0]
@@ -1274,7 +1330,7 @@ func (p *SyncMap) TryGet(keyA string, defaultA ...interface{}) interface{} {
 		}
 	}
 
-	vA, ok := p.Value[keyA]
+	vA, ok := p.ValueM[keyA]
 
 	if !ok {
 		if len(defaultA) > 0 {
@@ -1284,30 +1340,30 @@ func (p *SyncMap) TryGet(keyA string, defaultA ...interface{}) interface{} {
 		}
 	}
 
-	p.Lock.RUnlock()
+	p.LockM.RUnlock()
 
 	return vA
 }
 
 func (p *SyncMap) Size() int {
-	p.Lock.RLock()
+	p.LockM.RLock()
 
-	vA := len(p.Value)
+	vA := len(p.ValueM)
 
-	p.Lock.RUnlock()
+	p.LockM.RUnlock()
 
 	return vA
 }
 
 func (p *SyncMap) TrySize() int {
-	bT := p.Lock.TryRLock()
+	bT := p.LockM.TryRLock()
 	if !bT {
 		return -1
 	}
 
-	vA := len(p.Value)
+	vA := len(p.ValueM)
 
-	p.Lock.RUnlock()
+	p.LockM.RUnlock()
 
 	return vA
 }
@@ -3423,7 +3479,6 @@ func (pA *TK) CreateTempFile(dirA string, patternA string, optsA ...string) (str
 
 var CreateTempFile = TKX.CreateTempFile
 
-//
 func (pA *TK) CopyFile(src, dst string, optsA ...string) error {
 
 	srcFileStat, err := os.Stat(src)
@@ -11492,8 +11547,8 @@ var ConvertToGB18030 = TKX.ConvertToGB18030
 // 		return nil
 // 	}
 
-// 	return dst[:nDst]
-// }
+//		return dst[:nDst]
+//	}
 func (pA *TK) ConvertToGB18030Bytes(srcA string) []byte {
 
 	encoderT := mahonia.NewEncoder("GB18030")
@@ -11510,29 +11565,30 @@ var ConvertToGB18030Bytes = TKX.ConvertToGB18030Bytes
 // func ConvertToUTF8(srcA []byte, srcEncA string) string {
 // 	srcEncT := srcEncA
 
-// 	switch srcEncT {
-// 	case "", "GB18030", "gb18030", "GBK", "gbk", "GB2312", "gb2312":
-// 		dst := make([]byte, len(srcA)*2)
-// 		transformer := simplifiedchinese.GB18030.NewDecoder()
-// 		nDst, _, err := transformer.Transform(dst, srcA, true)
-// 		if err != nil {
-// 			return GenerateErrorStringF("encoding failed: %v", err.Error())
-// 		}
-// 		return string(dst[:nDst])
-// 	case "utf-8", "UTF-8":
-// 		return string(srcA)
-// 	case "windows-1252", "windows1252":
-// 		dst := make([]byte, len(srcA)*2)
-// 		transformer := charmap.Windows1252.NewDecoder()
-// 		nDst, _, err := transformer.Transform(dst, srcA, true)
-// 		if err != nil {
-// 			return GenerateErrorStringF("encoding failed: %v", srcEncA)
-// 		}
-// 		return string(dst[:nDst])
-// 	default:
-// 		return GenerateErrorStringF("unknown encoding: %v", srcEncA)
-// 	}
-// }
+//		switch srcEncT {
+//		case "", "GB18030", "gb18030", "GBK", "gbk", "GB2312", "gb2312":
+//			dst := make([]byte, len(srcA)*2)
+//			transformer := simplifiedchinese.GB18030.NewDecoder()
+//			nDst, _, err := transformer.Transform(dst, srcA, true)
+//			if err != nil {
+//				return GenerateErrorStringF("encoding failed: %v", err.Error())
+//			}
+//			return string(dst[:nDst])
+//		case "utf-8", "UTF-8":
+//			return string(srcA)
+//		case "windows-1252", "windows1252":
+//			dst := make([]byte, len(srcA)*2)
+//			transformer := charmap.Windows1252.NewDecoder()
+//			nDst, _, err := transformer.Transform(dst, srcA, true)
+//			if err != nil {
+//				return GenerateErrorStringF("encoding failed: %v", srcEncA)
+//			}
+//			return string(dst[:nDst])
+//		default:
+//			return GenerateErrorStringF("unknown encoding: %v", srcEncA)
+//		}
+//	}
+//
 // ConvertToUTF8 转换GB18030编码等字符串(字节形式)为UTF-8字符串
 func (pA *TK) ConvertToUTF8(srcA []byte, srcEncA string) string {
 	srcEncT := srcEncA
@@ -15252,7 +15308,7 @@ type xmlMapEntry struct {
 	CDataValue interface{} `xml:",cdata"`
 }
 
-//Initializes the builder. Required to do anything with this library
+// Initializes the builder. Required to do anything with this library
 func (pA *TK) NewXMLFromMSI(input map[string]interface{}) *StructMap {
 	return &StructMap{Map: input}
 }
@@ -15265,7 +15321,7 @@ func (pA *TK) NewXMLFromAny(input interface{}) *StructAny {
 
 var NewXMLFromAny = TKX.NewXMLFromAny
 
-//Add indentation to your xml
+// Add indentation to your xml
 func (smap *StructMap) WithIndent(prefix string, indent string) *StructMap {
 	smap.Indent = &Indentation{Prefix: prefix, Indent: indent}
 	return smap
@@ -15276,7 +15332,7 @@ func (p *StructAny) WithIndent(prefix string, indent string) *StructAny {
 	return p
 }
 
-//Add a root node to your xml
+// Add a root node to your xml
 func (smap *StructMap) WithRoot(name string, attributes map[string]string) *StructMap {
 	attr := []xml.Attr{}
 	for k, v := range attributes {
@@ -15295,7 +15351,7 @@ func (p *StructAny) WithRoot(name string, attributes map[string]string) *StructA
 	return p
 }
 
-//Add CDATA tags to all nodes
+// Add CDATA tags to all nodes
 func (smap *StructMap) AsCData() *StructMap {
 	smap.CData = true
 	return smap
@@ -15306,7 +15362,7 @@ func (p *StructAny) AsCData() *StructAny {
 	return p
 }
 
-//Prints your configuration in json format
+// Prints your configuration in json format
 func (smap *StructMap) Print() *StructMap {
 	var indent interface{} = smap.Indent
 	var root interface{}
@@ -15321,7 +15377,7 @@ func (smap *StructMap) Print() *StructMap {
 	return smap
 }
 
-//Builds XML as bytes
+// Builds XML as bytes
 func (smap *StructMap) Marshal() ([]byte, error) {
 	if smap.Indent == nil {
 		return xml.Marshal(smap)
@@ -15338,7 +15394,7 @@ func (p *StructAny) Marshal() ([]byte, error) {
 	}
 }
 
-//Builds XML as string
+// Builds XML as string
 func (smap *StructMap) MarshalToString() (string, error) {
 	xmlBytes, err := smap.Marshal()
 	return string(xmlBytes), err
