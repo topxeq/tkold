@@ -5808,6 +5808,87 @@ func (pA *TK) AbsInt(c int) int {
 
 var AbsInt = TKX.AbsInt
 
+func (pA *TK) Abs(c interface{}) interface{} {
+	switch nv := c.(type) {
+	case int:
+		if nv < 0 {
+			return -nv
+		} else {
+			return nv
+		}
+	case int8:
+		if nv < 0 {
+			return -nv
+		} else {
+			return nv
+		}
+	case int16:
+		if nv < 0 {
+			return -nv
+		} else {
+			return nv
+		}
+	case int32:
+		if nv < 0 {
+			return -nv
+		} else {
+			return nv
+		}
+	case int64:
+		if nv < 0 {
+			return -nv
+		} else {
+			return nv
+		}
+	case uint:
+		if nv < 0 {
+			return -nv
+		} else {
+			return nv
+		}
+	case uint8:
+		if nv < 0 {
+			return -nv
+		} else {
+			return nv
+		}
+	case uint16:
+		if nv < 0 {
+			return -nv
+		} else {
+			return nv
+		}
+	case uint32:
+		if nv < 0 {
+			return -nv
+		} else {
+			return nv
+		}
+	case uint64:
+		if nv < 0 {
+			return -nv
+		} else {
+			return nv
+		}
+	case float64:
+		if nv < 0.0 {
+			return -nv
+		} else {
+			return nv
+		}
+	case float32:
+		if nv < 0.0 {
+			return -nv
+		} else {
+			return nv
+		}
+	}
+
+	return fmt.Errorf("unknown type: %T", c)
+}
+
+var Abs = TKX.Abs
+
 // IntToKMGT convert a number to "3.21K", "1.2G", etc, formatA like "%.2f"
 // if sizeA < 1024, formatA is ignored
 func (pA *TK) IntToKMGT(sizeA int, formatA string) string {
@@ -12359,6 +12440,48 @@ func (pA *TK) WrapError(vA interface{}, errA error) interface{} {
 }
 
 var WrapError = TKX.WrapError
+
+func (pA *TK) DealRef(refA *interface{}, cmdA string, argsA ...interface{}) interface{} {
+	vT := *refA
+
+	if cmdA == "++" {
+		switch nv := vT.(type) {
+		case int:
+			rs := nv + 1
+			*refA = rs
+			return rs
+		case int64:
+			rs := nv + 1
+			*refA = rs
+			return rs
+		case byte:
+			rs := nv + 1
+			*refA = rs
+			return rs
+		}
+
+	} else if cmdA == "--" {
+		switch nv := vT.(type) {
+		case int:
+			rs := nv - 1
+			*refA = rs
+			return rs
+		case int64:
+			rs := nv - 1
+			*refA = rs
+			return rs
+		case byte:
+			rs := nv - 1
+			*refA = rs
+			return rs
+		}
+
+	}
+
+	return fmt.Errorf("unsupported type action: %T.%v", vT, cmdA)
+}
+
+var DealRef = TKX.DealRef
 
 func (pA *TK) ObjectsToS(aryA ...interface{}) []string {
 	if aryA == nil {
