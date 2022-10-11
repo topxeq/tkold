@@ -2729,7 +2729,7 @@ var GetTimeStamp = TKX.GetTimeStamp
 
 func (pA *TK) GetTimeStampMid(timeA time.Time) string {
 	tmps := PadString(Int64ToStr(timeA.UnixNano()), 13)
-	tmps = tmps[:len(tmps)-9]
+	tmps = tmps[:len(tmps)-6]
 	tmps = PadString(tmps, 13)
 	return tmps[:13]
 }
