@@ -110,7 +110,7 @@ type ExitCallback func()
 
 // 自定义操作代理类型
 
-type TXDelegate func(actionA string, dataA interface{}, paramsA ...interface{}) interface{}
+type TXDelegate func(actionA string, objA interface{}, dataA interface{}, paramsA ...interface{}) interface{}
 
 type CompactDelegate func(inputA interface{}) interface{}
 
@@ -2044,6 +2044,17 @@ func (pA *TK) RegFindAllGroupsX(strA, patternA string) [][]string {
 
 var RegFindAllGroupsX = TKX.RegFindAllGroupsX
 
+func (pA *TK) RegFindFirstGroupsX(strA, patternA string) []string {
+	regexpT, errT := regexpx.Compile(patternA)
+	if errT != nil {
+		return nil
+	}
+
+	return regexpT.FindStringSubmatch(strA)
+}
+
+var RegFindFirstGroupsX = TKX.RegFindFirstGroupsX
+
 // RegFindFirst returns error string if no match or no matching group
 func (pA *TK) RegFindFirst(strA, patternA string, groupA int) string {
 	regexpT, errT := regexp.Compile(patternA)
@@ -2138,6 +2149,20 @@ func (pA *TK) RegFindAllIndexX(strA, patternA string) [][]int {
 }
 
 var RegFindAllIndexX = TKX.RegFindAllIndexX
+
+func (pA *TK) RegFindFirstGroupsIndexX(strA, patternA string) []int {
+	regexpT, errT := regexpx.Compile(patternA)
+
+	if errT != nil {
+		return nil
+	}
+
+	rT := regexpT.FindStringSubmatchIndex(strA)
+
+	return rT
+}
+
+var RegFindFirstGroupsIndexX = TKX.RegFindFirstGroupsIndexX
 
 func (pA *TK) RegStartsWith(strA, patternA string) bool {
 	startT, _ := RegFindFirstIndex(strA, patternA)
@@ -2722,7 +2747,7 @@ func (pA *TK) GetTimeFromUnixTimeStampMid(timeStampStrA string) time.Time {
 var GetTimeFromUnixTimeStampMid = TKX.GetTimeFromUnixTimeStampMid
 
 func (pA *TK) GetTimeStamp(timeA time.Time) string {
-	return PadString(Int64ToStr(timeA.Unix()), 13)
+	return PadString(Int64ToStr(timeA.Unix()), 10)
 }
 
 var GetTimeStamp = TKX.GetTimeStamp
@@ -7773,7 +7798,7 @@ func (a UnaStruct1) MarshalJSON() ([]byte, error) {
 	return []byte{}, nil
 }
 
-type UnaStruct2 func(actionA string, dataA interface{}, paramsA ...interface{}) interface{}
+type UnaStruct2 func(actionA string, objA interface{}, dataA interface{}, paramsA ...interface{}) interface{}
 
 func (a UnaStruct2) MarshalJSON() ([]byte, error) {
 
