@@ -7757,6 +7757,11 @@ func (pA *TK) ToBase64(vA interface{}) string {
 		return base64.StdEncoding.EncodeToString([]byte(b2))
 	}
 
+	b3, ok := vA.(*bytes.Buffer)
+	if ok {
+		return base64.StdEncoding.EncodeToString(b3.Bytes())
+	}
+
 	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%v", vA)))
 }
 
