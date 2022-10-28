@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"image/color"
 	"io"
+	"io/fs"
 	"math"
 	"math/big"
 	"math/rand"
@@ -6155,6 +6156,24 @@ func (pA *TK) CreateFile(filePathT string, optsA ...string) error {
 }
 
 var CreateFile = TKX.CreateFile
+
+func (pA *TK) OpenFile(filePathT string, optsA ...string) interface{} {
+	flagStrT := GetSwitch(optsA, "-flag=")
+
+	flagT := ToInt(flagStrT, 0)
+
+	permT := ToInt(GetSwitch(optsA, "-flag="), 0)
+
+	fileT, errT := os.OpenFile(filePathT, flagT, fs.FileMode(permT))
+
+	if errT != nil {
+		return errT
+	}
+
+	return fileT
+}
+
+var OpenFile = TKX.OpenFile
 
 func (pA *TK) RenameFile(filePathT string, destFilePathT string, optsA ...string) error {
 	if !IfFileExists(filePathT) {
