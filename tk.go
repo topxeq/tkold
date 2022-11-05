@@ -12472,6 +12472,121 @@ func (pA *TK) RenderMarkdown(markdownA string) string {
 
 var RenderMarkdown = TKX.RenderMarkdown
 
+// reflect related
+
+func (pA *TK) ReflectCallMethod(vA interface{}, nameA string, argsA ...interface{}) (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("%v([%T/%v/%v->%v] %v)", r, vA, reflect.TypeOf(vA), reflect.TypeOf(vA).Kind(), nameA, vA)
+			return
+		}
+	}()
+
+	var rv1 reflect.Value
+
+	switch nv := vA.(type) {
+	case *interface{}:
+		// Pl("hereree1")
+		rv1 = reflect.ValueOf(GetRef(nv))
+	default:
+		rv1 = reflect.ValueOf(vA)
+
+	}
+
+	// Pl("rv1: %T %#v %v", rv1, rv1, rv1)
+
+	rv2 := rv1.MethodByName(nameA)
+
+	// Pl("rv2: %T %#v %v", rv2, rv2, rv2)
+
+	lenT := len(argsA)
+
+	sl := make([]reflect.Value, 0, lenT)
+
+	for i := 0; i < lenT; i++ {
+		sl = append(sl, reflect.ValueOf(argsA[i]))
+	}
+
+	rrvT := rv2.Call(sl)
+
+	rvr := make([]interface{}, 0)
+
+	for _, v9 := range rrvT {
+		rvr = append(rvr, v9.Interface())
+	}
+
+	rLenT := len(rvr)
+
+	if rLenT < 1 {
+		result = nil
+		return
+	} else if rLenT > 1 {
+		result = rvr
+		return
+	}
+
+	result = rvr[0]
+	return
+}
+
+var ReflectCallMethod = TKX.ReflectCallMethod
+
+func (pA *TK) ReflectCallMethodSlice(vA interface{}, nameA string, argsA ...interface{}) (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("%v([%T/%v/%v->%v] %v)", r, vA, reflect.TypeOf(vA), reflect.TypeOf(vA).Kind(), nameA, vA)
+			return
+		}
+	}()
+
+	rv1 := reflect.ValueOf(vA)
+
+	rv2 := rv1.MethodByName(nameA)
+
+	lenT := len(argsA)
+
+	sl := make([]reflect.Value, 0, lenT)
+
+	for i := 0; i < lenT-1; i++ {
+		sl = append(sl, reflect.ValueOf(argsA[i]))
+	}
+
+	if lenT > 0 {
+		tmpSl := make([]reflect.Value, 0, lenT)
+		for i := lenT - 1; i < lenT; i++ {
+			tmpSl = append(tmpSl, reflect.ValueOf(argsA[i]))
+		}
+		sl = append(sl, tmpSl...)
+	}
+
+	rrvT := rv2.CallSlice(sl)
+
+	rvr := make([]interface{}, 0)
+
+	for _, v9 := range rrvT {
+		rvr = append(rvr, v9.Interface())
+	}
+
+	rLenT := len(rvr)
+
+	if rLenT < 1 {
+		result = nil
+		return
+	} else if rLenT > 1 {
+		result = rvr
+		return
+	}
+
+	result = rvr[0]
+	return
+}
+
+var ReflectCallMethodSlice = TKX.ReflectCallMethodSlice
+
 // Misc Related
 
 func (pA *TK) Pass() {
@@ -13778,6 +13893,125 @@ func (pA *TK) GetPointer(p interface{}) interface{} {
 }
 
 var GetPointer = TKX.GetPointer
+
+func (pA *TK) GetRef(p interface{}) interface{} {
+	// Pl("def2: %T %v", p, p)
+
+	switch nnv := p.(type) {
+	case *bool:
+		return nnv
+	case *byte:
+		return nnv
+	case *rune:
+		return nnv
+	case *int:
+		return nnv
+	case *int64:
+		return nnv
+	case *float32:
+		return nnv
+	case *float64:
+		return nnv
+	case *string:
+		return nnv
+	case *[]byte:
+		return nnv
+	case *[]rune:
+		return nnv
+	case *[]int:
+		return nnv
+	case *[]int64:
+		return nnv
+	case *[]float32:
+		return nnv
+	case *[]float64:
+		return nnv
+	case *[]string:
+		return nnv
+	case *map[string]string:
+		return nnv
+	case *map[string]interface{}:
+		return nnv
+	case *bytes.Buffer:
+		return nnv
+	case *strings.Builder:
+		return nnv
+	case *interface{}:
+		// Pl("here3")
+		v2 := *nnv
+
+		switch nv := v2.(type) {
+		case bool:
+			pr := (*bool)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case byte:
+			pr := (*byte)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case rune:
+			pr := (*rune)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case int:
+			pr := (*int)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case int64:
+			pr := (*int64)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case float32:
+			pr := (*float32)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case float64:
+			pr := (*float64)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			// fmt.Printf("nv(%T)=%v, &nv=%v\n", nv, nv, &nv)
+			return pr
+		case string:
+			pr := (*string)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case []byte:
+			pr := (*[]byte)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case []rune:
+			pr := (*[]rune)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case []int:
+			pr := (*[]int)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case []int64:
+			pr := (*[]int64)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case []float32:
+			pr := (*[]float32)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case []float64:
+			pr := (*[]float64)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case []string:
+			pr := (*[]string)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case map[string]string:
+			pr := (*map[string]string)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case map[string]interface{}:
+			pr := (*map[string]interface{})(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case bytes.Buffer:
+			pr := (*bytes.Buffer)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+		case strings.Builder:
+			pr := (*strings.Builder)(unsafe.Pointer(*(*uintptr)(unsafe.Pointer(uintptr(unsafe.Pointer(nnv)) + 8))))
+			return pr
+
+		default:
+			fmt.Printf("nv(%T)=%v, &nv=%v\n", nv, nv, &nv)
+		}
+
+		return nnv
+	default:
+		return nnv
+
+	}
+}
+
+var GetRef = TKX.GetRef
 
 func (pA *TK) GetAddr(p interface{}) interface{} {
 	vp := reflect.Indirect(reflect.ValueOf(p))
