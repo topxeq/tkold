@@ -11412,6 +11412,149 @@ var JSONResponseToHTML = TKX.JSONResponseToHTML
 // max integer
 const MAX_INT = int(^uint(0) >> 1)
 
+func (pA *TK) GetNegative(nA interface{}) interface{} {
+	switch nv := nA.(type) {
+	case bool:
+		return !nv
+	case byte:
+		return -nv
+	case rune:
+		return -nv
+	case int:
+		return -nv
+	case int64:
+		return -nv
+	case float32:
+		return -nv
+	case float64:
+		return -nv
+	default:
+		return fmt.Errorf("unknown type: %T(%v)", nA, nA)
+	}
+}
+
+var GetNegative = TKX.GetNegative
+
+func (pA *TK) GetMultiplyResult(n1A interface{}, n2A interface{}) (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("failed: %v(%v, %v)", r, n1A, n2A)
+			return
+		}
+	}()
+
+	switch nv := n1A.(type) {
+	case byte:
+		return nv * n2A.(byte)
+	case rune:
+		return nv * n2A.(rune)
+	case int:
+		return nv * n2A.(int)
+	case int64:
+		return nv * n2A.(int64)
+	case float32:
+		return nv * n2A.(float32)
+	case float64:
+		return nv * n2A.(float64)
+	default:
+		return fmt.Errorf("unknown type: %T(%v)", n1A, n1A)
+	}
+}
+
+var GetMultiplyResult = TKX.GetMultiplyResult
+
+func (pA *TK) GetDivResult(n1A interface{}, n2A interface{}) (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("failed: %v(%v, %v)", r, n1A, n2A)
+			return
+		}
+	}()
+
+	switch nv := n1A.(type) {
+	case byte:
+		return nv / n2A.(byte)
+	case rune:
+		return nv / n2A.(rune)
+	case int:
+		return nv / n2A.(int)
+	case int64:
+		return nv / n2A.(int64)
+	case float32:
+		return nv / n2A.(float32)
+	case float64:
+		return nv / n2A.(float64)
+	default:
+		return fmt.Errorf("unknown type: %T(%v)", n1A, n1A)
+	}
+}
+
+var GetDivResult = TKX.GetDivResult
+
+func (pA *TK) GetMinusResult(n1A interface{}, n2A interface{}) (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("failed: %v(%v, %v)", r, n1A, n2A)
+			return
+		}
+	}()
+
+	switch nv := n1A.(type) {
+	case byte:
+		return nv - n2A.(byte)
+	case rune:
+		return nv - n2A.(rune)
+	case int:
+		return nv - n2A.(int)
+	case int64:
+		return nv - n2A.(int64)
+	case float32:
+		return nv - n2A.(float32)
+	case float64:
+		return nv - n2A.(float64)
+	default:
+		return fmt.Errorf("unknown type: %T(%v)", n1A, n1A)
+	}
+}
+
+var GetMinusResult = TKX.GetMinusResult
+
+func (pA *TK) GetAddResult(n1A interface{}, n2A interface{}) (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("failed: %v(%v, %v)", r, n1A, n2A)
+			return
+		}
+	}()
+
+	switch nv := n1A.(type) {
+	case byte:
+		return nv + n2A.(byte)
+	case rune:
+		return nv + n2A.(rune)
+	case int:
+		return nv + n2A.(int)
+	case int64:
+		return nv + n2A.(int64)
+	case float32:
+		return nv + n2A.(float32)
+	case float64:
+		return nv + n2A.(float64)
+	default:
+		return fmt.Errorf("unknown type: %T(%v)", n1A, n1A)
+	}
+}
+
+var GetAddResult = TKX.GetAddResult
+
 func (pA *TK) AdjustFloat(nA float64, digitA int) float64 {
 	return math.Round(nA*math.Pow10(digitA)) / math.Pow10(digitA)
 }
