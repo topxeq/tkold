@@ -3763,6 +3763,31 @@ func (pA *TK) Pl(formatA string, argsA ...interface{}) {
 
 var Pl = TKX.Pl
 
+func (pA *TK) Plo(vA interface{}) {
+	fmt.Printf("(%T)%v\n", vA, vA)
+}
+
+var Plo = TKX.Plo
+
+func (pA *TK) Plos(vA ...interface{}) {
+	for i, v := range vA {
+		if i > 0 {
+			fmt.Print(" ")
+		}
+		fmt.Printf("(%T)%v", v, v)
+	}
+}
+
+var Plos = TKX.Plos
+
+func (pA *TK) Plosr(vA ...interface{}) {
+	for i, v := range vA {
+		fmt.Printf("[%v] (%T)%v\n", i, v, v)
+	}
+}
+
+var Plosr = TKX.Plosr
+
 // PlNow 类似Pl，但前面会加有当前时间标记
 func (pA *TK) PlNow(formatA string, argsA ...interface{}) {
 	fmt.Printf(fmt.Sprintf("[%v] ", time.Now().Format(TimeFormatCompact2))+formatA+"\n", argsA...)
@@ -7785,6 +7810,18 @@ func (pA *TK) DecodeFromBase64(strA string) ([]byte, error) {
 
 var DecodeFromBase64 = TKX.DecodeFromBase64
 
+func (pA *TK) FromBase64(strA string) interface{} {
+	bufT, errT := base64.StdEncoding.DecodeString(strA)
+
+	if errT != nil {
+		return errT
+	}
+
+	return bufT
+}
+
+var FromBase64 = TKX.FromBase64
+
 // EncodeToXMLString 转换字符串XML格式编码的字符串，例如：字符串“<as>\"!sdsdsgfde345344对方对方对法国</as>” 会编码为 “&lt;as&gt;&#34;!sdsdsgfde345344对方对方对法国&lt;/as&gt;”
 func (pA *TK) EncodeToXMLString(strA string) string {
 	var bufT strings.Builder
@@ -10235,15 +10272,33 @@ func (pA *TK) DownloadWebPageX(urlA string, optsA ...interface{}) string {
 	postBodyT := GetSwitchI(optsA, "-postBody=", "")
 
 	if (postDataT != nil && len(postDataT) > 0) || postBodyT != "" || postBytesT != nil {
-		reqTypeT = "POST"
+		if reqTypeT != "PUT" {
+			reqTypeT = "POST"
+		}
+
 	}
 
-	if reqTypeT == "POST" {
+	postFileT := GetSwitchI(optsA, "-postFile=", "")
+
+	if reqTypeT == "POST" || reqTypeT == "PUT" {
 		if postBytesT != nil {
 			req, errT = http.NewRequest(reqTypeT, urlT, bytes.NewReader(postBytesT))
 
 		} else if postBodyT != "" {
 			req, errT = http.NewRequest(reqTypeT, urlT, strings.NewReader(postBodyT))
+
+		} else if postFileT != "" {
+			// file1, err := os.Open(postFileT)
+			// if err != nil {
+			// 	return GenerateErrorStringF("failed to load file content: %v", err)
+			// }
+
+			// defer file1.Close()
+
+			bufT := LoadBytes(postFileT)
+
+			// req, errT = http.NewRequest(reqTypeT, urlT, bufio.NewReader(file1))
+			req, errT = http.NewRequest(reqTypeT, urlT, bytes.NewReader(bufT))
 
 		} else {
 			req, errT = http.NewRequest(reqTypeT, urlT, bytes.NewBufferString(postDataT.Encode()))
