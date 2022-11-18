@@ -6133,6 +6133,15 @@ func (pA *TK) RemoveLastSubString(strA string, subStrA string) string {
 
 var RemoveLastSubString = TKX.RemoveLastSubString
 
+func (pA *TK) RemoveFirstSubString(strA string, subStrA string) string {
+	if StartsWith(strA, subStrA) {
+		return strA[len(subStrA):]
+	}
+	return strA
+}
+
+var RemoveFirstSubString = TKX.RemoveFirstSubString
+
 func (pA *TK) AddLastSubString(strA string, subStrA string) string {
 	if !EndsWith(strA, subStrA) {
 		return strA + subStrA
@@ -6189,7 +6198,21 @@ func (pA *TK) OpenFile(filePathT string, optsA ...string) interface{} {
 
 	flagT := ToInt(flagStrT, 0)
 
-	permT := ToInt(GetSwitch(optsA, "-flag="), 0)
+	if IfSwitchExistsWhole(optsA, "-readOnly") {
+		flagT = flagT | os.O_RDONLY
+	} else {
+		flagT = flagT | os.O_RDWR
+	}
+
+	if IfSwitchExistsWhole(optsA, "-create") {
+		flagT = flagT | os.O_CREATE
+	}
+
+	if IfSwitchExistsWhole(optsA, "-append") {
+		flagT = flagT | os.O_APPEND
+	}
+
+	permT := OctetToInt(GetSwitch(optsA, "-perm=", "0777"), 0777)
 
 	fileT, errT := os.OpenFile(filePathT, flagT, fs.FileMode(permT))
 
@@ -8762,6 +8785,24 @@ func (pA *TK) HexToInt(strA string, optsA ...string) int {
 }
 
 var HexToInt = TKX.HexToInt
+
+func (pA *TK) OctetToInt(strA string, defaultA ...int) int {
+	defaultT := -1
+
+	if len(defaultA) > 0 {
+		defaultT = defaultA[0]
+	}
+
+	vT, errT := strconv.ParseInt(strA, 8, 64)
+
+	if errT != nil {
+		return defaultT
+	}
+
+	return int(vT)
+}
+
+var OctetToInt = TKX.OctetToInt
 
 // HexToUInt return 0 if failed
 func (pA *TK) HexToUInt(strA string, optsA ...string) uint64 {
