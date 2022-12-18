@@ -3880,6 +3880,13 @@ func (pA *TK) PlErr(errA error) {
 
 var PlErr = TKX.PlErr
 
+func (pA *TK) PlErrX(errA interface{}) {
+
+	Pl("Error: %v", GetErrStrX(errA))
+}
+
+var PlErrX = TKX.PlErrX
+
 func (pA *TK) PlErrString(strA string) {
 	if !IsErrorString(strA) {
 		return
@@ -14611,6 +14618,22 @@ func (pA *TK) CheckError(errA interface{}, funcsA ...(func())) {
 }
 
 var CheckError = TKX.CheckError
+
+func (pA *TK) CheckErrX(errA interface{}, funcsA ...(func())) {
+
+	if IsErrX(errA) {
+		Pl("Error: %v", GetErrStrX(errA))
+
+		for _, v := range funcsA {
+			v()
+		}
+
+		os.Exit(1)
+	}
+
+}
+
+var CheckErrX = TKX.CheckErrX
 
 func (pA *TK) CheckErrorString(strA string, funcsA ...(func())) {
 	if IsErrorString(strA) {
