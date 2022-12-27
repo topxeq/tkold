@@ -3102,6 +3102,88 @@ var IsYesterday = TKX.IsYesterday
 
 // 切片、数组相关 slice related and array related
 
+func (pA *TK) ArrayContains(aryA interface{}, vA interface{}) bool {
+	if aryA == nil {
+		return false
+	}
+
+	ary1, ok := aryA.([]string)
+
+	if ok {
+		for _, v := range ary1 {
+			if v == vA {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	ary2, ok := aryA.([]int)
+
+	if ok {
+		for _, v := range ary2 {
+			if v == vA {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	ary3, ok := aryA.([]byte)
+
+	if ok {
+		for _, v := range ary3 {
+			if v == vA {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	ary4, ok := aryA.([]float64)
+
+	if ok {
+		for _, v := range ary4 {
+			if v == vA {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	ary5, ok := aryA.([]rune)
+
+	if ok {
+		for _, v := range ary5 {
+			if v == vA {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	aryz, ok := aryA.([]interface{})
+
+	if ok {
+		for _, v := range aryz {
+			if v == vA {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	return false
+}
+
+var ArrayContains = TKX.ArrayContains
+
 func (pA *TK) SafelyGetStringInArray(aryA interface{}, idxA int, optionsA ...string) string {
 	defaultT := GetSwitch(optionsA, "-default=", "")
 
