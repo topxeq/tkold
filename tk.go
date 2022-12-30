@@ -11921,6 +11921,8 @@ func (pA *TK) GetEQResult(n1A interface{}, n2A interface{}) (result interface{})
 	}()
 
 	switch nv := n1A.(type) {
+	case bool:
+		return nv == n2A.(bool)
 	case byte:
 		return nv == n2A.(byte)
 	case rune:
@@ -11935,10 +11937,10 @@ func (pA *TK) GetEQResult(n1A interface{}, n2A interface{}) (result interface{})
 		return nv == n2A.(float64)
 	case string:
 		return nv == n2A.(string)
-	case interface{}:
-		return nv == n2A.(string)
 	case time.Time:
 		return !nv.Before(n2A.(time.Time)) && !nv.After(n2A.(time.Time))
+	case interface{}:
+		return nv == n2A.(interface{})
 	default:
 		return fmt.Errorf("unknown type(==): %T(%v)", n1A, n1A)
 	}
@@ -11957,6 +11959,8 @@ func (pA *TK) GetNEQResult(n1A interface{}, n2A interface{}) (result interface{}
 	}()
 
 	switch nv := n1A.(type) {
+	case bool:
+		return nv != n2A.(bool)
 	case byte:
 		return nv != n2A.(byte)
 	case rune:
@@ -11971,10 +11975,10 @@ func (pA *TK) GetNEQResult(n1A interface{}, n2A interface{}) (result interface{}
 		return nv != n2A.(float64)
 	case string:
 		return nv != n2A.(string)
-	case interface{}:
-		return nv != n2A.(string)
 	case time.Time:
 		return !nv.Before(n2A.(time.Time)) || !nv.After(n2A.(time.Time))
+	case interface{}:
+		return nv != n2A.(interface{})
 	default:
 		return fmt.Errorf("unknown type(!=): %T(%v)", n1A, n1A)
 	}
