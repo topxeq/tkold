@@ -3533,12 +3533,12 @@ func (pA *TK) EnsureBasePath(nameA string) (string, error) {
 			basePathT = "/" + nameA
 		}
 
-		errT := EnsureMakeDirsE(basePathT)
+	}
 
-		if (errT != nil) || (!IfFileExists(basePathT)) {
-			basePathT = GetApplicationPath()
-		}
+	errT := EnsureMakeDirsE(basePathT)
 
+	if (errT != nil) || (!IfFileExists(basePathT)) {
+		basePathT = GetApplicationPath()
 	}
 
 	// filePathT := filepath.Join(basePathT, "basePathT.txt")
