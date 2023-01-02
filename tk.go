@@ -1369,6 +1369,57 @@ func (p *SyncMap) TrySize() int {
 	return vA
 }
 
+// Seq
+type Seq struct {
+	ValueM int
+	MutexM sync.Mutex
+}
+
+func (pA *TK) NewSeq() *Seq {
+	seqT := &Seq{}
+
+	return seqT
+}
+
+var NewSeq = TKX.NewSeq
+
+func (p *Seq) Reset(valueA ...int) {
+	var valueT int = 0
+
+	if len(valueA) > 0 {
+		valueT = valueA[0]
+	}
+
+	p.MutexM.Lock()
+	p.ValueM = valueT
+	p.MutexM.Unlock()
+}
+
+func (p *Seq) Get() int {
+	var result int
+
+	p.MutexM.Lock()
+	p.ValueM++
+	result = p.ValueM
+	p.MutexM.Unlock()
+
+	return result
+}
+
+var AutoSeq = &Seq{}
+
+func (pA *TK) GetSeq() int {
+	return AutoSeq.Get()
+}
+
+var GetSeq = TKX.GetSeq
+
+func (pA *TK) ResetSeq(valueA ...int) {
+	AutoSeq.Reset(valueA...)
+}
+
+var ResetSeq = TKX.ResetSeq
+
 // StringRing
 type StringRing struct {
 	Buf    []string
