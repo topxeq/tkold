@@ -117,6 +117,8 @@ type CompactDelegate func(inputA interface{}) interface{}
 
 type QuickDelegate func(strA string) string
 
+type QuickVarDelegate func(argsA ...interface{}) interface{}
+
 // 自定义集合类型
 
 type TXCollection struct {
@@ -8033,7 +8035,7 @@ func (a UnaStruct2) MarshalJSON() ([]byte, error) {
 
 func (a TXDelegate) MarshalJSON() ([]byte, error) {
 
-	return []byte{}, nil
+	return []byte("\"N/A(TXDelegate)\""), nil
 }
 
 // func (a func() (io.ReadCloser, error)) MarshalJSON() ([]byte, error) {
