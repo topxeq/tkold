@@ -12039,6 +12039,46 @@ func (pA *TK) GetNEQResult(n1A interface{}, n2A interface{}) (result interface{}
 
 var GetNEQResult = TKX.GetNEQResult
 
+func (pA *TK) GetANDResult(n1A interface{}, n2A interface{}) (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("failed: %v(%v, %v)", r, n1A, n2A)
+			return
+		}
+	}()
+
+	switch nv := n1A.(type) {
+	case bool:
+		return nv && n2A.(bool)
+	default:
+		return fmt.Errorf("unknown type(!=): %T(%v)", n1A, n1A)
+	}
+}
+
+var GetANDResult = TKX.GetANDResult
+
+func (pA *TK) GetORResult(n1A interface{}, n2A interface{}) (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("failed: %v(%v, %v)", r, n1A, n2A)
+			return
+		}
+	}()
+
+	switch nv := n1A.(type) {
+	case bool:
+		return nv || n2A.(bool)
+	default:
+		return fmt.Errorf("unknown type(!=): %T(%v)", n1A, n1A)
+	}
+}
+
+var GetORResult = TKX.GetORResult
+
 func (pA *TK) AdjustFloat(nA float64, digitA int) float64 {
 	return math.Round(nA*math.Pow10(digitA)) / math.Pow10(digitA)
 }
