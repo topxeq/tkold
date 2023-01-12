@@ -1134,6 +1134,36 @@ func (pA *TK) RemoveBOM(strA string) string {
 
 var RemoveBOM = TKX.RemoveBOM
 
+// EnsureValidFileName 确保文件名合理，不保证长度
+func (pA *TK) EnsureValidFileName(fileNameA string) string {
+	s1 := []rune(fileNameA)
+
+	o1 := []rune{}
+
+	for _, v := range s1 {
+		switch v {
+		case '%':
+			o1 = append(o1, '%')
+			o1 = append(o1, '%')
+		case ' ', '/', '?', '\\', '_', '*', '"', '<', '>', '\'', '|', ':':
+			o1 = append(o1, []rune("%"+hex.EncodeToString([]byte(string(v))))...)
+		default:
+			o1 = append(o1, v)
+		}
+
+	}
+
+	oo := string(o1)
+
+	if strings.HasPrefix(oo, ".") {
+		oo = "%2E" + oo[1:]
+	}
+
+	return oo
+}
+
+var EnsureValidFileName = TKX.EnsureValidFileName
+
 // EnsureValidFileNameX 确保文件名合理并且长度合适
 func (pA *TK) EnsureValidFileNameX(fileNameA string) string {
 	rs := EncodeStringSimple(fileNameA)
@@ -10918,6 +10948,92 @@ func (pA *TK) DownloadFile(urlA, dirA, fileNameA string, argsA ...string) string
 
 var DownloadFile = TKX.DownloadFile
 
+func (pA *TK) DownloadFileWithProgress(urlA, dirA, fileNameA string, funcA func(interface{}) interface{}, argsA ...string) string {
+
+	ifRenameT := IfSwitchExistsWhole(argsA, "-rename")
+
+	var urlT string
+	var fileNameT string = fileNameA
+
+	if (!StartsWithIgnoreCase(urlA, "http://")) && (!StartsWithIgnoreCase(urlA, "https://")) {
+		urlT = "http://" + urlA
+	} else {
+		urlT = urlA
+	}
+
+	respT, errT := http.Get(urlT)
+	if errT != nil {
+		return GenerateErrorStringF("failed to get URL: %v", errT.Error())
+	}
+
+	if respT.StatusCode != 200 {
+		return GenerateErrorStringF("failed to get URL: status code = %v", respT.StatusCode)
+	}
+
+	defer respT.Body.Close()
+
+	if fileNameT == "" {
+		fileNameT = GetLastComponentOfUrl(urlT)
+	}
+
+	if dirA != "" {
+		fileNameT = filepath.Join(dirA, fileNameT)
+	}
+
+	if ifRenameT {
+		fileNameT = GetAvailableFileName(fileNameT)
+	}
+
+	fileT, errT := os.Create(fileNameT)
+	if errT != nil {
+		return GenerateErrorStringF("failed to create file: %v", errT.Error())
+	}
+	defer fileT.Close()
+
+	// if respT.ContentLength == -1 {
+	// 	tmpBuf, _ := io.ReadAll(respT.Body)
+	// 	return GenerateErrorStringF("failed to get http response content length: %v\n%#v", string(tmpBuf), respT)
+	// }
+
+	countingWriterT := NewCountingWriter(nil, funcA)
+
+	multiWriterT := io.MultiWriter(fileT, countingWriterT)
+
+	bufT := make([]byte, 1000000)
+
+	// var writeCountT int = 0
+
+	for {
+		n, errT := respT.Body.Read(bufT)
+
+		if n == 0 && errT.Error() == "EOF" {
+			break
+		}
+
+		if (errT != nil) && (errT.Error() != "EOF") {
+			return GenerateErrorStringF("failed to download: %v", errT.Error())
+		}
+
+		_, errT = multiWriterT.Write(bufT[:n])
+		if errT != nil {
+			return GenerateErrorStringF("failed to writer file: %v", errT)
+		}
+
+		// writeCountT += countT
+	}
+
+	// valid download exe
+	// fi, errT := fileT.Stat()
+	// if errT == nil {
+	// 	if fi.Size() != respT.ContentLength {
+	// 		return GenerateErrorStringF("Downloaded file size error")
+	// 	}
+	// }
+	return fileNameT
+}
+
+var DownloadFileWithProgress = TKX.DownloadFileWithProgress
+
 func (pA *TK) DownloadBytes(urlA string) ([]byte, error) {
 
 	var urlT string
@@ -10949,6 +11065,42 @@ func (pA *TK) DownloadBytes(urlA string) ([]byte, error) {
 }
 
 var DownloadBytes = TKX.DownloadBytes
+
+func (pA *TK) DownloadBytesWithProgress(urlA string, funcA func(interface{}) interface{}) ([]byte, error) {
+
+	var urlT string
+
+	if !StartsWithIgnoreCase(urlA, "http://") {
+		urlT = "http://" + urlA
+	} else {
+		urlT = urlA
+	}
+
+	respT, errT := http.Get(urlT)
+	if errT != nil {
+		return nil, Errf("failed to get URL: %v", errT.Error())
+	}
+
+	if respT.StatusCode != 200 {
+		return nil, Errf("failed to get URL: status code = %v", respT.StatusCode)
+	}
+
+	defer respT.Body.Close()
+
+	countingWriterT := NewCountingWriter(nil, funcA)
+
+	teeReaderT := io.TeeReader(respT.Body, countingWriterT)
+
+	bufT, errT := io.ReadAll(teeReaderT)
+
+	if errT != nil {
+		return nil, Errf("failed to get http response body: %v", errT)
+	}
+
+	return bufT, nil
+}
+
+var DownloadBytesWithProgress = TKX.DownloadBytesWithProgress
 
 // PostRequest : another POST request sender
 func (pA *TK) PostRequest(urlA, reqBodyA string, timeoutSecsA time.Duration) (string, error) {
@@ -16651,6 +16803,45 @@ func handleChildren(e *xml.Encoder, fieldName string, v interface{}, cdata bool)
 }
 
 // Data struct related
+
+type CountingWriter struct {
+	Count     int
+	Writeback *string
+	Callback  func(interface{}) interface{}
+}
+
+func NewCountingWriter(writebackA *string, callbackA func(interface{}) interface{}) io.Writer {
+	return &CountingWriter{Writeback: writebackA, Callback: callbackA, Count: 0}
+}
+
+func (pA *CountingWriter) Reset() {
+	pA.Count = 0
+}
+
+func (pA *CountingWriter) SetCallback(funcA func(interface{}) interface{}) {
+	pA.Callback = funcA
+}
+
+func (pA *CountingWriter) SetWriteback(writebackA *string) {
+	pA.Writeback = writebackA
+}
+
+func (pA *CountingWriter) Write(p []byte) (n int, err error) {
+	lenT := len(p)
+	pA.Count += lenT
+
+	infoT := fmt.Sprintf("%v", pA.Count)
+
+	if pA.Callback != nil {
+		pA.Callback(infoT)
+	}
+
+	if pA.Writeback != nil {
+		*(pA.Writeback) = infoT
+	}
+
+	return lenT, nil
+}
 
 type SimpleStack struct {
 	Items   []interface{}
