@@ -1145,7 +1145,7 @@ func (pA *TK) EnsureValidFileName(fileNameA string) string {
 		case '%':
 			o1 = append(o1, '%')
 			o1 = append(o1, '%')
-		case ' ', '/', '?', '\\', '_', '*', '"', '<', '>', '\'', '|', ':':
+		case ' ', '/', '?', '\\', '*', '"', '<', '>', '\'', '|', ':':
 			o1 = append(o1, []rune("%"+hex.EncodeToString([]byte(string(v))))...)
 		default:
 			o1 = append(o1, v)
@@ -6114,23 +6114,26 @@ func (pA *TK) Abs(c interface{}) interface{} {
 
 var Abs = TKX.Abs
 
-// IntToKMGT convert a number to "3.21K", "1.2G", etc, formatA like "%.2f"
+// IntToKMGT convert a number to "3.21K", "1.2G", etc, formatA like "%.02f"
 // if sizeA < 1024, formatA is ignored
-func (pA *TK) IntToKMGT(sizeA int, formatA string) string {
-	if formatA == "" {
-		formatA = "%.2f"
+func (pA *TK) IntToKMGT(sizeA interface{}, formatA ...interface{}) string {
+	formatT := "%.02f"
+	if len(formatA) > 0 {
+		formatT = ToStr(formatA[0])
 	}
 
-	if sizeA >= 1099511627776 {
-		return fmt.Sprintf(formatA+"T", float64(sizeA)/1099511627776)
-	} else if sizeA >= 1073741824 {
-		return fmt.Sprintf(formatA+"G", float64(sizeA)/1073741824)
-	} else if sizeA >= 1048576 {
-		return fmt.Sprintf(formatA+"M", float64(sizeA)/1048576)
-	} else if sizeA >= 1024 {
-		return fmt.Sprintf(formatA+"K", float64(sizeA)/1024)
+	var sizeT int = ToInt(sizeA, 0)
+
+	if sizeT >= 1099511627776 {
+		return fmt.Sprintf(formatT+"T", float64(sizeT)/1099511627776)
+	} else if sizeT >= 1073741824 {
+		return fmt.Sprintf(formatT+"G", float64(sizeT)/1073741824)
+	} else if sizeT >= 1048576 {
+		return fmt.Sprintf(formatT+"M", float64(sizeT)/1048576)
+	} else if sizeT >= 1024 {
+		return fmt.Sprintf(formatT+"K", float64(sizeT)/1024)
 	} else {
-		return fmt.Sprintf("%dB", sizeA)
+		return fmt.Sprintf("%dB", sizeT)
 	}
 }
 
@@ -6267,8 +6270,18 @@ func (pA *TK) GetFilePathSeperator() string {
 
 var GetFilePathSeperator = TKX.GetFilePathSeperator
 
-func (pA *TK) GetLastComponentOfFilePath(pathA string) string {
-	if EndsWith(pathA, GetFilePathSeperator()) {
+func (pA *TK) GetLastComponentOfFilePath(pathA string, sepA ...string) string {
+	var sepT string
+	if len(sepA) > 0 {
+		sepT = sepA[0]
+		listT := strings.Split(pathA, sepT)
+
+		return listT[len(listT)-1]
+	} else {
+		sepT = GetFilePathSeperator()
+	}
+
+	if EndsWith(pathA, sepT) {
 		return ""
 	} else {
 		return filepath.Base(pathA)
@@ -10995,9 +11008,25 @@ func (pA *TK) DownloadFileWithProgress(urlA, dirA, fileNameA string, funcA func(
 	// 	return GenerateErrorStringF("failed to get http response content length: %v\n%#v", string(tmpBuf), respT)
 	// }
 
-	countingWriterT := NewCountingWriter(nil, funcA)
+	lengthT := respT.ContentLength
 
-	multiWriterT := io.MultiWriter(fileT, countingWriterT)
+	var multiWriterT io.Writer
+
+	if funcA != nil {
+		var countingWriterT io.Writer
+
+		ifPercentT := IfSwitchExistsWhole(argsA, "-percent")
+
+		if ifPercentT {
+			countingWriterT = NewCountingWriter(funcA, "-percent", lengthT)
+		} else {
+			countingWriterT = NewCountingWriter(funcA)
+		}
+
+		multiWriterT = io.MultiWriter(fileT, countingWriterT)
+	} else {
+		multiWriterT = fileT
+	}
 
 	bufT := make([]byte, 1000000)
 
@@ -11087,7 +11116,7 @@ func (pA *TK) DownloadBytesWithProgress(urlA string, funcA func(interface{}) int
 
 	defer respT.Body.Close()
 
-	countingWriterT := NewCountingWriter(nil, funcA)
+	countingWriterT := NewCountingWriter(funcA)
 
 	teeReaderT := io.TeeReader(respT.Body, countingWriterT)
 
@@ -16805,42 +16834,228 @@ func handleChildren(e *xml.Encoder, fieldName string, v interface{}, cdata bool)
 // Data struct related
 
 type CountingWriter struct {
-	Count     int
-	Writeback *string
-	Callback  func(interface{}) interface{}
+	Count      int
+	Total      int
+	IfPercent  bool
+	WritebackI *int
+	WritebackS *string
+	WritebackA *interface{}
+	Callback   func(interface{}) interface{}
+	Lock       *sync.Mutex
 }
 
-func NewCountingWriter(writebackA *string, callbackA func(interface{}) interface{}) io.Writer {
-	return &CountingWriter{Writeback: writebackA, Callback: callbackA, Count: 0}
+// func NewCountingWriter(lockA *sync.Mutex, writebackA *string, writebackIA *interface{}, callbackA func(interface{}) interface{}) io.Writer {
+func NewCountingWriter(argsA ...interface{}) io.Writer {
+	vT := &CountingWriter{}
+	argsT := make([]string, 0, len(argsA))
+	for _, v := range argsA {
+		if nv, ok := v.(string); ok {
+			argsT = append(argsT, nv)
+			continue
+		}
+
+		if nv, ok := v.(int); ok {
+			vT.Total = nv
+			continue
+		}
+
+		if nv, ok := v.(int64); ok {
+			vT.Total = int(nv)
+			continue
+		}
+
+		if nv, ok := v.(*int); ok {
+			vT.WritebackI = nv
+			continue
+		}
+
+		if nv, ok := v.(*string); ok {
+			vT.WritebackS = nv
+			continue
+		}
+
+		if nv, ok := v.(*interface{}); ok {
+			vT.WritebackA = nv
+			continue
+		}
+
+		if nv, ok := v.(func(interface{}) interface{}); ok {
+			vT.Callback = nv
+			continue
+		}
+
+		if nv, ok := v.(*sync.Mutex); ok {
+			vT.Lock = nv
+			continue
+		}
+	}
+
+	if IfSwitchExistsWhole(argsT, "-percent") {
+		vT.IfPercent = true
+	}
+
+	return vT // &CountingWriter{Lock: lockA, Writeback: writebackA, WritebackI: writebackIA, Callback: callbackA, Count: 0}
 }
 
 func (pA *CountingWriter) Reset() {
+	if pA.Lock != nil {
+		pA.Lock.Lock()
+	}
+
 	pA.Count = 0
+
+	if pA.Lock != nil {
+		pA.Lock.Unlock()
+	}
 }
 
-func (pA *CountingWriter) SetCallback(funcA func(interface{}) interface{}) {
-	pA.Callback = funcA
-}
+// func (pA *CountingWriter) SetCallback(funcA func(interface{}) interface{}) {
+// 	pA.Callback = funcA
+// }
 
-func (pA *CountingWriter) SetWriteback(writebackA *string) {
-	pA.Writeback = writebackA
-}
+// func (pA *CountingWriter) SetWriteback(writebackA *string) {
+// 	pA.Writeback = writebackA
+// }
 
 func (pA *CountingWriter) Write(p []byte) (n int, err error) {
 	lenT := len(p)
+
+	if pA.Lock != nil {
+		pA.Lock.Lock()
+	}
+
 	pA.Count += lenT
 
-	infoT := fmt.Sprintf("%v", pA.Count)
+	var infoT string
+
+	if pA.IfPercent {
+		if pA.Total >= 0 {
+			infoT = fmt.Sprintf("%v%%", pA.Count*100/pA.Total)
+		} else {
+			infoT = "-%"
+		}
+	} else {
+		infoT = fmt.Sprintf("%v", pA.Count)
+	}
 
 	if pA.Callback != nil {
 		pA.Callback(infoT)
 	}
 
-	if pA.Writeback != nil {
-		*(pA.Writeback) = infoT
+	if pA.WritebackS != nil {
+		*(pA.WritebackS) = infoT
+	}
+
+	if pA.WritebackI != nil {
+		if pA.IfPercent {
+			if pA.Total >= 0 {
+				*(pA.WritebackI) = pA.Count * 100 / pA.Total
+			} else {
+				*(pA.WritebackI) = 0
+			}
+		} else {
+			*(pA.WritebackI) = pA.Count
+		}
+	}
+
+	if pA.WritebackA != nil {
+		*(pA.WritebackA) = infoT
+	}
+
+	if pA.Lock != nil {
+		pA.Lock.Unlock()
 	}
 
 	return lenT, nil
+}
+
+type SyncQueue struct {
+	Items *doublylinkedlist.List
+	Lock  sync.Mutex
+}
+
+func (pA *TK) NewSyncQueue(sizeA ...int) *SyncQueue {
+	rs := &SyncQueue{Items: doublylinkedlist.New()}
+
+	return rs
+}
+
+var NewSyncQueue = TKX.NewSyncQueue
+
+func (p *SyncQueue) Add(vA interface{}) {
+	p.Lock.Lock()
+
+	p.Items.Add(vA)
+
+	p.Lock.Unlock()
+}
+
+func (p *SyncQueue) Clear() {
+	p.Lock.Lock()
+
+	p.Items.Clear()
+
+	p.Lock.Unlock()
+}
+
+func (p *SyncQueue) ClearAdd(vA interface{}) {
+	p.Lock.Lock()
+
+	p.Items.Clear()
+
+	p.Items.Add(vA)
+
+	p.Lock.Unlock()
+}
+
+func (p *SyncQueue) QuickGet() interface{} {
+	var result interface{} = nil
+	var b bool
+
+	p.Lock.Lock()
+
+	result, b = p.Items.Get(0)
+
+	if b {
+		p.Items.Remove(0)
+	}
+
+	p.Lock.Unlock()
+
+	if b {
+		return result
+	}
+
+	return nil
+}
+
+func (p *SyncQueue) Get() (interface{}, bool) {
+	var result interface{} = nil
+	var b bool
+
+	p.Lock.Lock()
+
+	result, b = p.Items.Get(0)
+
+	if b {
+		p.Items.Remove(0)
+	}
+
+	p.Lock.Unlock()
+
+	return result, b
+}
+
+func (p *SyncQueue) Size() int {
+	var result int
+
+	p.Lock.Lock()
+
+	result = p.Items.Size()
+
+	p.Lock.Unlock()
+
+	return result
 }
 
 type SimpleStack struct {
@@ -17002,6 +17217,8 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		return hashset.New()
 	case "treeset":
 		return linkedhashset.New()
+	case "syncqueue":
+		return NewSyncQueue()
 	case "error", "err":
 		if lenT > 1 {
 			return fmt.Errorf(ToStr(argsA[1]), argsA[2:]...)

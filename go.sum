@@ -87,8 +87,8 @@ github.com/topxeq/countingwriter v0.0.0-20230112012023-e109792a7e10 h1:TPjTX89MB
 github.com/topxeq/countingwriter v0.0.0-20230112012023-e109792a7e10/go.mod h1:S/DxGB7MRImGIuTaMZNJpWgguYvMD4a6OGrejBph0xI=
 github.com/topxeq/gods v0.0.0-20220125023913-b5718bb0c704 h1:UDjm5BOCQ4slQmGLHR9jL/0ldJDHy2CriDdqYbcI5o8=
 github.com/topxeq/gods v0.0.0-20220125023913-b5718bb0c704/go.mod h1:pwCuhd06kBt3NUKc3BQwXbh6DOznm8sbFyMixA1Im/M=
-github.com/topxeq/goph v0.0.0-20230112062014-d357691d1317 h1:o1LSFjBct+njD2e+ARV8HyAFZjrHOQ7FOSbCjIA3Z8Q=
-github.com/topxeq/goph v0.0.0-20230112062014-d357691d1317/go.mod h1:fOimJ+ta5fknMtX8zTB7XNEx3JXwAzlNwLn5R6H8ZEo=
+github.com/topxeq/goph v0.0.0-20230113040700-a4dbfcb816e0 h1:aI82ENJ1qKJxY3MangQa/RbpY2dgsKwianPQ48z9NMY=
+github.com/topxeq/goph v0.0.0-20230113040700-a4dbfcb816e0/go.mod h1:fOimJ+ta5fknMtX8zTB7XNEx3JXwAzlNwLn5R6H8ZEo=
 github.com/topxeq/mahonia v0.0.0-20190828060648-12b0599ddd1a h1:AbaDA3cbBe+3qpvek2YhvE/xn+8vLOc3J+KBlR2DMII=
 github.com/topxeq/mahonia v0.0.0-20190828060648-12b0599ddd1a/go.mod h1:Y07Sl+FLd164UCoNlvVFUb0NJWtcehctV6kaNWPjLgM=
 github.com/topxeq/regexpx v0.0.0-20200814082553-4bffc7d07029 h1:NmJisdKbTYN77elIJosh+8S0R+8gLUzsR0O1Q2k9a3A=
