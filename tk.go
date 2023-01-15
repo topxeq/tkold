@@ -109,6 +109,41 @@ var GetVersion = TKX.GetVersion
 
 type ExitCallback func()
 
+type QuickObject struct {
+	Type  string
+	Value interface{}
+	Id    string
+	Name  string
+}
+
+func (pA *TK) NewQuickObject(argsA ...interface{}) *QuickObject {
+	p1 := &QuickObject{}
+
+	for _, v := range argsA {
+		s1, ok := v.(string)
+
+		if ok {
+			if strings.HasPrefix(s1, "-type=") {
+				p1.Type = s1[6:]
+			} else if strings.HasPrefix(s1, "-id=") {
+				p1.Id = s1[4:]
+			} else if strings.HasPrefix(s1, "-name=") {
+				p1.Name = s1[6:]
+			} else if strings.HasPrefix(s1, "-value=") {
+				p1.Value = s1[7:]
+			} else {
+				p1.Value = s1
+			}
+		} else {
+			p1.Value = v
+		}
+	}
+
+	return p1
+}
+
+var NewQuickObject = TKX.NewQuickObject
+
 // 自定义操作代理类型
 
 type TXDelegate func(actionA string, objA interface{}, dataA interface{}, paramsA ...interface{}) interface{}
@@ -16849,6 +16884,10 @@ func NewCountingWriter(argsA ...interface{}) io.Writer {
 	vT := &CountingWriter{}
 	argsT := make([]string, 0, len(argsA))
 	for _, v := range argsA {
+		if v == nil {
+			continue
+		}
+
 		if nv, ok := v.(string); ok {
 			argsT = append(argsT, nv)
 			continue
