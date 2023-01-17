@@ -17193,6 +17193,81 @@ func (pA *TK) NewSimpleStack(sizeA ...int) *SimpleStack {
 
 var NewSimpleStack = TKX.NewSimpleStack
 
+type SyncStack struct {
+	Items   []interface{}
+	Pointer int
+
+	Lock sync.Mutex
+}
+
+func (p *SyncStack) Reset(sizeA ...int) {
+	sizeT := 10
+
+	if len(sizeA) > 0 {
+		sizeT = sizeA[0]
+	}
+
+	p.Lock.Lock()
+
+	p.Items = make([]interface{}, 0, sizeT)
+
+	p.Pointer = 0
+
+	p.Lock.Unlock()
+}
+
+func (p *SyncStack) Push(vA interface{}) {
+	p.Lock.Lock()
+
+	lenT := len(p.Items)
+
+	if p.Pointer >= lenT {
+		p.Items = append(p.Items, vA)
+	} else {
+		p.Items[p.Pointer] = vA
+	}
+
+	p.Pointer++
+
+	p.Lock.Unlock()
+}
+
+func (p *SyncStack) Pop() interface{} {
+	p.Lock.Lock()
+	if p.Pointer < 1 {
+		p.Lock.Unlock()
+		return nil
+	}
+
+	p.Pointer--
+	rs := p.Items[p.Pointer]
+	p.Lock.Unlock()
+	return rs
+}
+
+func (p *SyncStack) Peek() interface{} {
+	p.Lock.Lock()
+	if p.Pointer < 1 {
+		p.Lock.Unlock()
+		return nil
+	}
+
+	rs := p.Items[p.Pointer-1]
+	p.Lock.Unlock()
+
+	return rs
+}
+
+func (pA *TK) NewSyncStack(sizeA ...int) *SyncStack {
+	rs := &SyncStack{}
+
+	rs.Reset(sizeA...)
+
+	return rs
+}
+
+var NewSyncStack = TKX.NewSyncStack
+
 func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 	lenT := len(argsA)
 

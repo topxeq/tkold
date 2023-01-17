@@ -1,6 +1,6 @@
 module github.com/topxeq/tk
 
-go 1.12
+go 1.16
 
 require (
 	github.com/aarzilli/sandblast v0.0.0-20151220083925-43f8fb998d06
