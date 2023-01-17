@@ -13416,6 +13416,57 @@ func (pA *TK) ReflectCallMethod(vA interface{}, nameA string, argsA ...interface
 
 var ReflectCallMethod = TKX.ReflectCallMethod
 
+func (pA *TK) ReflectGetMember(vA interface{}, argsA ...interface{}) (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("%v([%T/%v/%v->%v] %v)", r, vA, reflect.TypeOf(vA), reflect.TypeOf(vA).Kind(), argsA, vA)
+			return
+		}
+	}()
+
+	var vr interface{} = vA
+
+	for _, v2 := range argsA {
+
+		typeT := reflect.TypeOf(vr)
+
+		kindT := typeT.Kind()
+
+		// tk.Pl("kind: %v", kindT)
+
+		if kindT == reflect.Ptr {
+			vrf := reflect.ValueOf(vr).Elem()
+
+			kindT = vrf.Kind()
+
+			// tk.Pl("vrf: %v, kind: %v", vrf, kindT)
+
+			if kindT == reflect.Struct {
+				vr = vrf.Interface()
+			}
+		}
+
+		if kindT == reflect.Struct {
+			rv1 := reflect.ValueOf(vr)
+
+			rv2 := rv1.FieldByName(ToStr(v2)).Interface()
+
+			vr = rv2
+			continue
+		}
+
+		result = fmt.Errorf("未知成员：%v（%T/%v）.%v", vr, vr, kindT, v2)
+		return
+	}
+
+	result = vr
+	return
+}
+
+var ReflectGetMember = TKX.ReflectGetMember
+
 func (pA *TK) ReflectCallMethodSlice(vA interface{}, nameA string, argsA ...interface{}) (result interface{}) {
 	defer func() {
 		r := recover()
