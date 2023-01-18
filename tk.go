@@ -1388,6 +1388,20 @@ func (p *SyncMap) Get(keyA string, defaultA ...interface{}) interface{} {
 	return vA
 }
 
+func (p *SyncMap) GetList() interface{} {
+	rs := make(map[string]interface{})
+
+	p.LockM.RLock()
+
+	for k, v := range p.ValueM {
+		rs[k] = v
+	}
+
+	p.LockM.RUnlock()
+
+	return rs
+}
+
 func (p *SyncMap) TryGet(keyA string, defaultA ...interface{}) interface{} {
 	bT := p.LockM.TryRLock()
 	if !bT {
