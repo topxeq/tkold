@@ -109,6 +109,34 @@ var GetVersion = TKX.GetVersion
 
 type ExitCallback func()
 
+type Message struct {
+	Type        string
+	From        string
+	To          string
+	Value       interface{}
+	BoolValue   bool
+	IntValue    int
+	FloatValue  float64
+	StringValue string
+	Resv1       interface{}
+}
+
+type UndefinedStruct struct {
+	int
+}
+
+func (o UndefinedStruct) String() string {
+	return "undefined"
+}
+
+var Undefined UndefinedStruct = UndefinedStruct{0}
+
+func (pA *TK) IsUndefined(vA interface{}) bool {
+	return vA == Undefined
+}
+
+var IsUndefined = TKX.IsUndefined
+
 type QuickObject struct {
 	Type  string
 	Value interface{}
@@ -17179,6 +17207,14 @@ func (p *SimpleStack) Reset(sizeA ...int) {
 	p.Pointer = 0
 }
 
+func (p *SimpleStack) Clear() {
+	sizeT := 10
+
+	p.Items = make([]interface{}, 0, sizeT)
+
+	p.Pointer = 0
+}
+
 func (p *SimpleStack) Push(vA interface{}) {
 	// if p.Items == nil {
 	// 	p.Reset()
@@ -17246,6 +17282,24 @@ func (p *SimpleStack) Peek() interface{} {
 	// }
 
 	// return p.Items[lenT-1]
+}
+
+func (p *SimpleStack) PeekLayer(idxA int) interface{} {
+	if p.Pointer < 1 {
+		return nil
+	}
+
+	if idxA >= p.Pointer {
+		return nil
+	}
+
+	rs := p.Items[idxA]
+
+	return rs
+}
+
+func (p *SimpleStack) Size() int {
+	return p.Pointer
 }
 
 func (pA *TK) NewSimpleStack(sizeA ...int) *SimpleStack {
