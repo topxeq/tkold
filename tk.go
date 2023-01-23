@@ -85,16 +85,16 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
-var versionG = "v1.0.0"
+var VersionG = "v1.0.1"
 
 type TK struct {
 	Version string
 }
 
-var TKX = &TK{Version: versionG}
+var TKX = &TK{Version: VersionG}
 
 func (pA *TK) NewTK() *TK {
-	return &TK{Version: versionG}
+	return &TK{Version: VersionG}
 }
 
 var NewTK = TKX.NewTK
@@ -132,6 +132,7 @@ func (o UndefinedStruct) String() string {
 var Undefined UndefinedStruct = UndefinedStruct{0}
 
 func (pA *TK) IsUndefined(vA interface{}) bool {
+	// Pl("--- %#v ----> %#v --- \n", vA, Undefined)
 	return vA == Undefined
 }
 
@@ -17191,15 +17192,25 @@ func (p *SyncQueue) Size() int {
 }
 
 type SimpleStack struct {
-	Items   []interface{}
-	Pointer int
+	Items        []interface{}
+	Pointer      int
+	DefaultValue interface{}
 }
 
-func (p *SimpleStack) Reset(sizeA ...int) {
+// if present, the 1st argument is the initial capacity of the stack, the 2nd is the default value return while use pop or peek actions when there are no values in the stack
+func (p *SimpleStack) Reset(argsA ...interface{}) {
 	sizeT := 10
 
-	if len(sizeA) > 0 {
-		sizeT = sizeA[0]
+	p.DefaultValue = nil
+
+	lenT := len(argsA)
+
+	if lenT > 0 {
+		sizeT = ToInt(argsA[0])
+	}
+
+	if lenT > 1 {
+		p.DefaultValue = argsA[1]
 	}
 
 	p.Items = make([]interface{}, 0, sizeT)
@@ -17208,15 +17219,13 @@ func (p *SimpleStack) Reset(sizeA ...int) {
 }
 
 func (p *SimpleStack) Clear() {
-	sizeT := 10
-
-	p.Items = make([]interface{}, 0, sizeT)
+	p.Items = make([]interface{}, 0)
 
 	p.Pointer = 0
 }
 
 func (p *SimpleStack) Push(vA interface{}) {
-	// if p.Items == nil {
+	// if p.Items == Undefined {
 	// 	p.Reset()
 	// }
 
@@ -17235,7 +17244,7 @@ func (p *SimpleStack) Push(vA interface{}) {
 
 func (p *SimpleStack) Pop() interface{} {
 	if p.Pointer < 1 {
-		return nil
+		return p.DefaultValue
 	}
 
 	p.Pointer--
@@ -17262,7 +17271,7 @@ func (p *SimpleStack) Pop() interface{} {
 
 func (p *SimpleStack) Peek() interface{} {
 	if p.Pointer < 1 {
-		return nil
+		return p.DefaultValue
 	}
 
 	// p.StackPointerM--
@@ -17284,13 +17293,18 @@ func (p *SimpleStack) Peek() interface{} {
 	// return p.Items[lenT-1]
 }
 
+// use -1 to get the topmost item in the stack, -2 as the second topmost item, and so on
 func (p *SimpleStack) PeekLayer(idxA int) interface{} {
+	if idxA < 0 {
+		idxA = p.Size() - idxA
+	}
+
 	if p.Pointer < 1 {
-		return nil
+		return p.DefaultValue
 	}
 
 	if idxA >= p.Pointer {
-		return nil
+		return p.DefaultValue
 	}
 
 	rs := p.Items[idxA]
@@ -17302,10 +17316,10 @@ func (p *SimpleStack) Size() int {
 	return p.Pointer
 }
 
-func (pA *TK) NewSimpleStack(sizeA ...int) *SimpleStack {
+func (pA *TK) NewSimpleStack(argsA ...interface{}) *SimpleStack {
 	rs := &SimpleStack{}
 
-	rs.Reset(sizeA...)
+	rs.Reset(argsA...)
 
 	return rs
 }
@@ -17313,20 +17327,30 @@ func (pA *TK) NewSimpleStack(sizeA ...int) *SimpleStack {
 var NewSimpleStack = TKX.NewSimpleStack
 
 type SyncStack struct {
-	Items   []interface{}
-	Pointer int
+	Items        []interface{}
+	Pointer      int
+	DefaultValue interface{}
 
 	Lock sync.Mutex
 }
 
-func (p *SyncStack) Reset(sizeA ...int) {
+// if present, the 1st argument is the initial capacity of the stack, the 2nd is the default value return while use pop or peek actions when there are no values in the stack
+func (p *SyncStack) Reset(argsA ...interface{}) {
 	sizeT := 10
 
-	if len(sizeA) > 0 {
-		sizeT = sizeA[0]
+	lenT := len(argsA)
+
+	if lenT > 0 {
+		sizeT = ToInt(argsA[0])
 	}
 
 	p.Lock.Lock()
+
+	p.DefaultValue = nil
+
+	if lenT > 1 {
+		p.DefaultValue = argsA[1]
+	}
 
 	p.Items = make([]interface{}, 0, sizeT)
 
@@ -17354,8 +17378,9 @@ func (p *SyncStack) Push(vA interface{}) {
 func (p *SyncStack) Pop() interface{} {
 	p.Lock.Lock()
 	if p.Pointer < 1 {
+		rs := p.DefaultValue
 		p.Lock.Unlock()
-		return nil
+		return rs
 	}
 
 	p.Pointer--
@@ -17367,8 +17392,9 @@ func (p *SyncStack) Pop() interface{} {
 func (p *SyncStack) Peek() interface{} {
 	p.Lock.Lock()
 	if p.Pointer < 1 {
+		rs := p.DefaultValue
 		p.Lock.Unlock()
-		return nil
+		return rs
 	}
 
 	rs := p.Items[p.Pointer-1]
@@ -17377,10 +17403,43 @@ func (p *SyncStack) Peek() interface{} {
 	return rs
 }
 
-func (pA *TK) NewSyncStack(sizeA ...int) *SyncStack {
+func (p *SyncStack) PeekLayer(idxA int) interface{} {
+	p.Lock.Lock()
+	if idxA < 0 {
+		idxA = p.Pointer - idxA
+	}
+
+	if p.Pointer < 1 {
+		rs := p.DefaultValue
+		p.Lock.Unlock()
+		return rs
+	}
+
+	if idxA >= p.Pointer {
+		rs := p.DefaultValue
+		p.Lock.Unlock()
+		return rs
+	}
+
+	rs := p.Items[idxA]
+
+	p.Lock.Unlock()
+	return rs
+}
+
+func (p *SyncStack) Size() int {
+	p.Lock.Lock()
+
+	rs := p.Pointer
+
+	p.Lock.Unlock()
+	return rs
+}
+
+func (pA *TK) NewSyncStack(argsA ...interface{}) *SyncStack {
 	rs := &SyncStack{}
 
-	rs.Reset(sizeA...)
+	rs.Reset(argsA...)
 
 	return rs
 }
