@@ -4006,8 +4006,22 @@ func (pA *TK) Pl(formatA string, argsA ...interface{}) {
 
 var Pl = TKX.Pl
 
-func (pA *TK) Plo(vA interface{}) {
-	fmt.Printf("(%T)%v\n", vA, vA)
+func (pA *TK) Plo(vA ...interface{}) {
+	lenT := len(vA)
+
+	if lenT < 1 {
+		fmt.Println()
+		return
+	}
+
+	if lenT == 1 {
+		fmt.Printf("(%T)%v\n", vA[0], vA[0])
+		return
+	}
+
+	for i, v := range vA {
+		fmt.Printf("[%v] (%T)%v\n", i, v, v)
+	}
 }
 
 var Plo = TKX.Plo
@@ -11927,12 +11941,67 @@ func (pA *TK) GetNegativeResult(nA interface{}) interface{} {
 		return -nv
 	case float64:
 		return -nv
+	case UndefinedStruct:
+		return true
 	default:
 		return fmt.Errorf("unknown type(1-): %T(%v)", nA, nA)
 	}
 }
 
 var GetNegativeResult = TKX.GetNegativeResult
+
+func (pA *TK) GetLogicalNotResult(nA interface{}) interface{} {
+	if nA == nil {
+		return true
+	}
+
+	switch nv := nA.(type) {
+	case bool:
+		return !nv
+	case UndefinedStruct:
+		return true
+	}
+
+	return false
+}
+
+var GetLogicalNotResult = TKX.GetLogicalNotResult
+
+func (pA *TK) GetBitNotResult(nA interface{}) interface{} {
+	if nA == nil {
+		return true
+	}
+
+	var v3 interface{}
+
+	switch nv := nA.(type) {
+	case bool:
+		v3 = !nv
+	case byte:
+		v3 = ^nv
+	case rune:
+		v3 = ^nv
+	case int:
+		v3 = ^nv
+	case string:
+		buf, err := hex.DecodeString(nv)
+		if err != nil {
+			return fmt.Errorf("hex convertion failed")
+		}
+
+		for i := 0; i < len(buf); i++ {
+			buf[i] = ^(buf[i])
+		}
+
+		v3 = hex.EncodeToString(buf)
+	default:
+		return fmt.Errorf("unknown type(*): %T(%v)", nA, nA)
+	}
+
+	return v3
+}
+
+var GetBitNotResult = TKX.GetBitNotResult
 
 func (pA *TK) GetMultiplyResult(n1A interface{}, n2A interface{}) (result interface{}) {
 	defer func() {
@@ -11957,6 +12026,8 @@ func (pA *TK) GetMultiplyResult(n1A interface{}, n2A interface{}) (result interf
 		return nv * n2A.(float32)
 	case float64:
 		return nv * n2A.(float64)
+	case string:
+		return strings.Repeat(nv, ToInt(n2A))
 	default:
 		return fmt.Errorf("unknown type(*): %T(%v)", n1A, n1A)
 	}
@@ -12047,6 +12118,21 @@ func (pA *TK) GetMinusResult(n1A interface{}, n2A interface{}) (result interface
 		return nv - n2A.(float32)
 	case float64:
 		return nv - n2A.(float64)
+	case time.Time:
+		rsT := ToTime(n2A)
+
+		if IsError(rsT) {
+			t2 := ToInt(n2A, MAX_INT)
+
+			if t2 == MAX_INT {
+				return fmt.Errorf("time conversion failed: %T -> %T", n1A, n2A)
+			}
+
+			return nv.Add(time.Duration(-t2) * time.Millisecond)
+		} else {
+			return ToInt(nv.Sub(rsT.(time.Time)) / time.Millisecond)
+		}
+
 	default:
 		return fmt.Errorf("unknown type(-): %T(%v)", n1A, n1A)
 	}
@@ -12079,12 +12165,120 @@ func (pA *TK) GetAddResult(n1A interface{}, n2A interface{}) (result interface{}
 		return nv + n2A.(float64)
 	case string:
 		return nv + n2A.(string)
+	case []byte:
+		return append(nv, n2A.([]byte)...)
+	case time.Time:
+		return nv.Add(time.Duration(time.Millisecond * time.Duration(ToInt(n2A))))
 	default:
 		return fmt.Errorf("unknown type(+): %T(%v)", n1A, n1A)
 	}
 }
 
 var GetAddResult = TKX.GetAddResult
+
+func (pA *TK) GetBitANDResult(n1A interface{}, n2A interface{}) (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("failed: %v(%v, %v)", r, n1A, n2A)
+			return
+		}
+	}()
+
+	switch nv := n1A.(type) {
+	case byte:
+		return nv & n2A.(byte)
+	case rune:
+		return nv & n2A.(rune)
+	case int:
+		return nv & n2A.(int)
+	case int64:
+		return nv & n2A.(int64)
+	default:
+		return fmt.Errorf("unknown type(+): %T(%v)", n1A, n1A)
+	}
+}
+
+var GetBitANDResult = TKX.GetBitANDResult
+
+func (pA *TK) GetBitORResult(n1A interface{}, n2A interface{}) (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("failed: %v(%v, %v)", r, n1A, n2A)
+			return
+		}
+	}()
+
+	switch nv := n1A.(type) {
+	case byte:
+		return nv | n2A.(byte)
+	case rune:
+		return nv | n2A.(rune)
+	case int:
+		return nv | n2A.(int)
+	case int64:
+		return nv | n2A.(int64)
+	default:
+		return fmt.Errorf("unknown type(+): %T(%v)", n1A, n1A)
+	}
+}
+
+var GetBitORResult = TKX.GetBitORResult
+
+func (pA *TK) GetBitXORResult(n1A interface{}, n2A interface{}) (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("failed: %v(%v, %v)", r, n1A, n2A)
+			return
+		}
+	}()
+
+	switch nv := n1A.(type) {
+	case byte:
+		return nv ^ n2A.(byte)
+	case rune:
+		return nv ^ n2A.(rune)
+	case int:
+		return nv ^ n2A.(int)
+	case int64:
+		return nv ^ n2A.(int64)
+	default:
+		return fmt.Errorf("unknown type(+): %T(%v)", n1A, n1A)
+	}
+}
+
+var GetBitXORResult = TKX.GetBitXORResult
+
+func (pA *TK) GetBitANDNOTResult(n1A interface{}, n2A interface{}) (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("failed: %v(%v, %v)", r, n1A, n2A)
+			return
+		}
+	}()
+
+	switch nv := n1A.(type) {
+	case byte:
+		return nv &^ n2A.(byte)
+	case rune:
+		return nv &^ n2A.(rune)
+	case int:
+		return nv &^ n2A.(int)
+	case int64:
+		return nv &^ n2A.(int64)
+	default:
+		return fmt.Errorf("unknown type(+): %T(%v)", n1A, n1A)
+	}
+}
+
+var GetBitANDNOTResult = TKX.GetBitANDNOTResult
 
 func (pA *TK) GetGTResult(n1A interface{}, n2A interface{}) (result interface{}) {
 	defer func() {
