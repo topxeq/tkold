@@ -4015,12 +4015,12 @@ func (pA *TK) Plo(vA ...interface{}) {
 	}
 
 	if lenT == 1 {
-		fmt.Printf("(%T)%v\n", vA[0], vA[0])
+		fmt.Printf("(%T)%#v\n", vA[0], vA[0])
 		return
 	}
 
 	for i, v := range vA {
-		fmt.Printf("[%v] (%T)%v\n", i, v, v)
+		fmt.Printf("[%v] (%T)%#v\n", i, v, v)
 	}
 }
 
@@ -4031,7 +4031,7 @@ func (pA *TK) Plos(vA ...interface{}) {
 		if i > 0 {
 			fmt.Print(" ")
 		}
-		fmt.Printf("(%T)%v", v, v)
+		fmt.Printf("(%T)%#v", v, v)
 	}
 
 	fmt.Print("\n")
