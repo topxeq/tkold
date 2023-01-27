@@ -18860,3 +18860,1014 @@ func (pA *TK) GetMimeTypeByExt(extensionA string) string {
 }
 
 var GetMimeTypeByExt = TKX.GetMimeTypeByExt
+
+// func Counter(stopA int) Iterator {
+// 	return &StepCounterIterator{Current: 0, Step: 1, Stop: stopA}
+// }
+
+// func StepCounter(startA, stopA, stepA int) Iterator {
+// 	return &StepCounterIterator{Current: startA, Step: stepA, Stop: stopA}
+// }
+
+// type StepCounterIterator struct {
+// 	Current int
+// 	Step    int
+// 	Stop    int
+// }
+
+// func (iter *StepCounterIterator) Next() (interface{}, bool) {
+// 	if iter.Current >= iter.Stop {
+// 		return 0, false
+// 	}
+
+// 	item := iter.Current
+// 	iter.Current += iter.Step
+
+// 	return item, true
+// }
+
+// func (iter *StepCounterIterator) QuickNext() interface{} {
+// 	if iter.Current >= iter.Stop {
+// 		return nil
+// 	}
+
+// 	item := iter.Current
+// 	iter.Current += iter.Step
+
+// 	return item
+// }
+
+// func StepFloatCounter(startA, stopA, stepA float64) Iterator {
+// 	return &StepFloatCounterIterator{Current: startA, Step: stepA, Stop: stopA}
+// }
+
+// type StepFloatCounterIterator struct {
+// 	Current float64
+// 	Step    float64
+// 	Stop    float64
+// }
+
+// func (iter *StepFloatCounterIterator) Next() (interface{}, bool) {
+// 	if iter.Current >= iter.Stop {
+// 		return 0, false
+// 	}
+
+// 	item := iter.Current
+// 	iter.Current += iter.Step
+
+// 	return item, true
+// }
+
+// func (iter *StepFloatCounterIterator) QuickNext() interface{} {
+// 	if iter.Current >= iter.Stop {
+// 		return nil
+// 	}
+
+// 	item := iter.Current
+// 	iter.Current += iter.Step
+
+// 	return item
+// }
+
+// dirA: the condition direction: 0(default): >=, 1: <=, 2: >, 3: <, 4: ==
+// startA == -1, indicates startA = len(dataA) - 1
+// stopA == -1, indicates stopA = len(dataA)
+// iter2 := tk.NewCompactIterator("abc123", 0, -1, 1, 0)
+// for {
+// 	item, ok := iter2.Next()
+// 	if !ok {
+// 		break
+// 	}
+// 	fmt.Println(item)
+// }
+// output in order: a, b, c, 1, 2, 3, each in a line
+//
+// iter3 := tk.NewCompactIterator("abc123", -1, 0, -1, 3)
+//
+// for {
+// 	item, ok := iter3.Next()
+// 	if !ok {
+// 		break
+// 	}
+// 	fmt.Println(item)
+// }
+// output in order: 3, 2, 1, c, b, a, each in a line
+
+// func NewCompactIterator(dataA interface{}, startA, stopA, stepA interface{}, dirA ...int) Iterator {
+
+type Iterator interface {
+	// IsValid() bool
+	HasNext() bool
+	// count, index/key, value, if has value
+	Next() (int, interface{}, interface{}, bool)
+	QuickNext() interface{}
+	QuickNextWithIndex() interface{}
+}
+
+// NewCompactIterator(dataA, startA, stopA, stepA, dir(ection)A)
+// for dirA: 0(default): >=, 1: <=, 2: >, 3: <, 4: ==, means the condition operator to terminate the range loop
+// in most cases, for positive direction, it should be 0, for negative range, it will be 1
+func NewCompactIterator(dataA interface{}, argsA ...interface{}) Iterator {
+	var startT interface{} = 0
+	if len(argsA) > 0 {
+		startT = argsA[0]
+	}
+
+	var stopT interface{} = -1
+	if len(argsA) > 1 {
+		stopT = argsA[1]
+	}
+
+	var stepT interface{} = 1
+	if len(argsA) > 2 {
+		stepT = argsA[2]
+	}
+
+	dirT := 0
+	if len(argsA) > 3 {
+		dirT = ToInt(argsA[3], 0)
+	}
+
+	switch nv := dataA.(type) {
+	case int:
+		// stopT := ToInt(stopT, 0)
+
+		// if stopT <= -1 {
+		// 	stopT = nv
+		// }
+
+		return &CompactIterator{Type: 1, Current: ToInt(startT, 0), Step: ToInt(stepT, 1), Stop: nv, Direction: dirT}
+	case float64:
+		// startT := ToFloat(startT, 0.0)
+
+		// if startT <= -1 {
+		// 	startT = 0.0
+		// }
+
+		// stopT := ToFloat(stopT, 0.0)
+
+		// if stopT <= -1 {
+		// 	stopT = nv
+		// }
+
+		return &CompactIterator{Type: 2, Current: ToFloat(startT, 0.0), Step: ToFloat(stepT, 1.0), Stop: nv, Direction: dirT}
+	case string:
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len(nv) - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len(nv)
+		}
+
+		return &CompactIterator{Type: 21, Data: nv, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT}
+
+	case []byte:
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len(nv) - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len(nv)
+		}
+
+		return &CompactIterator{Type: 22, Data: nv, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT}
+
+	case []rune:
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len(nv) - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len(nv)
+		}
+
+		return &CompactIterator{Type: 23, Data: nv, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT}
+
+	case []int:
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len(nv) - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len(nv)
+		}
+
+		return &CompactIterator{Type: 31, Data: nv, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT}
+
+	case []float64:
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len(nv) - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len(nv)
+		}
+
+		return &CompactIterator{Type: 32, Data: nv, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT}
+
+	case []string:
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len(nv) - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len(nv)
+		}
+
+		return &CompactIterator{Type: 33, Data: nv, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT}
+
+	case []interface{}:
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len(nv) - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len(nv)
+		}
+
+		return &CompactIterator{Type: 91, Data: nv, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT}
+
+	case []map[string]string:
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len(nv) - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len(nv)
+		}
+
+		return &CompactIterator{Type: 92, Data: nv, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT}
+
+	case []map[string]interface{}:
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len(nv) - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len(nv)
+		}
+
+		return &CompactIterator{Type: 93, Data: nv, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT}
+
+	case map[string]string:
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len(nv) - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len(nv)
+		}
+
+		keysT := make([]string, 0, len(nv))
+
+		for k := range nv {
+			keysT = append(keysT, k)
+		}
+
+		return &CompactIterator{Type: 51, Data: nv, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT, Keys: keysT}
+
+	case map[string]int:
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len(nv) - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len(nv)
+		}
+
+		keysT := make([]string, 0, len(nv))
+
+		for k := range nv {
+			keysT = append(keysT, k)
+		}
+
+		return &CompactIterator{Type: 52, Data: nv, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT, Keys: keysT}
+
+	case map[string]float64:
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len(nv) - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len(nv)
+		}
+
+		keysT := make([]string, 0, len(nv))
+
+		for k := range nv {
+			keysT = append(keysT, k)
+		}
+
+		return &CompactIterator{Type: 53, Data: nv, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT, Keys: keysT}
+
+	case map[string]interface{}:
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len(nv) - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len(nv)
+		}
+
+		keysT := make([]string, 0, len(nv))
+
+		for k := range nv {
+			keysT = append(keysT, k)
+		}
+
+		return &CompactIterator{Type: 81, Data: nv, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT, Keys: keysT}
+
+	case map[int]int:
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len(nv) - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len(nv)
+		}
+
+		keysT := make([]int, 0, len(nv))
+
+		for k := range nv {
+			keysT = append(keysT, k)
+		}
+
+		return &CompactIterator{Type: 61, Data: nv, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT, Keys: keysT}
+
+	case map[int]string:
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len(nv) - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len(nv)
+		}
+
+		keysT := make([]int, 0, len(nv))
+
+		for k := range nv {
+			keysT = append(keysT, k)
+		}
+
+		return &CompactIterator{Type: 62, Data: nv, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT, Keys: keysT}
+
+	}
+
+	valueT := reflect.ValueOf(dataA)
+
+	kindT := valueT.Kind()
+
+	if kindT == reflect.Array || kindT == reflect.Slice {
+		len1T := valueT.Len()
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len1T - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len1T
+		}
+
+		return &CompactIterator{Type: 97, Data: valueT, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT}
+
+	} else if kindT == reflect.Map {
+		len1T := valueT.Len()
+		startT := ToInt(startT, 0)
+
+		if startT <= -1 {
+			startT = len1T - 1
+		}
+
+		stopT := ToInt(stopT, 0)
+
+		if stopT <= -1 {
+			stopT = len1T
+		}
+
+		return &CompactIterator{Type: 98, Data: valueT, Current: startT, Step: ToInt(stepT, 1), Stop: stopT, Direction: dirT, Keys: valueT.MapKeys()}
+
+	}
+
+	return nil // &CompactIterator{Type: 0, Data: dataA}
+}
+
+type CompactIterator struct {
+	Type      int // 0: unknown, 1: int, 2: float64, 21: string, 22: []byte, 23: []rune, 31: []int, 32: []float64, 33: []string, 51: map[string]string, 52: map[string]int, 53: map[string]float64, 61: map[int]int, 62: map[int]string, 81: map[string]interface{}, 91: []interface{}, 92: []map[string]string, 93: []map[string]interface{}, 97: reflect array/slice, 98: reflect map
+	Direction int // 0(default): >=, 1: <=, 2: >, 3: <, 4: ==
+
+	Count int
+
+	Current interface{}
+	Step    interface{}
+	Stop    interface{}
+
+	Data interface{}
+
+	Keys interface{}
+	// Slice interface{}
+}
+
+// func (p *CompactIterator) IsValid() bool {
+// 	return p.Type != 0
+// }
+
+func (p *CompactIterator) HasNext() bool {
+	if p.Type == 2 { //float64
+		cv := p.Current.(float64)
+		stopT := p.Stop.(float64)
+
+		if p.Direction < 1 {
+			if cv >= stopT {
+				return false
+			}
+		} else if p.Direction == 1 {
+			if cv <= stopT {
+				return false
+			}
+		} else if p.Direction == 2 {
+			if cv > stopT {
+				return false
+			}
+		} else if p.Direction == 3 {
+			if cv < stopT {
+				return false
+			}
+		} else if p.Direction == 4 {
+			if cv == stopT {
+				return false
+			}
+		}
+
+		return true
+	}
+
+	cv := p.Current.(int)
+	stopT := p.Stop.(int)
+
+	if p.Direction < 1 {
+		if cv >= stopT {
+			return false
+		}
+	} else if p.Direction == 1 {
+		if cv <= stopT {
+			return false
+		}
+	} else if p.Direction == 2 {
+		if cv > stopT {
+			return false
+		}
+	} else if p.Direction == 3 {
+		if cv < stopT {
+			return false
+		}
+	} else if p.Direction == 4 {
+		if cv == stopT {
+			return false
+		}
+	}
+
+	return true
+
+}
+
+func (p *CompactIterator) Next() (int, interface{}, interface{}, bool) {
+	nilT := Undefined
+
+	if !p.HasNext() {
+		return p.Count, nilT, nilT, false
+	}
+
+	switch p.Type {
+	case 1: // int
+		// cv := p.Current.(int)
+		// stopT := p.Stop.(int)
+		// nilT := Undefined
+
+		// if p.Direction < 1 {
+		// 	if cv >= stopT {
+		// 		return p.Count, nilT, false
+		// 	}
+		// } else if p.Direction == 1 {
+		// 	if cv <= stopT {
+		// 		return p.Count, nilT, false
+		// 	}
+		// } else if p.Direction == 2 {
+		// 	if cv > stopT {
+		// 		return p.Count, nilT, false
+		// 	}
+		// } else if p.Direction == 3 {
+		// 	if cv < stopT {
+		// 		return p.Count, nilT, false
+		// 	}
+		// } else if p.Direction == 4 {
+		// 	if cv == stopT {
+		// 		return p.Count, nilT, false
+		// 	}
+		// }
+
+		item := p.Current
+		p.Current = item.(int) + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, p.Count - 1, item, true
+	case 2: // float64
+		// cv := p.Current.(float64)
+		// stopT := p.Stop.(float64)
+		// nilT := Undefined
+
+		// if p.Direction < 1 {
+		// 	if cv >= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 1 {
+		// 	if cv <= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 2 {
+		// 	if cv > stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 3 {
+		// 	if cv < stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 4 {
+		// 	if cv == stopT {
+		// 		return nilT, false
+		// 	}
+		// }
+
+		// dataP := p.Data.(float64)
+
+		item := p.Current
+		p.Current = item.(float64) + p.Step.(float64)
+		p.Count++
+
+		return p.Count - 1, p.Count - 1, item, true
+
+	case 21: // string
+		// cv := p.Current.(int)
+		// stopT := p.Stop.(int)
+		// nilT := Undefined
+
+		// if p.Direction < 1 {
+		// 	if cv >= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 1 {
+		// 	if cv <= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 2 {
+		// 	if cv > stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 3 {
+		// 	if cv < stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 4 {
+		// 	if cv == stopT {
+		// 		return nilT, false
+		// 	}
+		// }
+
+		cv := p.Current.(int)
+		dataP := p.Data.(string)
+
+		item := dataP[cv : cv+1]
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, p.Count - 1, item, true
+
+	case 22: // []byte
+		cv := p.Current.(int)
+		// stopT := p.Stop.(int)
+		// nilT := Undefined
+		dataP := p.Data.([]byte)
+
+		// if p.Direction < 1 {
+		// 	if cv >= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 1 {
+		// 	if cv <= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 2 {
+		// 	if cv > stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 3 {
+		// 	if cv < stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 4 {
+		// 	if cv == stopT {
+		// 		return nilT, false
+		// 	}
+		// }
+
+		item := dataP[cv : cv+1]
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, p.Count - 1, item, true
+
+	case 23: // []rune
+		cv := p.Current.(int)
+		// stopT := p.Stop.(int)
+		// nilT := Undefined
+		dataP := p.Data.([]rune)
+
+		// if p.Direction < 1 {
+		// 	if cv >= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 1 {
+		// 	if cv <= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 2 {
+		// 	if cv > stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 3 {
+		// 	if cv < stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 4 {
+		// 	if cv == stopT {
+		// 		return nilT, false
+		// 	}
+		// }
+
+		item := dataP[cv : cv+1]
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, p.Count - 1, item, true
+
+	case 31: // []int
+		cv := p.Current.(int)
+		// stopT := p.Stop.(int)
+		// nilT := Undefined
+		dataP := p.Data.([]int)
+
+		// if p.Direction < 1 {
+		// 	if cv >= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 1 {
+		// 	if cv <= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 2 {
+		// 	if cv > stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 3 {
+		// 	if cv < stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 4 {
+		// 	if cv == stopT {
+		// 		return nilT, false
+		// 	}
+		// }
+
+		item := dataP[cv : cv+1]
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, p.Count - 1, item, true
+
+	case 32: // []float64
+		cv := p.Current.(int)
+		// stopT := p.Stop.(int)
+		// nilT := Undefined
+		dataP := p.Data.([]float64)
+
+		// if p.Direction < 1 {
+		// 	if cv >= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 1 {
+		// 	if cv <= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 2 {
+		// 	if cv > stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 3 {
+		// 	if cv < stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 4 {
+		// 	if cv == stopT {
+		// 		return nilT, false
+		// 	}
+		// }
+
+		item := dataP[cv : cv+1]
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, p.Count - 1, item, true
+
+	case 33: // []string
+		cv := p.Current.(int)
+		// stopT := p.Stop.(int)
+		// nilT := Undefined
+		dataP := p.Data.([]string)
+
+		// if p.Direction < 1 {
+		// 	if cv >= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 1 {
+		// 	if cv <= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 2 {
+		// 	if cv > stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 3 {
+		// 	if cv < stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 4 {
+		// 	if cv == stopT {
+		// 		return nilT, false
+		// 	}
+		// }
+
+		item := dataP[cv : cv+1]
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, p.Count, item, true
+
+	case 51: // map[string]string
+		cv := p.Current.(int)
+		// stopT := p.Stop.(int)
+		// nilT := Undefined
+		dataP := p.Data.(map[string]string)
+
+		// if p.Direction < 1 {
+		// 	if cv >= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 1 {
+		// 	if cv <= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 2 {
+		// 	if cv > stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 3 {
+		// 	if cv < stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 4 {
+		// 	if cv == stopT {
+		// 		return nilT, false
+		// 	}
+		// }
+
+		keyT := p.Keys.([]string)[cv]
+
+		item := dataP[keyT]
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, keyT, item, true
+
+	case 52: // map[string]int
+		cv := p.Current.(int)
+		// stopT := p.Stop.(int)
+		// nilT := Undefined
+		dataP := p.Data.(map[string]int)
+
+		// if p.Direction < 1 {
+		// 	if cv >= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 1 {
+		// 	if cv <= stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 2 {
+		// 	if cv > stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 3 {
+		// 	if cv < stopT {
+		// 		return nilT, false
+		// 	}
+		// } else if p.Direction == 4 {
+		// 	if cv == stopT {
+		// 		return nilT, false
+		// 	}
+		// }
+
+		keyT := p.Keys.([]string)[cv]
+
+		item := dataP[keyT]
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, keyT, item, true
+
+	case 53: // map[string]float64
+		cv := p.Current.(int)
+		dataP := p.Data.(map[string]float64)
+
+		keyT := p.Keys.([]string)[cv]
+
+		item := dataP[keyT]
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, keyT, item, true
+
+	case 61: // map[int]int
+		cv := p.Current.(int)
+		dataP := p.Data.(map[int]int)
+
+		keyT := p.Keys.([]int)[cv]
+
+		item := dataP[keyT]
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, keyT, item, true
+
+	case 62: // map[int]string
+		cv := p.Current.(int)
+		dataP := p.Data.(map[int]string)
+
+		keyT := p.Keys.([]int)[cv]
+
+		item := dataP[keyT]
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, keyT, item, true
+	case 81: // map[string]interface{}
+		cv := p.Current.(int)
+		dataP := p.Data.(map[string]interface{})
+
+		keyT := p.Keys.([]string)[cv]
+
+		item := dataP[keyT]
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, keyT, item, true
+
+	case 91: // []interface{}
+		cv := p.Current.(int)
+		dataP := p.Data.([]interface{})
+
+		item := dataP[cv : cv+1]
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, p.Count - 1, item, true
+
+	case 92: // []map[string]string
+		cv := p.Current.(int)
+		dataP := p.Data.([]map[string]string)
+
+		item := dataP[cv : cv+1]
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, p.Count - 1, item, true
+
+	case 93: // []map[string]interface{}
+		cv := p.Current.(int)
+		dataP := p.Data.([]map[string]interface{})
+
+		item := dataP[cv : cv+1]
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, p.Count - 1, item, true
+
+	case 97: // reflect array/slice
+		cv := p.Current.(int)
+		dataP := p.Data.(reflect.Value)
+
+		item := dataP.Index(cv).Interface()
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, p.Count - 1, item, true
+
+	case 98: // reflect map
+		cv := p.Current.(int)
+		dataP := p.Data.(reflect.Value)
+
+		keyT := p.Keys.([]reflect.Value)[cv]
+
+		item := dataP.MapIndex(keyT)
+		p.Current = cv + p.Step.(int)
+		p.Count++
+
+		return p.Count - 1, keyT, item, true
+
+	}
+
+	return p.Count, nilT, nilT, false
+
+}
+
+func (p *CompactIterator) QuickNext() interface{} {
+	_, _, rs, b := p.Next()
+
+	if !b {
+		return Undefined
+	}
+
+	return rs
+}
+
+func (p *CompactIterator) QuickNextWithIndex() interface{} {
+	count, indexKey, rs, b := p.Next()
+
+	if !b {
+		return Undefined
+	}
+
+	return []interface{}{indexKey, rs, count, b}
+}
