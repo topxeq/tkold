@@ -18967,7 +18967,7 @@ type Iterator interface {
 // NewCompactIterator(dataA, startA, stopA, stepA, dir(ection)A)
 // for dirA: 0(default): >=, 1: <=, 2: >, 3: <, 4: ==, means the condition operator to terminate the range loop
 // in most cases, for positive direction, it should be 0, for negative range, it will be 1
-func NewCompactIterator(dataA interface{}, argsA ...interface{}) Iterator {
+func (pA *TK) NewCompactIterator(dataA interface{}, argsA ...interface{}) Iterator {
 	var startT interface{} = 0
 	if len(argsA) > 0 {
 		startT = argsA[0]
@@ -19314,6 +19314,8 @@ func NewCompactIterator(dataA interface{}, argsA ...interface{}) Iterator {
 
 	return nil // &CompactIterator{Type: 0, Data: dataA}
 }
+
+var NewCompactIterator = TKX.NewCompactIterator
 
 type CompactIterator struct {
 	Type      int // 0: unknown, 1: int, 2: float64, 21: string, 22: []byte, 23: []rune, 31: []int, 32: []float64, 33: []string, 51: map[string]string, 52: map[string]int, 53: map[string]float64, 61: map[int]int, 62: map[int]string, 81: map[string]interface{}, 91: []interface{}, 92: []map[string]string, 93: []map[string]interface{}, 97: reflect array/slice, 98: reflect map
