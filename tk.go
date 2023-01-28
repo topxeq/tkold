@@ -18872,6 +18872,63 @@ func (pA *TK) GetMimeTypeByExt(extensionA string) string {
 
 var GetMimeTypeByExt = TKX.GetMimeTypeByExt
 
+func (pA *TK) Len(vA interface{}) int {
+
+	lenT := -1
+
+	switch nv := vA.(type) {
+	case string:
+		lenT = len(nv)
+		break
+	case []byte:
+		lenT = len(nv)
+		break
+	case []rune:
+		lenT = len(nv)
+		break
+	case []int:
+		lenT = len(nv)
+		break
+	case []float64:
+		lenT = len(nv)
+		break
+	case []interface{}:
+		lenT = len(nv)
+		break
+	case []string:
+		lenT = len(nv)
+		break
+	case []map[string]string:
+		lenT = len(nv)
+		break
+	case []map[string]interface{}:
+		lenT = len(nv)
+		break
+	case map[string]interface{}:
+		lenT = len(nv)
+		break
+	case map[string]string:
+		lenT = len(nv)
+		break
+	case map[string]int:
+		lenT = len(nv)
+		break
+	default:
+		valueT := reflect.ValueOf(vA)
+
+		kindT := valueT.Kind()
+
+		if kindT == reflect.Array || kindT == reflect.Slice || kindT == reflect.Chan || kindT == reflect.Map {
+			lenT = valueT.Len()
+		}
+
+	}
+
+	return lenT
+}
+
+var Len = TKX.Len
+
 // func Counter(stopA int) Iterator {
 // 	return &StepCounterIterator{Current: 0, Step: 1, Stop: stopA}
 // }
