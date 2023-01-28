@@ -4857,13 +4857,19 @@ func (pA *TK) GetSwitch(argsA []string, switchStrA string, defaultA ...string) s
 
 var GetSwitch = TKX.GetSwitch
 
-func (pA *TK) GetSwitchI(argsA []interface{}, switchStrA string, defaultA string) string {
+func (pA *TK) GetSwitchI(argsA []interface{}, switchStrA string, defaultA ...string) string {
+	var defaultT string
+
+	if len(defaultA) > 0 {
+		defaultT = defaultA[0]
+	}
+
 	if argsA == nil {
-		return defaultA
+		return defaultT
 	}
 
 	if len(argsA) < 1 {
-		return defaultA
+		return defaultT
 	}
 
 	tmpStrT := ""
@@ -4884,7 +4890,7 @@ func (pA *TK) GetSwitchI(argsA []interface{}, switchStrA string, defaultA string
 
 	}
 
-	return defaultA
+	return defaultT
 
 }
 
@@ -8171,6 +8177,11 @@ func (a UnaStruct2) MarshalJSON() ([]byte, error) {
 func (a TXDelegate) MarshalJSON() ([]byte, error) {
 
 	return []byte("\"N/A(TXDelegate)\""), nil
+}
+
+func (a QuickVarDelegate) MarshalJSON() ([]byte, error) {
+
+	return []byte("\"N/A(QuickVarDelegate)\""), nil
 }
 
 // func (a func() (io.ReadCloser, error)) MarshalJSON() ([]byte, error) {
