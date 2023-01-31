@@ -2374,6 +2374,7 @@ func (pA *TK) RegMatch(strA, patternA string) bool {
 var RegMatch = TKX.RegMatch
 
 func (pA *TK) RegMatchX(strA, patternA string) bool {
+	// Pl("str: %#v, reg: %#v", strA, patternA)
 	regexpT, errT := regexpx.Compile(patternA)
 
 	if errT != nil {
@@ -19471,6 +19472,8 @@ func (p *CompactIterator) Next() (int, interface{}, interface{}, bool) {
 		return p.Count, nilT, nilT, false
 	}
 
+	// Pln("p.Type:", p.Type)
+
 	switch p.Type {
 	case 1: // int
 		// cv := p.Current.(int)
@@ -19569,7 +19572,7 @@ func (p *CompactIterator) Next() (int, interface{}, interface{}, bool) {
 		cv := p.Current.(int)
 		dataP := p.Data.(string)
 
-		item := dataP[cv : cv+1]
+		item := dataP[cv]
 		p.Current = cv + p.Step.(int)
 		p.Count++
 
@@ -19603,7 +19606,7 @@ func (p *CompactIterator) Next() (int, interface{}, interface{}, bool) {
 		// 	}
 		// }
 
-		item := dataP[cv : cv+1]
+		item := dataP[cv]
 		p.Current = cv + p.Step.(int)
 		p.Count++
 
@@ -19637,7 +19640,7 @@ func (p *CompactIterator) Next() (int, interface{}, interface{}, bool) {
 		// 	}
 		// }
 
-		item := dataP[cv : cv+1]
+		item := dataP[cv]
 		p.Current = cv + p.Step.(int)
 		p.Count++
 
@@ -19671,7 +19674,7 @@ func (p *CompactIterator) Next() (int, interface{}, interface{}, bool) {
 		// 	}
 		// }
 
-		item := dataP[cv : cv+1]
+		item := dataP[cv]
 		p.Current = cv + p.Step.(int)
 		p.Count++
 
@@ -19705,7 +19708,7 @@ func (p *CompactIterator) Next() (int, interface{}, interface{}, bool) {
 		// 	}
 		// }
 
-		item := dataP[cv : cv+1]
+		item := dataP[cv]
 		p.Current = cv + p.Step.(int)
 		p.Count++
 
@@ -19739,13 +19742,14 @@ func (p *CompactIterator) Next() (int, interface{}, interface{}, bool) {
 		// 	}
 		// }
 
-		item := dataP[cv : cv+1]
+		item := dataP[cv]
 		p.Current = cv + p.Step.(int)
 		p.Count++
 
 		return p.Count - 1, p.Count, item, true
 
 	case 51: // map[string]string
+		Pl("here51")
 		cv := p.Current.(int)
 		// stopT := p.Stop.(int)
 		// nilT := Undefined
@@ -19868,7 +19872,7 @@ func (p *CompactIterator) Next() (int, interface{}, interface{}, bool) {
 		cv := p.Current.(int)
 		dataP := p.Data.([]interface{})
 
-		item := dataP[cv : cv+1]
+		item := dataP[cv]
 		p.Current = cv + p.Step.(int)
 		p.Count++
 
@@ -19878,7 +19882,7 @@ func (p *CompactIterator) Next() (int, interface{}, interface{}, bool) {
 		cv := p.Current.(int)
 		dataP := p.Data.([]map[string]string)
 
-		item := dataP[cv : cv+1]
+		item := dataP[cv]
 		p.Current = cv + p.Step.(int)
 		p.Count++
 
@@ -19888,7 +19892,7 @@ func (p *CompactIterator) Next() (int, interface{}, interface{}, bool) {
 		cv := p.Current.(int)
 		dataP := p.Data.([]map[string]interface{})
 
-		item := dataP[cv : cv+1]
+		item := dataP[cv]
 		p.Current = cv + p.Step.(int)
 		p.Count++
 
