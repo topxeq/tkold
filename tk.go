@@ -12478,25 +12478,70 @@ func (pA *TK) GetNEQResult(n1A interface{}, n2A interface{}) (result interface{}
 
 	switch nv := n1A.(type) {
 	case bool:
-		return nv != n2A.(bool)
+		n2v, ok := n2A.(bool)
+		if !ok {
+			return true
+		}
+
+		return nv != n2v
 	case byte:
-		return nv != n2A.(byte)
+		n2v, ok := n2A.(byte)
+		if !ok {
+			return true
+		}
+
+		return nv != n2v
 	case rune:
-		return nv != n2A.(rune)
+		n2v, ok := n2A.(rune)
+		if !ok {
+			return true
+		}
+
+		return nv != n2v
 	case int:
-		return nv != n2A.(int)
+		n2v, ok := n2A.(int)
+		if !ok {
+			return true
+		}
+
+		return nv != n2v
 	case int64:
-		return nv != n2A.(int64)
+		n2v, ok := n2A.(int64)
+		if !ok {
+			return true
+		}
+
+		return nv != n2v
 	case float32:
-		return nv != n2A.(float32)
+		n2v, ok := n2A.(float32)
+		if !ok {
+			return true
+		}
+
+		return nv != n2v
 	case float64:
-		return nv != n2A.(float64)
+		n2v, ok := n2A.(float64)
+		if !ok {
+			return true
+		}
+
+		return nv != n2v
 	case string:
-		return nv != n2A.(string)
+		n2v, ok := n2A.(string)
+		if !ok {
+			return true
+		}
+
+		return nv != n2v
 	case time.Time:
-		return !nv.Before(n2A.(time.Time)) || !nv.After(n2A.(time.Time))
+		n2v, ok := n2A.(time.Time)
+		if !ok {
+			return true
+		}
+
+		return !nv.Before(n2v) || !nv.After(n2v)
 	case interface{}:
-		return nv != n2A.(interface{})
+		return nv != n2A
 	default:
 		return fmt.Errorf("unknown type(!=): %T(%v)", n1A, n1A)
 	}
@@ -12516,7 +12561,13 @@ func (pA *TK) GetANDResult(n1A interface{}, n2A interface{}) (result interface{}
 
 	switch nv := n1A.(type) {
 	case bool:
-		return nv && n2A.(bool)
+		if !nv {
+			return false
+		}
+
+		return n2A.(bool)
+
+		// return nv && n2A.(bool)
 	default:
 		return fmt.Errorf("unknown type(!=): %T(%v)", n1A, n1A)
 	}
