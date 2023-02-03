@@ -5598,7 +5598,7 @@ func (pA *TK) ToFloat(v interface{}, defaultA ...float64) (result float64) {
 	var defaultT float64
 
 	if defaultA == nil || len(defaultA) < 1 {
-		defaultT = 0
+		defaultT = 0.0
 	} else {
 		defaultT = defaultA[0]
 	}
@@ -15253,6 +15253,104 @@ func (pA *TK) GetAddr(p interface{}) interface{} {
 }
 
 var GetAddr = TKX.GetAddr
+
+func (pA *TK) SetByRef(ppA interface{}, vA interface{}) (result error) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("faile to set by ref: %v(%v)", r, string(debug.Stack()))
+
+			return
+		}
+	}()
+
+	switch nv := ppA.(type) {
+	case *bool:
+		*nv = ToBool(vA)
+		return nil
+
+	case *int:
+		*nv = ToInt(vA, 0)
+		return nil
+
+	case *float64:
+		*nv = ToFloat(vA, 0.0)
+		return nil
+
+	case *string:
+		*nv = ToStr(vA)
+		return nil
+
+	case *interface{}:
+		*nv = vA
+		return nil
+
+	}
+
+	valueT := reflect.ValueOf(ppA)
+
+	kindT := valueT.Kind()
+
+	if kindT != reflect.Pointer {
+		return fmt.Errorf("not pointer type")
+	}
+
+	elemT := valueT.Elem()
+
+	if !elemT.CanSet() {
+		return fmt.Errorf("value cannot be set")
+	}
+
+	elemT.Set(reflect.ValueOf(vA))
+
+	return nil
+}
+
+var SetByRef = TKX.SetByRef
+
+func (pA *TK) GetRefValue(ppA interface{}) (result interface{}, err error) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = nil
+			err = fmt.Errorf("faile to get ref value: %v(%v)", r, string(debug.Stack()))
+			return
+		}
+	}()
+
+	switch nv := ppA.(type) {
+	case *bool:
+		return *nv, nil
+	case *int:
+		return *nv, nil
+	case *float64:
+		return *nv, nil
+	case *string:
+		return *nv, nil
+	case *interface{}:
+		return *nv, nil
+	}
+
+	valueT := reflect.ValueOf(ppA)
+
+	kindT := valueT.Kind()
+
+	if kindT != reflect.Pointer {
+		return nil, fmt.Errorf("not pointer type")
+	}
+
+	elemT := valueT.Elem()
+
+	if !elemT.CanInterface() {
+		return nil, fmt.Errorf("value cannot convert to interface")
+	}
+
+	return elemT.Interface(), nil
+}
+
+var GetRefValue = TKX.GetRefValue
 
 func (pA *TK) GetVar(nameA string) interface{} {
 	varMutexG.Lock()
