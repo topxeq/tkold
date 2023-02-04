@@ -138,6 +138,31 @@ func (pA *TK) IsUndefined(vA interface{}) bool {
 
 var IsUndefined = TKX.IsUndefined
 
+type List struct {
+	Data []interface{}
+
+	Type string
+}
+
+func NewList(vA ...interface{}) *List {
+	p := &List{Data: make([]interface{}, 0, len(vA)), Type: ""}
+	p.Data = append(p.Data, vA...)
+
+	return p
+}
+
+func (p *List) Clear() {
+	p.Data = make([]interface{}, 0)
+}
+
+func (p *List) AddItem(vA interface{}) {
+	p.Data = append(p.Data, vA)
+}
+
+func (p *List) AddItems(vA ...interface{}) {
+	p.Data = append(p.Data, vA...)
+}
+
 type QuickObject struct {
 	Type  string
 	Value interface{}
