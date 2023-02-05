@@ -7018,7 +7018,7 @@ var GetAvailableFileName = TKX.GetAvailableFileName
 // LoadStringFromFile 从文件中读取整个内容到字符串中
 func (pA *TK) LoadStringFromFile(fileNameA string) string {
 	if !IfFileExists(fileNameA) {
-		return GenerateErrorString("文件不存在")
+		return GenerateErrorString("file not exists")
 	}
 
 	fileT, err := os.Open(fileNameA)
