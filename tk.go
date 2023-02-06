@@ -4960,29 +4960,27 @@ func (pA *TK) GetSwitchWithDefaultInt64Value(argsA []string, switchStrA string, 
 var GetSwitchWithDefaultInt64Value = TKX.GetSwitchWithDefaultInt64Value
 
 // IfSwitchExists 判断命令行参数中是否存在开关，用法：flag := IfSwitchExists(args, "-restart")
-func (pA *TK) IfSwitchExists(argsA []string, switchStrA string) bool {
-	if argsA == nil {
-		return false
-	}
+// func (pA *TK) IfSwitchExists(argsA []string, switchStrA string) bool {
+// 	if argsA == nil {
+// 		return false
+// 	}
 
-	if len(argsA) < 1 {
-		return false
-	}
+// 	if len(argsA) < 1 {
+// 		return false
+// 	}
 
-	for _, argT := range argsA {
-		if StartsWith(argT, switchStrA) {
-			return true
-		}
+// 	for _, argT := range argsA {
+// 		if StartsWith(argT, switchStrA) {
+// 			return true
+// 		}
 
-	}
+// 	}
 
-	return false
-}
-
-var IfSwitchExists = TKX.IfSwitchExists
+// 	return false
+// }
 
 // IfSwitchExistsWhole 判断命令行参数中是否存在开关（完整的，），用法：flag := IfSwitchExistsWhole(args, "-restart")
-func (pA *TK) IfSwitchExistsWhole(argsA []string, switchStrA string) bool {
+func (pA *TK) IfSwitchExists(argsA []string, switchStrA string) bool {
 	if argsA == nil {
 		return false
 	}
@@ -5001,7 +4999,9 @@ func (pA *TK) IfSwitchExistsWhole(argsA []string, switchStrA string) bool {
 	return false
 }
 
-var IfSwitchExistsWhole = TKX.IfSwitchExistsWhole
+var IfSwitchExistsWhole = TKX.IfSwitchExists
+
+var IfSwitchExists = TKX.IfSwitchExists
 
 func (pA *TK) IfSwitchExistsWholeI(argsA []interface{}, switchStrA string) bool {
 	if argsA == nil {
@@ -7038,6 +7038,28 @@ func (pA *TK) LoadStringFromFile(fileNameA string) string {
 
 var LoadStringFromFile = TKX.LoadStringFromFile
 
+func (pA *TK) LoadText(fileNameA string) interface{} {
+	if !IfFileExists(fileNameA) {
+		return fmt.Errorf("file not exists")
+	}
+
+	fileT, err := os.Open(fileNameA)
+	if err != nil {
+		return err
+	}
+
+	defer fileT.Close()
+
+	fileContentT, err := io.ReadAll(fileT)
+	if err != nil {
+		return err
+	}
+
+	return string(fileContentT)
+}
+
+var LoadText = TKX.LoadText
+
 // LoadStringFromFileWithDefault 从文件中读取整个内容到字符串中，出现问题时返回默认字符串
 func (pA *TK) LoadStringFromFileWithDefault(fileNameA string, defaultA string) string {
 	if !IfFileExists(fileNameA) {
@@ -7290,6 +7312,7 @@ func (pA *TK) SaveStringToFileE(strA string, fileA string) error {
 }
 
 var SaveStringToFileE = TKX.SaveStringToFileE
+var SaveText = TKX.SaveStringToFileE
 
 func (pA *TK) AppendStringToFile(strA string, fileA string) string {
 	fileT, err := os.OpenFile(fileA, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -10724,6 +10747,179 @@ func (pA *TK) DownloadWebPageX(urlA string, optsA ...interface{}) string {
 
 var DownloadWebPageX = TKX.DownloadWebPageX
 
+func (pA *TK) GetWeb(urlA string, optsA ...interface{}) interface{} {
+	timeoutStrT := GetSwitchI(optsA, "-timeout=", "15")
+
+	encodingT := GetSwitchI(optsA, "-encoding=", "")
+
+	timeoutSecsT := time.Second * time.Duration(StrToInt(timeoutStrT, 15))
+
+	client := &http.Client{
+		//CheckRedirect: redirectPolicyFunc,
+		Timeout: time.Second * timeoutSecsT,
+	}
+
+	var urlT string
+	if !StartsWithIgnoreCase(urlA, "http") {
+		urlT = "http://" + urlA
+	} else {
+		urlT = urlA
+	}
+
+	var respT *http.Response
+	var errT error
+	var req *http.Request
+
+	reqTypeT := GetSwitchI(optsA, "-method=", "GET")
+
+	var postDataT url.Values = nil
+
+	postStrT := GetSwitchI(optsA, "-post=", "")
+
+	var postBytesT []byte = nil
+
+	if postStrT != "" {
+		postObjT, errT := FromJSON(postStrT)
+
+		if errT == nil {
+			postMapT, ok := postObjT.(map[string]interface{})
+
+			if ok {
+				postDataT = MapToPostDataI(postMapT)
+			}
+		}
+	}
+
+	if postDataT == nil {
+		for _, v := range optsA {
+			rv, ok := v.(url.Values)
+
+			if ok {
+				postDataT = rv
+				break
+			}
+
+			rv2, ok := v.(map[string]string)
+
+			if ok {
+				postDataT = MapToPostData(rv2)
+				break
+			}
+
+			rv3, ok := v.(map[string]interface{})
+
+			if ok {
+				postDataT = MapToPostDataI(rv3)
+				break
+			}
+
+			rv4, ok := v.([]byte)
+
+			if ok {
+				postBytesT = rv4
+				break
+			}
+		}
+	}
+
+	postBodyT := GetSwitchI(optsA, "-postBody=", "")
+
+	if (postDataT != nil && len(postDataT) > 0) || postBodyT != "" || postBytesT != nil {
+		if reqTypeT != "PUT" {
+			reqTypeT = "POST"
+		}
+
+	}
+
+	postFileT := GetSwitchI(optsA, "-postFile=", "")
+
+	if reqTypeT == "POST" || reqTypeT == "PUT" {
+		if postBytesT != nil {
+			req, errT = http.NewRequest(reqTypeT, urlT, bytes.NewReader(postBytesT))
+
+		} else if postBodyT != "" {
+			req, errT = http.NewRequest(reqTypeT, urlT, strings.NewReader(postBodyT))
+
+		} else if postFileT != "" {
+			// file1, err := os.Open(postFileT)
+			// if err != nil {
+			// 	return GenerateErrorStringF("failed to load file content: %v", err)
+			// }
+
+			// defer file1.Close()
+
+			bufT := LoadBytes(postFileT)
+
+			// req, errT = http.NewRequest(reqTypeT, urlT, bufio.NewReader(file1))
+			req, errT = http.NewRequest(reqTypeT, urlT, bytes.NewReader(bufT))
+
+		} else {
+			req, errT = http.NewRequest(reqTypeT, urlT, bytes.NewBufferString(postDataT.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded; param=value")
+		}
+		// req.PostForm = MapToPostData(postDataA)
+	} else {
+		req, errT = http.NewRequest(reqTypeT, urlT, nil)
+	}
+
+	customHeadersStrT := Trim(GetSwitchI(optsA, "-headers=", ""))
+
+	if customHeadersStrT != "" {
+		headerObjT, errT := FromJSON(customHeadersStrT)
+
+		if errT == nil {
+			headerMapT, ok := headerObjT.(map[string]interface{})
+
+			if ok {
+				for k, v := range headerMapT {
+					s, ok := v.(string)
+					if ok {
+						req.Header.Add(k, s)
+					}
+				}
+			}
+		}
+	}
+
+	if IfSwitchExistsWholeI(optsA, "-verbose") {
+		Pl("REQ: %v", req)
+	}
+
+	respT, errT = client.Do(req)
+
+	if errT == nil {
+		defer respT.Body.Close()
+		if respT.StatusCode != 200 {
+			if IfSwitchExistsWholeI(optsA, "-detail") {
+				body, errT := io.ReadAll(respT.Body)
+
+				if errT != nil {
+					body = []byte(errT.Error())
+				}
+				Pl("response status: %v (%v) body: %v", respT.StatusCode, respT, string(body))
+			}
+
+			return GenerateErrorStringF("response status: %v", respT.StatusCode)
+		} else {
+			body, errT := io.ReadAll(respT.Body)
+
+			if errT != nil {
+				return errT
+			}
+
+			if (encodingT == "") || (strings.ToLower(encodingT) == "utf-8") {
+				return string(body)
+			} else {
+				return ConvertToUTF8(body, encodingT)
+			}
+		}
+	} else {
+		return errT
+	}
+}
+
+var GetWeb = TKX.GetWeb
+
 func (pA *TK) DownloadWebBytes(urlA string, postDataA map[string]string, customHeadersA map[string]string, optsA ...string) ([]byte, map[string]string, error) {
 	timeoutStrT := GetSwitch(optsA, "-timeout=", "15")
 
@@ -11228,7 +11424,7 @@ func (pA *TK) DownloadBytesWithProgress(urlA string, funcA func(interface{}) int
 
 	var urlT string
 
-	if !StartsWithIgnoreCase(urlA, "http://") {
+	if (!StartsWithIgnoreCase(urlA, "http://")) && (!StartsWithIgnoreCase(urlA, "https://")) {
 		urlT = "http://" + urlA
 	} else {
 		urlT = urlA
