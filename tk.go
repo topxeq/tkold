@@ -5,6 +5,7 @@ package tk
 import (
 	"bufio"
 	"bytes"
+	"compress/gzip"
 	"crypto/aes"
 	"crypto/md5"
 	"crypto/tls"
@@ -15105,6 +15106,109 @@ func (pA *TK) GenerateQR(contentA string, optsA ...string) (barcode.Barcode, err
 }
 
 var GenerateQR = TKX.GenerateQR
+
+func (pA *TK) Compress(dataA interface{}, argsA ...interface{}) interface{} {
+	//NoCompression      = flate.NoCompression
+	//BestSpeed          = flate.BestSpeed
+	//BestCompression    = flate.BestCompression
+	//DefaultCompression = flate.DefaultCompression
+	//gzip.NewWriterLevel()
+
+	var inputBufT []byte
+
+	switch nv := dataA.(type) {
+	case []byte:
+		inputBufT = nv
+	case string:
+		inputBufT = []byte(nv)
+	default:
+		return fmt.Errorf("failed to compress, unsupported type: %T(%v)", dataA, dataA)
+	}
+
+	var buf bytes.Buffer
+
+	gzipWriter := gzip.NewWriter(&buf)
+
+	_, err := gzipWriter.Write(inputBufT)
+	if err != nil {
+		gzipWriter.Close()
+		return err
+	}
+
+	errT := gzipWriter.Close()
+	if errT != nil {
+		return err
+	}
+
+	return buf.Bytes()
+}
+
+var Compress = TKX.Compress
+
+func (pA *TK) Uncompress(dataA interface{}, argsA ...interface{}) interface{} {
+	var inputBufT []byte
+
+	switch nv := dataA.(type) {
+	case []byte:
+		inputBufT = nv
+	// case string:
+	// 	inputBufT = []byte(inputBufT)
+	default:
+		return fmt.Errorf("failed to uncompress, unsupported type: %T(%v)", dataA, dataA)
+	}
+
+	bytesReader := bytes.NewReader(inputBufT)
+
+	gzipReader, err := gzip.NewReader(bytesReader)
+	if err != nil {
+		return err
+	}
+
+	defer gzipReader.Close()
+
+	buf := new(bytes.Buffer)
+
+	_, err = buf.ReadFrom(gzipReader)
+
+	if err != nil {
+		return err
+	}
+
+	return buf.Bytes()
+}
+
+var Uncompress = TKX.Uncompress
+
+func (pA *TK) CompressText(textA string) string {
+	dataT := Compress([]byte(textA))
+
+	_, ok := dataT.(error)
+	if ok {
+		return textA
+	}
+
+	return EncodeToBase64(dataT.([]byte))
+}
+
+var CompressText = TKX.CompressText
+
+func (pA *TK) UncompressText(textA string) string {
+	dataT, errT := DecodeFromBase64(textA)
+	if errT != nil {
+		return textA
+	}
+
+	dataOutT := Uncompress(dataT)
+
+	_, ok := dataOutT.(error)
+	if ok {
+		return textA
+	}
+
+	return string(dataOutT.([]byte))
+}
+
+var UncompressText = TKX.UncompressText
 
 func (pA *TK) GetZipArchiver(argsA ...string) *archiver.Zip {
 	z := &archiver.Zip{
