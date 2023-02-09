@@ -6809,6 +6809,9 @@ func SortMSIArray(aryA []map[string]interface{}, keyA string, descA bool) {
 func (pA *TK) GetFileList(dirA string, argsA ...string) []map[string]string {
 
 	verboseT := IfSwitchExistsWhole(argsA, "-verbose")
+	if verboseT {
+		Pl("dir: %v, params: %v", dirA, argsA)
+	}
 
 	recursiveT := IfSwitchExistsWhole(argsA, "-recursive")
 
