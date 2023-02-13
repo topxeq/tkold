@@ -12413,6 +12413,79 @@ func (pA *TK) GetAddResult(n1A interface{}, n2A interface{}) (result interface{}
 
 var GetAddResult = TKX.GetAddResult
 
+func (pA *TK) GetAddResultForce(n1A interface{}, n2A interface{}) (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("failed: %v(%v, %v)", r, n1A, n2A)
+			return
+		}
+	}()
+
+	if n1A == nil {
+		return n2A
+	}
+
+	switch nv := n1A.(type) {
+	case byte:
+		return nv + ToByte(n2A)
+	case rune:
+		return nv + ToRune(n2A)
+	case int:
+		return nv + ToInt(n2A, 0)
+	case int64:
+		return nv + int64(ToInt(n2A))
+	case float32:
+		return nv + float32(ToFloat(n2A))
+	case float64:
+		return nv + ToFloat(n2A)
+	case string:
+		return nv + ToStr(n2A)
+	case []byte:
+		tmpBufT := DataToBytes(n2A)
+		if IsError(tmpBufT) {
+			return tmpBufT
+		}
+
+		return append(nv, tmpBufT.([]byte)...)
+	case time.Time:
+		return nv.Add(time.Duration(time.Millisecond * time.Duration(ToInt(n2A, 0))))
+	default:
+		return fmt.Errorf("unknown type(+): %T(%v)", n1A, n1A)
+	}
+}
+
+var GetAddResultForce = TKX.GetAddResultForce
+
+func (pA *TK) GetAddsResult(valuesA ...interface{}) (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("failed: %v(%v)", r, valuesA)
+			return
+		}
+	}()
+
+	var valueT interface{}
+
+	for i, v := range valuesA {
+		if i == 0 {
+			valueT = v
+
+			continue
+		}
+
+		valueT = GetAddResultForce(valueT, v)
+	}
+
+	return valueT
+
+}
+
+var GetAddsResult = TKX.GetAddsResult
+
 func (pA *TK) GetBitANDResult(n1A interface{}, n2A interface{}) (result interface{}) {
 	defer func() {
 		r := recover()
