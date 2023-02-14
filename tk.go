@@ -18072,6 +18072,19 @@ func (p *SimpleStack) Size() int {
 	return p.Pointer
 }
 
+func (p *SimpleStack) Reverse() *SimpleStack {
+	lenT := p.Size()
+
+	rs := &SimpleStack{Items: make([]interface{}, 0, lenT), DefaultValue: p.DefaultValue, Pointer: 0}
+
+	for i := lenT - 1; i >= 0; i-- {
+		rs.Push(p.Items[i])
+	}
+
+	return rs
+}
+
+// if present, the 1st argument is the initial capacity of the stack, the 2nd is the default value return while use pop or peek actions when there are no values in the stack
 func (pA *TK) NewSimpleStack(argsA ...interface{}) *SimpleStack {
 	rs := &SimpleStack{}
 
