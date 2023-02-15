@@ -3290,6 +3290,126 @@ var IsYesterday = TKX.IsYesterday
 
 // 切片、数组相关 slice related and array related
 
+func (pA *TK) GetArrayItem(aryA interface{}, idxA int, defaultA ...interface{}) interface{} {
+	// Pl("GetArrayItem: %#v %v %#v", aryA, idxA, defaultA)
+	var defaultT interface{} = Undefined
+
+	if len(defaultA) > 0 {
+		defaultT = defaultA[0]
+	}
+
+	if aryA == nil {
+		return defaultT
+	}
+
+	switch nv := aryA.(type) {
+	case []interface{}:
+		if (idxA < 0) || (idxA >= len(nv)) {
+			return defaultT
+		}
+
+		return nv[idxA]
+	case []int:
+		if (idxA < 0) || (idxA >= len(nv)) {
+			return defaultT
+		}
+
+		return nv[idxA]
+	case []byte:
+		if (idxA < 0) || (idxA >= len(nv)) {
+			return defaultT
+		}
+
+		return nv[idxA]
+	case []rune:
+		if (idxA < 0) || (idxA >= len(nv)) {
+			return defaultT
+		}
+
+		return nv[idxA]
+	case []string:
+		if (idxA < 0) || (idxA >= len(nv)) {
+			return defaultT
+		}
+
+		return nv[idxA]
+	case []float64:
+		if (idxA < 0) || (idxA >= len(nv)) {
+			return defaultT
+		}
+
+		return nv[idxA]
+	case []map[string]string:
+		if (idxA < 0) || (idxA >= len(nv)) {
+			return defaultT
+		}
+
+		return nv[idxA]
+	case []map[string]interface{}:
+		if (idxA < 0) || (idxA >= len(nv)) {
+			return defaultT
+		}
+
+		return nv[idxA]
+	case []bool:
+		if (idxA < 0) || (idxA >= len(nv)) {
+			return defaultT
+		}
+
+		return nv[idxA]
+	case []uint:
+		if (idxA < 0) || (idxA >= len(nv)) {
+			return defaultT
+		}
+
+		return nv[idxA]
+	case []int64:
+		if (idxA < 0) || (idxA >= len(nv)) {
+			return defaultT
+		}
+
+		return nv[idxA]
+	case []uint64:
+		if (idxA < 0) || (idxA >= len(nv)) {
+			return defaultT
+		}
+
+		return nv[idxA]
+	case []float32:
+		if (idxA < 0) || (idxA >= len(nv)) {
+			return defaultT
+		}
+
+		return nv[idxA]
+	case []map[string]int:
+		if (idxA < 0) || (idxA >= len(nv)) {
+			return defaultT
+		}
+
+		return nv[idxA]
+	default:
+		valueT := reflect.ValueOf(aryA)
+
+		kindT := valueT.Kind()
+
+		if kindT == reflect.Array || kindT == reflect.Slice || kindT == reflect.String {
+			lenT := valueT.Len()
+
+			if (idxA < 0) || (idxA >= lenT) {
+				return defaultT
+			}
+
+			return valueT.Index(idxA).Interface()
+		}
+
+		return defaultT
+	}
+
+	// return defaultT
+}
+
+var GetArrayItem = TKX.GetArrayItem
+
 func (pA *TK) ArrayContains(aryA interface{}, vA interface{}) bool {
 	if aryA == nil {
 		return false
@@ -3640,6 +3760,71 @@ func (pA *TK) ByteSliceToStringDec(bufA []byte, sepA string) string {
 var ByteSliceToStringDec = TKX.ByteSliceToStringDec
 
 // 映射相关 map related
+
+func (pA *TK) GetMapItem(mapA interface{}, keyA interface{}, defaultA ...interface{}) interface{} {
+	var defaultT interface{} = Undefined
+
+	if len(defaultA) > 0 {
+		defaultT = defaultA[0]
+	}
+
+	if mapA == nil {
+		return defaultT
+	}
+
+	var rv interface{}
+	var ok bool
+
+	switch nv := mapA.(type) {
+	case map[string]interface{}:
+		rv, ok = nv[ToStr(keyA)]
+	case map[string]int:
+		rv, ok = nv[ToStr(keyA)]
+	case map[string]byte:
+		rv, ok = nv[ToStr(keyA)]
+	case map[string]rune:
+		rv, ok = nv[ToStr(keyA)]
+	case map[string]float64:
+		rv, ok = nv[ToStr(keyA)]
+	case map[string]string:
+		rv, ok = nv[ToStr(keyA)]
+	case map[string]map[string]string:
+		rv, ok = nv[ToStr(keyA)]
+	case map[string]map[string]interface{}:
+		rv, ok = nv[ToStr(keyA)]
+	default:
+		// tk.Plo("here1", v1, v2o)
+		valueT := reflect.ValueOf(mapA)
+
+		kindT := valueT.Kind()
+
+		if kindT == reflect.Map {
+			rv := valueT.MapIndex(reflect.ValueOf(keyA))
+
+			if !rv.IsValid() {
+				return defaultT
+			}
+
+			return rv.Interface()
+		}
+
+		rv := ReflectGetMember(mapA, keyA)
+
+		if IsError(rv) {
+			return defaultT
+		}
+
+		return rv
+	}
+
+	if !ok {
+		return defaultT
+	}
+
+	return rv
+}
+
+var GetMapItem = TKX.GetMapItem
 
 // GetValueOfMSS get the value for key in map[string]string
 // returns default value if not ok
