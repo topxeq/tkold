@@ -3049,7 +3049,7 @@ func (pA *TK) ToTime(timeA interface{}, defaultA ...interface{}) interface{} {
 		return timeT
 	}
 
-	var defaultT interface{} = Errf("failed to convert to time")
+	var defaultT interface{} = Errf("failed to convert to time: %#v", timeA)
 	ifLocalT := true
 
 	formatT := ""
@@ -3077,12 +3077,12 @@ func (pA *TK) ToTime(timeA interface{}, defaultA ...interface{}) interface{} {
 		}
 
 		if argT == "-defaultErr" {
-			defaultT = fmt.Errorf("failed to convert to time")
+			defaultT = fmt.Errorf("failed to convert to time: %#v", timeA)
 			continue
 		}
 
 		if argT == "-defaultErrStr" {
-			defaultT = ErrStrf("failed to convert to time")
+			defaultT = ErrStrf("failed to convert to time: %#v", timeA)
 			continue
 		}
 
@@ -3409,6 +3409,230 @@ func (pA *TK) GetArrayItem(aryA interface{}, idxA int, defaultA ...interface{}) 
 }
 
 var GetArrayItem = TKX.GetArrayItem
+
+func (pA *TK) GetArraySlice(aryA interface{}, startA int, endA int, defaultA ...interface{}) interface{} {
+	// Pl("GetArraySlice: %#v %v %#v", aryA, idxA, defaultA)
+	var defaultT interface{} = Undefined
+
+	if len(defaultA) > 0 {
+		defaultT = defaultA[0]
+	}
+
+	if aryA == nil {
+		return defaultT
+	}
+
+	switch nv := aryA.(type) {
+	case []interface{}:
+		lenT := len(nv)
+		if (startA < 0) || (startA >= lenT) {
+			return defaultT
+		}
+
+		if endA < 0 {
+			endA = lenT
+		} else if endA > lenT {
+			return defaultT
+		}
+
+		return nv[startA:endA]
+	case []int:
+		lenT := len(nv)
+		if (startA < 0) || (startA >= lenT) {
+			return defaultT
+		}
+
+		if endA < 0 {
+			endA = lenT
+		} else if endA > lenT {
+			return defaultT
+		}
+
+		return nv[startA:endA]
+	case []byte:
+		lenT := len(nv)
+		if (startA < 0) || (startA >= lenT) {
+			return defaultT
+		}
+
+		if endA < 0 {
+			endA = lenT
+		} else if endA > lenT {
+			return defaultT
+		}
+
+		return nv[startA:endA]
+	case []rune:
+		lenT := len(nv)
+		if (startA < 0) || (startA >= lenT) {
+			return defaultT
+		}
+
+		if endA < 0 {
+			endA = lenT
+		} else if endA > lenT {
+			return defaultT
+		}
+
+		return nv[startA:endA]
+	case []string:
+		lenT := len(nv)
+		if (startA < 0) || (startA >= lenT) {
+			return defaultT
+		}
+
+		if endA < 0 {
+			endA = lenT
+		} else if endA > lenT {
+			return defaultT
+		}
+
+		return nv[startA:endA]
+	case []float64:
+		lenT := len(nv)
+		if (startA < 0) || (startA >= lenT) {
+			return defaultT
+		}
+
+		if endA < 0 {
+			endA = lenT
+		} else if endA > lenT {
+			return defaultT
+		}
+
+		return nv[startA:endA]
+	case []map[string]string:
+		lenT := len(nv)
+		if (startA < 0) || (startA >= lenT) {
+			return defaultT
+		}
+
+		if endA < 0 {
+			endA = lenT
+		} else if endA > lenT {
+			return defaultT
+		}
+
+		return nv[startA:endA]
+	case []map[string]interface{}:
+		lenT := len(nv)
+		if (startA < 0) || (startA >= lenT) {
+			return defaultT
+		}
+
+		if endA < 0 {
+			endA = lenT
+		} else if endA > lenT {
+			return defaultT
+		}
+
+		return nv[startA:endA]
+	case []bool:
+		lenT := len(nv)
+		if (startA < 0) || (startA >= lenT) {
+			return defaultT
+		}
+
+		if endA < 0 {
+			endA = lenT
+		} else if endA > lenT {
+			return defaultT
+		}
+
+		return nv[startA:endA]
+	case []uint:
+		lenT := len(nv)
+		if (startA < 0) || (startA >= lenT) {
+			return defaultT
+		}
+
+		if endA < 0 {
+			endA = lenT
+		} else if endA > lenT {
+			return defaultT
+		}
+
+		return nv[startA:endA]
+	case []int64:
+		lenT := len(nv)
+		if (startA < 0) || (startA >= lenT) {
+			return defaultT
+		}
+
+		if endA < 0 {
+			endA = lenT
+		} else if endA > lenT {
+			return defaultT
+		}
+
+		return nv[startA:endA]
+	case []uint64:
+		lenT := len(nv)
+		if (startA < 0) || (startA >= lenT) {
+			return defaultT
+		}
+
+		if endA < 0 {
+			endA = lenT
+		} else if endA > lenT {
+			return defaultT
+		}
+
+		return nv[startA:endA]
+	case []float32:
+		lenT := len(nv)
+		if (startA < 0) || (startA >= lenT) {
+			return defaultT
+		}
+
+		if endA < 0 {
+			endA = lenT
+		} else if endA > lenT {
+			return defaultT
+		}
+
+		return nv[startA:endA]
+	case []map[string]int:
+		lenT := len(nv)
+		if (startA < 0) || (startA >= lenT) {
+			return defaultT
+		}
+
+		if endA < 0 {
+			endA = lenT
+		} else if endA > lenT {
+			return defaultT
+		}
+
+		return nv[startA:endA]
+	default:
+		valueT := reflect.ValueOf(aryA)
+
+		kindT := valueT.Kind()
+
+		if kindT == reflect.Array || kindT == reflect.Slice || kindT == reflect.String {
+			lenT := valueT.Len()
+
+			if (startA < 0) || (startA >= lenT) {
+				return defaultT
+			}
+
+			if endA < 0 {
+				endA = lenT
+			} else if endA > lenT {
+				return defaultT
+			}
+
+			return valueT.Slice(startA, endA).Interface()
+		}
+
+		return defaultT
+	}
+
+	// return defaultT
+}
+
+var GetArraySlice = TKX.GetArraySlice
 
 func (pA *TK) ArrayContains(aryA interface{}, vA interface{}) bool {
 	if aryA == nil {
