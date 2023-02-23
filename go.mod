@@ -22,7 +22,7 @@ require (
 	github.com/yeka/zip v0.0.0-20180914125537-d046722c6feb
 	github.com/yuin/goldmark v1.4.13
 	github.com/yuin/goldmark-highlighting v0.0.0-20220208100518-594be1970594
-	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
+	golang.org/x/crypto v0.6.0
 	golang.org/x/net v0.7.0
 	golang.org/x/term v0.5.0
 )
