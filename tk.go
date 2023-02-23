@@ -18682,6 +18682,8 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 	switch typeT {
 	case "nil":
 		return nil
+	case "tk":
+		return NewTK()
 	case "string":
 		if lenT > 1 {
 			return CreateStringSimple(ToStr(argsA[1]))
