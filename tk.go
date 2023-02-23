@@ -18688,7 +18688,7 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		}
 
 		return CreateStringEmpty()
-	case "bytesbuffer":
+	case "bytesBuffer", "bytesbuffer":
 		if lenT > 1 {
 			nv, ok := argsA[1].([]byte)
 
@@ -18700,7 +18700,7 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		}
 		// var bufT bytes.Buffer
 		return new(bytes.Buffer)
-	case "stringbuffer", "stringbuilder":
+	case "stringBuilder", "stringbuffer", "stringbuilder":
 
 		var bufT = new(strings.Builder)
 		if lenT > 1 {
@@ -18708,7 +18708,7 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		}
 
 		return bufT
-	case "stringreader":
+	case "stringReader", "stringreader":
 		if lenT > 1 {
 			return strings.NewReader(ToStr(argsA[1]))
 		}
