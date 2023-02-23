@@ -20,11 +20,11 @@ require (
 	github.com/topxeq/uuid v0.0.0-20210318003930-0d149e412ca1
 	github.com/topxeq/xmlx v0.2.0
 	github.com/yeka/zip v0.0.0-20180914125537-d046722c6feb
-	github.com/yuin/goldmark v1.4.12
+	github.com/yuin/goldmark v1.4.13
 	github.com/yuin/goldmark-highlighting v0.0.0-20220208100518-594be1970594
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
-	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
-	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
+	golang.org/x/net v0.7.0
+	golang.org/x/term v0.5.0
 )
 
 require (
@@ -38,7 +38,6 @@ require (
 	github.com/nwaples/rardecode v1.1.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
-	golang.org/x/sys v0.0.0-20220224003255-dbe011f71a99 // indirect
 )
 
 // replace github.com/topxeq/charlang v0.0.0 => ../charlang

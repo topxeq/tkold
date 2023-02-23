@@ -13420,6 +13420,51 @@ func (pA *TK) GetDBConnection(driverA string, pathT string) *sql.DB {
 
 var GetDBConnection = TKX.GetDBConnection
 
+func (pA *TK) FormatSQLValue(strA string) string {
+	strT := strings.Replace(strA, "\r", "\\r", -1)
+	strT = strings.Replace(strT, "\n", "\\n", -1)
+	strT = strings.Replace(strT, "'", "''", -1)
+
+	return strT
+}
+
+var FormatSQLValue = TKX.FormatSQLValue
+
+func (pA *TK) ListToSQLList(vA interface{}) string {
+	bufT := new(strings.Builder)
+
+	bufT.WriteString("(")
+
+	switch nv := vA.(type) {
+	case []string:
+		for i, v := range nv {
+			if i > 0 {
+				bufT.WriteString(",")
+			}
+			bufT.WriteString("'")
+			v = strings.Replace(v, "'", "''", -1)
+			bufT.WriteString(v)
+			bufT.WriteString("'")
+		}
+	case []interface{}:
+		for i, v := range nv {
+			if i > 0 {
+				bufT.WriteString(",")
+			}
+			bufT.WriteString("'")
+			vs := strings.Replace(ToStr(v), "'", "''", -1)
+			bufT.WriteString(vs)
+			bufT.WriteString("'")
+		}
+	}
+
+	bufT.WriteString(")")
+
+	return bufT.String()
+}
+
+var ListToSQLList = TKX.ListToSQLList
+
 // GetDBRowCount 获取类似select count(*)的结果
 func (pA *TK) GetDBRowCount(dbA *sql.DB, sqlA string) (int, error) {
 	if dbA == nil {
