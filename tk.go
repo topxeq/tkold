@@ -4602,7 +4602,15 @@ var PlErrWithPrefix = TKX.PlErrWithPrefix
 
 // Plv output one variable
 func (pA *TK) Plv(argsA ...interface{}) {
-	fmt.Printf("%#v\n", argsA...)
+	for i := 0; i < len(argsA); i++ {
+		if i > 0 {
+			fmt.Printf(" ")
+		}
+
+		fmt.Printf("%#v", argsA[i])
+	}
+
+	fmt.Println()
 }
 
 var Plv = TKX.Plv
@@ -16968,6 +16976,19 @@ func (a *LoginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 	}
 	return nil, nil
 }
+
+// network related
+
+func (pA *TK) Listen(netA string, addrA string) interface{} {
+	rsT, errT := net.Listen(netA, addrA)
+	if errT != nil {
+		return fmt.Errorf("failed to listen: %v", errT)
+	}
+
+	return rsT
+}
+
+var Listen = TKX.Listen
 
 // sock5 related
 
