@@ -1669,6 +1669,509 @@ func (v StringRing) String() string {
 	return rs
 }
 
+// ByteQueue
+
+type ByteQueueItem struct {
+	Prev  *ByteQueueItem
+	Next  *ByteQueueItem
+	Value byte
+}
+
+func (v ByteQueueItem) String() string {
+	return fmt.Sprintf("%v", v.Value)
+}
+
+type ByteQueue struct {
+	Head  *ByteQueueItem
+	Tail  *ByteQueueItem
+	CapM  int
+	SizeM int
+}
+
+func (pA *TK) NewByteQueue(capA ...int) *ByteQueue {
+	ringT := &ByteQueue{}
+
+	ringT.Reset(capA...)
+
+	return ringT
+}
+
+var NewByteQueue = TKX.NewByteQueue
+
+func (p *ByteQueue) Reset(capA ...int) {
+	var sizeT int = 10
+
+	if len(capA) > 0 {
+		sizeT = capA[0]
+	}
+
+	p.CapM = sizeT
+	p.SizeM = 0
+
+	p.Head = nil
+	p.Tail = nil
+}
+
+func (p *ByteQueue) Clear() {
+	p.SizeM = 0
+
+	p.Head = nil
+	p.Tail = nil
+}
+
+func (p *ByteQueue) Size() int {
+	return p.SizeM
+}
+
+func (p *ByteQueue) Push(byteA byte) {
+	if p.SizeM >= p.CapM {
+		if p.SizeM == 1 {
+			p.Head = nil
+			p.Tail = nil
+		} else {
+			p.Head = p.Head.Next
+			p.Head.Prev = nil
+		}
+
+		p.SizeM--
+	}
+
+	itemT := &ByteQueueItem{Value: byteA}
+
+	if p.Tail == nil {
+		p.Head = itemT
+		p.Tail = itemT
+	} else {
+		itemT.Prev = p.Tail
+		p.Tail.Next = itemT
+		p.Tail = itemT
+	}
+
+	p.SizeM++
+}
+
+func (p *ByteQueue) Insert(idxA int, byteA byte) error {
+	if idxA < 0 || idxA >= p.Size() {
+		return fmt.Errorf("out of index: %v/%v", idxA, p.Size())
+	}
+
+	if p.SizeM >= p.CapM {
+		if p.SizeM == 1 {
+			p.Head = nil
+			p.Tail = nil
+		} else {
+			p.Tail = p.Tail.Prev
+			p.Tail.Next = nil
+		}
+
+		p.SizeM--
+	}
+
+	itemT := &ByteQueueItem{Value: byteA}
+
+	if idxA == 0 {
+		if p.Tail == nil {
+			p.Head = itemT
+			p.Tail = itemT
+		} else {
+			p.Head.Prev = itemT
+			itemT.Next = p.Head
+
+			p.Head = itemT
+		}
+
+		p.SizeM++
+		return nil
+	}
+
+	currentT := p.Head
+	cntT := 0
+
+	for cntT < idxA {
+		currentT = currentT.Next
+		cntT++
+	}
+
+	if currentT == nil {
+		// return fmt.Errorf("out of index: %v/%v", cntT, p.Size())
+		if p.Tail == nil {
+			p.Head = itemT
+			p.Tail = itemT
+		} else {
+			itemT.Prev = p.Tail
+			p.Tail.Next = itemT
+			p.Tail = itemT
+			itemT.Next = currentT
+		}
+
+		p.SizeM++
+
+		return nil
+	}
+
+	// Pl("currentT: %#v", currentT)
+
+	itemT.Prev = currentT.Prev
+	currentT.Prev.Next = itemT
+	currentT.Prev = itemT
+	itemT.Next = currentT
+
+	p.SizeM++
+
+	return nil
+}
+
+func (p *ByteQueue) Remove(idxA int) error {
+	if idxA < 0 || idxA >= p.Size() {
+		return fmt.Errorf("out of index: %v/%v", idxA, p.Size())
+	}
+
+	if idxA == 0 {
+		if p.Size() == 1 {
+			p.Head = nil
+			p.Tail = nil
+		} else {
+			p.Head = p.Head.Next
+			p.Head.Prev = nil
+		}
+
+		p.SizeM--
+
+		return nil
+	}
+
+	if idxA == p.Size()-1 {
+		if p.Size() == 1 {
+			p.Head = nil
+			p.Tail = nil
+		} else {
+			p.Tail = p.Tail.Prev
+			p.Tail.Next = nil
+		}
+
+		p.SizeM--
+
+		return nil
+
+	}
+
+	currentT := p.Head
+	cntT := 0
+
+	for cntT < idxA {
+		currentT = currentT.Next
+		cntT++
+	}
+
+	currentT.Prev.Next = currentT.Next
+	currentT.Next.Prev = currentT.Prev
+
+	p.SizeM--
+
+	return nil
+}
+
+// no indexA to get first item, indexA < 0 to get the last item
+func (p *ByteQueue) Get(indexA ...int) interface{} {
+	var idxT int
+
+	if len(indexA) > 0 {
+		idxT = indexA[0]
+	} else {
+		idxT = 0
+	}
+
+	if idxT < 0 {
+		idxT = p.Size() - 1
+	}
+
+	if idxT < 0 || idxT >= p.Size() {
+		return fmt.Errorf("out of index")
+	}
+
+	currentT := p.Head
+	cntT := 0
+
+	for cntT < idxT {
+		currentT = currentT.Next
+		cntT++
+	}
+
+	if currentT == nil {
+		return fmt.Errorf("out of index")
+	}
+
+	return currentT.Value
+}
+
+// pop the last item
+func (p *ByteQueue) Pop() interface{} {
+	sizeT := p.Size()
+	if sizeT < 1 {
+		return fmt.Errorf("no item")
+	}
+
+	if sizeT == 1 {
+		rs := p.Head.Value
+
+		p.Head = nil
+		p.Tail = nil
+
+		p.SizeM = 0
+
+		return rs
+	}
+
+	rs := p.Tail.Value
+
+	p.Tail = p.Tail.Prev
+	p.Tail.Next = nil
+
+	p.SizeM--
+
+	return rs
+}
+
+// pick and pop the last item
+func (p *ByteQueue) Pick() interface{} {
+	sizeT := p.Size()
+	if sizeT < 1 {
+		return fmt.Errorf("no item")
+	}
+
+	if sizeT == 1 {
+		rs := p.Head.Value
+
+		p.Head = nil
+		p.Tail = nil
+
+		p.SizeM = 0
+
+		return rs
+	}
+
+	rs := p.Head.Value
+
+	p.Head = p.Head.Next
+	p.Head.Prev = nil
+
+	p.SizeM--
+
+	return rs
+}
+
+// func (p *ByteQueue) GetE(indexA ...int) (byte, error) {
+// 	var idxT int
+// 	var rs byte
+
+// 	if len(indexA) > 0 {
+// 		idxT = indexA[0]
+// 	} else {
+// 		idxT = p.Start
+// 	}
+
+// 	if idxT < 0 || idxT >= len(p.Buf) {
+// 		return 0, fmt.Errorf("out of index")
+// 	}
+
+// 	rs = p.Buf[idxT]
+
+// 	return rs, nil
+// }
+
+// func (p *ByteQueue) GetD(indexA int, defaultA ...byte) byte {
+// 	var defaultT byte = 0
+
+// 	if len(defaultA) > 0 {
+// 		defaultT = defaultA[0]
+// 	}
+
+// 	if indexA < 0 || indexA >= len(p.Buf) {
+// 		return defaultT
+// 	}
+
+// 	return p.Buf[indexA]
+// }
+
+// func (p *ByteQueue) Pick() interface{} {
+// 	var rs byte
+
+// 	if p.NotFirstFlag {
+// 		lenT := len(p.Buf)
+// 		bufT := make([]byte, lenT)
+
+// 		cntT := 0
+// 		currentT := p.Start
+// 		for {
+// 			bufT[cntT] = p.Buf[currentT]
+
+// 			if currentT == p.End {
+// 				break
+// 			}
+
+// 			cntT++
+
+// 			currentT++
+// 			if currentT >= lenT {
+// 				currentT = 0
+// 			}
+// 		}
+
+// 		p.Buf = bufT
+// 		p.Start = 0
+// 		p.End = lenT - 1
+// 		p.NotFirstFlag = false
+// 	}
+
+// 	// idxT := p.End
+
+// 	// if idxT < 0 || idxT >= len(p.Buf) {
+// 	// 	return fmt.Errorf("out of index")
+// 	// }
+
+// 	if p.End < 0 {
+// 		return fmt.Errorf("out of index")
+// 	}
+
+// 	rs = p.Buf[p.End]
+
+// 	p.End--
+
+// 	// if p.NotFirstFlag {
+// 	// 	if p.End < 0 {
+// 	// 		p.End = len(p.Buf) - 1
+// 	// 	}
+
+// 	// 	if p.End == p.Start {
+// 	// 		p.Reset(len(p.Buf))
+// 	// 	}
+// 	// } else {
+// 	// 	if p.End < 0 {
+// 	// 		p.End = -1
+// 	// 	}
+// 	// }
+
+// 	return rs
+// }
+
+// func (p *ByteQueue) PickE() (byte, error) {
+// 	var idxT int
+// 	var rs byte
+
+// 	idxT = p.End
+
+// 	if idxT < 0 || idxT >= p.Start {
+// 		return 0, fmt.Errorf("out of index")
+// 	}
+
+// 	rs = p.Buf[idxT]
+
+// 	p.End++
+
+// 	return rs, nil
+// }
+
+// func (p *ByteQueue) PickD(defaultA ...byte) byte {
+// 	var defaultT byte = 0
+
+// 	if len(defaultA) > 0 {
+// 		defaultT = defaultA[0]
+// 	}
+
+// 	var indexT = p.End
+
+// 	if indexT < 0 || indexT >= p.Start {
+// 		return defaultT
+// 	}
+
+// 	rs := p.Buf[indexT]
+
+// 	p.End++
+
+// 	return rs
+// }
+
+// func (v ByteQueue) GetList() []byte {
+// 	bufT := make([]byte, 0, len(v.Buf))
+
+// 	i := v.End
+// 	for i != v.Start {
+// 		bufT = append(bufT, v.Buf[i])
+
+// 		i++
+// 		if i >= len(v.Buf) {
+// 			i = 0
+// 		}
+// 	}
+
+// 	return bufT
+// }
+
+// func (v ByteQueue) GetString() string {
+// 	bufT := make([]byte, 0, len(v.Buf))
+
+// 	i := v.End
+// 	for i != v.Start {
+// 		bufT = append(bufT, v.Buf[i])
+
+// 		i++
+// 		if i >= len(v.Buf) {
+// 			i = 0
+// 		}
+// 	}
+
+// 	return string(bufT)
+// }
+
+func (v ByteQueue) String() string {
+	var bufT strings.Builder
+
+	currentT := v.Head
+
+	for currentT != nil {
+		bufT.WriteString(fmt.Sprintf(" %v", currentT))
+
+		currentT = currentT.Next
+	}
+
+	// rs := Spr("Head: %v, Tail: %v, Buf: %#v", v.Head, v.Tail, v)
+
+	return bufT.String()
+}
+
+func (v ByteQueue) GetInfo() string {
+	var bufT strings.Builder
+
+	currentT := v.Head
+
+	for currentT != nil {
+		bufT.WriteString(fmt.Sprintf(" %#v", currentT))
+
+		currentT = currentT.Next
+	}
+
+	// rs := Spr("Head: %v, Tail: %v, Buf: %#v", v.Head, v.Tail, v)
+
+	return bufT.String()
+}
+
+func (v ByteQueue) GetList() []byte {
+	var bufT []byte = make([]byte, v.Size())
+
+	currentT := v.Head
+
+	cntT := 0
+
+	for currentT != nil {
+		bufT[cntT] = currentT.Value
+
+		currentT = currentT.Next
+		cntT++
+	}
+
+	return bufT
+}
+
 // TXString 相关
 
 type TXString struct {
@@ -18711,7 +19214,7 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		}
 
 		return CreateStringEmpty()
-	case "bytesBuffer", "bytesbuffer":
+	case "bytesbuffer":
 		if lenT > 1 {
 			nv, ok := argsA[1].([]byte)
 
@@ -18723,7 +19226,7 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		}
 		// var bufT bytes.Buffer
 		return new(bytes.Buffer)
-	case "stringBuilder", "stringbuffer", "stringbuilder":
+	case "stringbuffer", "stringbuilder":
 
 		var bufT = new(strings.Builder)
 		if lenT > 1 {
@@ -18731,7 +19234,7 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		}
 
 		return bufT
-	case "stringReader", "stringreader":
+	case "stringreader":
 		if lenT > 1 {
 			return strings.NewReader(ToStr(argsA[1]))
 		}
@@ -18743,6 +19246,12 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		}
 
 		return NewStringRing()
+	case "bytequeue":
+		if lenT > 1 {
+			return NewByteQueue(ToInt(argsA[1]))
+		}
+
+		return NewByteQueue()
 	case "simplestack":
 		return NewSimpleStack()
 	case "stack":
@@ -18777,7 +19286,7 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		return btree.NewWithIntComparator(ToInt(argsA[1]))
 	}
 
-	return Errf("unknown object type")
+	return Errf("unknown object type: %v", typeT)
 }
 
 var NewObject = TKX.NewObject
