@@ -20463,6 +20463,9 @@ func (pA *TK) Len(vA interface{}) int {
 	case map[string]int:
 		lenT = len(nv)
 		break
+	case *ByteQueue:
+		lenT = nv.Size()
+		break
 	default:
 		valueT := reflect.ValueOf(vA)
 
