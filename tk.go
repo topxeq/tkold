@@ -377,6 +377,8 @@ var variableG = make(map[string]interface{})
 var varMutexG sync.Mutex
 var fileVarMutexG sync.Mutex
 
+var LocksG [10]sync.RWMutex
+
 // 全局环境集合相关 global environment related
 
 func (pA *TK) SetGlobalEnv(vA string) {
@@ -428,6 +430,195 @@ func (pA *TK) HasGlobalEnv(vA string) bool {
 }
 
 var HasGlobalEnv = TKX.HasGlobalEnv
+
+// Global variables related 全局变量相关
+
+func (pA *TK) LockN(idxA ...int) {
+	idxT := 0
+
+	if len(idxA) > 0 {
+		idxT = idxA[0]
+	}
+
+	if idxT < 0 || idxT > 9 {
+		idxT = 0
+	}
+
+	LocksG[idxT].Lock()
+}
+
+var LockN = TKX.LockN
+
+func (pA *TK) UnlockN(idxA ...int) {
+	// defer func() {
+	// 	Pl("defer: %v", "r")
+	// 	r := recover()
+
+	// 	if r != nil {
+	// 		Pl("recover: %v", r)
+	// 		return
+	// 	}
+	// }()
+
+	idxT := 0
+
+	if len(idxA) > 0 {
+		idxT = idxA[0]
+	}
+
+	if idxT < 0 || idxT > 9 {
+		idxT = 0
+	}
+
+	LocksG[idxT].Unlock()
+}
+
+var UnlockN = TKX.UnlockN
+
+func (pA *TK) TryLockN(idxA ...int) bool {
+	idxT := 0
+
+	if len(idxA) > 0 {
+		idxT = idxA[0]
+	}
+
+	if idxT < 0 || idxT > 9 {
+		idxT = 0
+	}
+
+	return LocksG[idxT].TryLock()
+}
+
+var TryLockN = TKX.TryLockN
+
+func (pA *TK) RLockN(idxA ...int) {
+	idxT := 0
+
+	if len(idxA) > 0 {
+		idxT = idxA[0]
+	}
+
+	if idxT < 0 || idxT > 9 {
+		idxT = 0
+	}
+
+	LocksG[idxT].RLock()
+}
+
+var RLockN = TKX.RLockN
+
+func (pA *TK) RUnlockN(idxA ...int) {
+	// defer func() {
+	// 	r := recover()
+
+	// 	if r != nil {
+	// 		return
+	// 	}
+	// }()
+
+	idxT := 0
+
+	if len(idxA) > 0 {
+		idxT = idxA[0]
+	}
+
+	if idxT < 0 || idxT > 9 {
+		idxT = 0
+	}
+
+	LocksG[idxT].RUnlock()
+}
+
+var RUnlockN = TKX.RUnlockN
+
+func (pA *TK) TryRLockN(idxA ...int) bool {
+	idxT := 0
+
+	if len(idxA) > 0 {
+		idxT = idxA[0]
+	}
+
+	if idxT < 0 || idxT > 9 {
+		idxT = 0
+	}
+
+	return LocksG[idxT].TryRLock()
+}
+
+var TryRLockN = TKX.TryRLockN
+
+func (pA *TK) GetVar(nameA string) interface{} {
+	varMutexG.Lock()
+	rs, ok := variableG[nameA]
+	varMutexG.Unlock()
+
+	if !ok {
+		GenerateErrorString("no key")
+	}
+	return rs
+}
+
+var GetVar = TKX.GetVar
+
+func (pA *TK) SetVar(nameA string, valueA interface{}) {
+	varMutexG.Lock()
+	variableG[nameA] = valueA
+	varMutexG.Unlock()
+}
+
+var SetVar = TKX.SetVar
+
+func (pA *TK) DeleteVar(nameA string) {
+	varMutexG.Lock()
+	delete(variableG, nameA)
+	varMutexG.Unlock()
+}
+
+var DeleteVar = TKX.DeleteVar
+
+func (pA *TK) ClearVar() {
+	varMutexG.Lock()
+	variableG = make(map[string]interface{})
+	varMutexG.Unlock()
+}
+
+var ClearVar = TKX.ClearVar
+
+func (pA *TK) SizeVar() int {
+	var rs int
+	varMutexG.Lock()
+	rs = len(variableG)
+	varMutexG.Unlock()
+
+	return rs
+}
+
+var SizeVar = TKX.SizeVar
+
+func (pA *TK) GetFileVar(fileNameA string) interface{} {
+	var rs interface{}
+	fileVarMutexG.Lock()
+	errT := LoadJSONFromFile(fileNameA, &rs)
+	fileVarMutexG.Unlock()
+
+	if errT != nil {
+		return errT
+	}
+
+	return rs
+}
+
+var GetFileVar = TKX.GetFileVar
+
+func (pA *TK) SetFileVar(fileNameA string, valueA interface{}) error {
+	fileVarMutexG.Lock()
+	errT := SaveJSONIndentToFile(valueA, fileNameA)
+	fileVarMutexG.Unlock()
+
+	return errT
+}
+
+var SetFileVar = TKX.SetFileVar
 
 // 字符串相关函数 string related
 
@@ -16717,79 +16908,6 @@ func (pA *TK) GetRefValue(ppA interface{}) (result interface{}, err error) {
 }
 
 var GetRefValue = TKX.GetRefValue
-
-func (pA *TK) GetVar(nameA string) interface{} {
-	varMutexG.Lock()
-	rs, ok := variableG[nameA]
-	varMutexG.Unlock()
-
-	if !ok {
-		GenerateErrorString("no key")
-	}
-	return rs
-}
-
-var GetVar = TKX.GetVar
-
-func (pA *TK) SetVar(nameA string, valueA interface{}) {
-	varMutexG.Lock()
-	variableG[nameA] = valueA
-	varMutexG.Unlock()
-}
-
-var SetVar = TKX.SetVar
-
-func (pA *TK) DeleteVar(nameA string) {
-	varMutexG.Lock()
-	delete(variableG, nameA)
-	varMutexG.Unlock()
-}
-
-var DeleteVar = TKX.DeleteVar
-
-func (pA *TK) ClearVar() {
-	varMutexG.Lock()
-	variableG = make(map[string]interface{})
-	varMutexG.Unlock()
-}
-
-var ClearVar = TKX.ClearVar
-
-func (pA *TK) SizeVar() int {
-	var rs int
-	varMutexG.Lock()
-	rs = len(variableG)
-	varMutexG.Unlock()
-
-	return rs
-}
-
-var SizeVar = TKX.SizeVar
-
-func (pA *TK) GetFileVar(fileNameA string) interface{} {
-	var rs interface{}
-	fileVarMutexG.Lock()
-	errT := LoadJSONFromFile(fileNameA, &rs)
-	fileVarMutexG.Unlock()
-
-	if errT != nil {
-		return errT
-	}
-
-	return rs
-}
-
-var GetFileVar = TKX.GetFileVar
-
-func (pA *TK) SetFileVar(fileNameA string, valueA interface{}) error {
-	fileVarMutexG.Lock()
-	errT := SaveJSONIndentToFile(valueA, fileNameA)
-	fileVarMutexG.Unlock()
-
-	return errT
-}
-
-var SetFileVar = TKX.SetFileVar
 
 func (pA *TK) CheckErrorFunc(errA error, funcA func()) {
 	if errA != nil {
