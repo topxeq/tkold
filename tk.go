@@ -1251,6 +1251,7 @@ func (pA *TK) SplitN(strA string, sepA string, countA int) []string {
 
 var SplitN = TKX.SplitN
 
+// SplitByLen 按长度拆分一个字符串为数组，注意由于是rune，可能不是按字节长度，例： listT = strSplitByLen(strT, 10)，可以加第三个参数表示字节数不能超过多少，加第四个参数表示分隔符（遇上分隔符从分隔符后重新计算长度，也就是说分割长度可以超过指定的个数，一般用于有回车的情况）
 func (pA *TK) SplitByLen(strA string, lenA int, byteLimitA ...interface{}) []string {
 	if len(strA) == 0 {
 		return nil
@@ -10330,11 +10331,44 @@ var MD5EncryptToBytes = TKX.MD5EncryptToBytes
 
 // 加密解密相关
 
-func (pA *TK) BytesToHex(bufA []byte) string {
+func (pA *TK) BytesToHex(bufA []byte, optsA ...string) string {
+	// Pl("%#v %#v", bufA, optsA)
+	if len(optsA) > 0 {
+		if IfSwitchExistsWhole(optsA, "-split") {
+			var sb strings.Builder
+
+			for i, v := range bufA {
+				if i > 0 {
+					sb.WriteString(" ")
+				}
+
+				sb.WriteString(fmt.Sprintf("%02X", v))
+			}
+
+			return sb.String()
+		}
+	}
+
 	return strings.ToUpper(hex.EncodeToString(bufA))
 }
 
 var BytesToHex = TKX.BytesToHex
+
+func (pA *TK) BytesToHexX(bufA []byte) string {
+	var sb strings.Builder
+
+	for i, v := range bufA {
+		if i > 0 {
+			sb.WriteString(" ")
+		}
+
+		sb.WriteString(fmt.Sprintf("%02X", v))
+	}
+
+	return sb.String()
+}
+
+var BytesToHexX = TKX.BytesToHexX
 
 func (pA *TK) HexToBytes(strA string) []byte {
 	buf, err := hex.DecodeString(strA)
