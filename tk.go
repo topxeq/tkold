@@ -11901,6 +11901,7 @@ func (pA *TK) DownloadWebPage(urlA string, postDataA map[string]string, customHe
 
 var DownloadWebPage = TKX.DownloadWebPage
 
+// DownloadWebPageX deprecated, recommend to use getWeb instead
 func (pA *TK) DownloadWebPageX(urlA string, optsA ...interface{}) string {
 	timeoutStrT := GetSwitchI(optsA, "-timeout=", "15")
 
@@ -12232,6 +12233,10 @@ func (pA *TK) GetWeb(urlA string, optsA ...interface{}) interface{} {
 
 			if errT != nil {
 				return errT
+			}
+
+			if IfSwitchExistsWholeI(optsA, "-bytes") {
+				return body
 			}
 
 			if (encodingT == "") || (strings.ToLower(encodingT) == "utf-8") {
