@@ -17039,6 +17039,10 @@ func (pA *TK) SetByRef(ppA interface{}, vA interface{}) (result error) {
 		}
 	}()
 
+	// Pln("---")
+	// Plv(ppA)
+	// Plv(vA)
+
 	switch nv := ppA.(type) {
 	case *bool:
 		*nv = ToBool(vA)
