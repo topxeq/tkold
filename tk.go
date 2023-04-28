@@ -139,6 +139,237 @@ func (pA *TK) IsUndefined(vA interface{}) bool {
 
 var IsUndefined = TKX.IsUndefined
 
+type MapRef struct {
+	Data interface{}
+	Key  string
+}
+
+func (pA *TK) GetMapRef(mapA interface{}, keyA string) *MapRef {
+	valueT := reflect.ValueOf(mapA)
+
+	kindT := valueT.Kind()
+
+	if kindT != reflect.Map {
+		return nil
+	}
+
+	return &MapRef{Data: mapA, Key: keyA}
+}
+
+var GetMapRef = TKX.GetMapRef
+
+func (p *MapRef) GetValue() interface{} {
+	valueT := reflect.ValueOf(p.Data)
+
+	kindT := valueT.Kind()
+
+	// if kindT != reflect.Pointer {
+	// 	return fmt.Errorf("not pointer type")
+	// }
+
+	// elemT := valueT.Elem()
+
+	if kindT != reflect.Map {
+		return nil
+	}
+
+	rv := valueT.MapIndex(reflect.ValueOf(p.Key))
+
+	if !rv.IsValid() {
+		return nil
+	}
+
+	return rv.Interface()
+
+}
+
+func (p *MapRef) SetValue(vA interface{}) (result error) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("failed to set map value: %v", r)
+			return
+		}
+	}()
+
+	valueT := reflect.ValueOf(p.Data)
+
+	kindT := valueT.Kind()
+
+	// if kindT != reflect.Pointer {
+	// 	return fmt.Errorf("not pointer type")
+	// }
+
+	// elemT := valueT.Elem()
+
+	if kindT != reflect.Map {
+		result = fmt.Errorf("not a map")
+		return
+	}
+
+	valueT.SetMapIndex(reflect.ValueOf(p.Key), reflect.ValueOf(vA))
+
+	result = nil
+	return
+}
+
+type FlexRef struct {
+	Type  string
+	Data  interface{}
+	Key   string
+	Index int
+}
+
+func (pA *TK) GetFlexRef(dataA interface{}, typeA string, keyA string, indexA int) *FlexRef {
+	if typeA == "" {
+		return &FlexRef{Type: "", Data: dataA, Key: keyA, Index: indexA}
+	}
+
+	if typeA == "map" {
+		valueT := reflect.ValueOf(dataA)
+
+		kindT := valueT.Kind()
+
+		if kindT != reflect.Map {
+			return nil
+		}
+
+		return &FlexRef{Type: "map", Data: dataA, Key: keyA, Index: indexA}
+
+	}
+
+	if typeA == "array" || typeA == "slice" {
+		valueT := reflect.ValueOf(dataA)
+
+		kindT := valueT.Kind()
+
+		if kindT != reflect.Slice && kindT != reflect.Slice {
+			return nil
+		}
+
+		if kindT == reflect.Slice {
+			return &FlexRef{Type: "array", Data: dataA, Key: keyA, Index: indexA}
+		}
+
+		if kindT == reflect.Array {
+			return &FlexRef{Type: "array", Data: dataA, Key: keyA, Index: indexA}
+		}
+
+		return nil
+
+	}
+
+	return nil
+}
+
+var GetFlexRef = TKX.GetFlexRef
+
+func (p *FlexRef) GetValue() (result interface{}) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = nil
+			return
+		}
+	}()
+
+	valueT := reflect.ValueOf(p.Data)
+
+	kindT := valueT.Kind()
+
+	if p.Type == "map" {
+
+		// if kindT != reflect.Pointer {
+		// 	return fmt.Errorf("not pointer type")
+		// }
+
+		// elemT := valueT.Elem()
+
+		if kindT != reflect.Map {
+			return nil
+		}
+
+		rv := valueT.MapIndex(reflect.ValueOf(p.Key))
+
+		if !rv.IsValid() {
+			return nil
+		}
+
+		return rv.Interface()
+
+	}
+
+	if p.Type == "array" {
+		// if kindT != reflect.Pointer {
+		// 	return fmt.Errorf("not pointer type")
+		// }
+
+		// elemT := valueT.Elem()
+
+		if kindT != reflect.Slice && kindT != reflect.Array {
+			return nil
+		}
+
+		rv := valueT.Index(p.Index)
+
+		if !rv.IsValid() {
+			return nil
+		}
+
+		return rv.Interface()
+
+	}
+
+	if kindT != reflect.Pointer {
+		return nil
+	}
+
+	rv := valueT.Elem()
+
+	if !rv.IsValid() {
+		return nil
+	}
+
+	return rv
+}
+
+func (p *FlexRef) SetValue(vA interface{}) (result error) {
+	defer func() {
+		r := recover()
+
+		if r != nil {
+			result = fmt.Errorf("failed to set map value: %v", r)
+			return
+		}
+	}()
+
+	valueT := reflect.ValueOf(p.Data)
+
+	kindT := valueT.Kind()
+
+	// if kindT != reflect.Pointer {
+	// 	return fmt.Errorf("not pointer type")
+	// }
+
+	// elemT := valueT.Elem()
+
+	if kindT == reflect.Map {
+		valueT.SetMapIndex(reflect.ValueOf(p.Key), reflect.ValueOf(vA))
+		return nil
+	}
+
+	if kindT == reflect.Array || kindT == reflect.Slice {
+		valueT.Index(p.Index).Set(reflect.ValueOf(vA))
+		return nil
+	}
+
+	result = fmt.Errorf("type not supported")
+
+	return
+}
+
 type List struct {
 	Data []interface{}
 
@@ -11909,9 +12140,24 @@ func (pA *TK) DownloadWebPageX(urlA string, optsA ...interface{}) string {
 
 	timeoutSecsT := time.Second * time.Duration(StrToInt(timeoutStrT, 15))
 
+	proxyT := GetSwitchI(optsA, "-proxy=", "")
+
 	client := &http.Client{
 		//CheckRedirect: redirectPolicyFunc,
 		Timeout: time.Second * timeoutSecsT,
+	}
+
+	if proxyT != "" {
+		urli := url.URL{}
+		urlproxy, errT := urli.Parse(proxyT)
+
+		if errT != nil {
+			return ErrorToString(errT)
+		}
+
+		client.Transport = &http.Transport{
+			Proxy: http.ProxyURL(urlproxy),
+		}
 	}
 
 	var urlT string
@@ -12080,11 +12326,26 @@ func (pA *TK) GetWeb(urlA string, optsA ...interface{}) interface{} {
 
 	encodingT := GetSwitchI(optsA, "-encoding=", "")
 
+	proxyT := GetSwitchI(optsA, "-proxy=", "")
+
 	timeoutSecsT := time.Second * time.Duration(StrToInt(timeoutStrT, 15))
 
 	client := &http.Client{
 		//CheckRedirect: redirectPolicyFunc,
 		Timeout: time.Second * timeoutSecsT,
+	}
+
+	if proxyT != "" {
+		urli := url.URL{}
+		urlproxy, errT := urli.Parse(proxyT)
+
+		if errT != nil {
+			return errT
+		}
+
+		client.Transport = &http.Transport{
+			Proxy: http.ProxyURL(urlproxy),
+		}
 	}
 
 	var urlT string
@@ -12107,6 +12368,10 @@ func (pA *TK) GetWeb(urlA string, optsA ...interface{}) interface{} {
 	var postBytesT []byte = nil
 
 	if postStrT != "" {
+		if strings.HasPrefix(postStrT, "HEX_") {
+			postStrT = HexToStr(postStrT)
+		}
+
 		postObjT, errT := FromJSON(postStrT)
 
 		if errT == nil {
@@ -12152,6 +12417,10 @@ func (pA *TK) GetWeb(urlA string, optsA ...interface{}) interface{} {
 
 	postBodyT := GetSwitchI(optsA, "-postBody=", "")
 
+	if strings.HasPrefix(postBodyT, "HEX_") {
+		postBodyT = HexToStr(postBodyT)
+	}
+
 	if (postDataT != nil && len(postDataT) > 0) || postBodyT != "" || postBytesT != nil {
 		if reqTypeT != "PUT" {
 			reqTypeT = "POST"
@@ -12190,9 +12459,17 @@ func (pA *TK) GetWeb(urlA string, optsA ...interface{}) interface{} {
 		req, errT = http.NewRequest(reqTypeT, urlT, nil)
 	}
 
+	if errT != nil {
+		return errT
+	}
+
 	customHeadersStrT := Trim(GetSwitchI(optsA, "-headers=", ""))
 
 	if customHeadersStrT != "" {
+		if strings.HasPrefix(customHeadersStrT, "HEX_") {
+			customHeadersStrT = HexToStr(customHeadersStrT)
+		}
+
 		headerObjT, errT := FromJSON(customHeadersStrT)
 
 		if errT == nil {
@@ -12227,7 +12504,7 @@ func (pA *TK) GetWeb(urlA string, optsA ...interface{}) interface{} {
 				Pl("response status: %v (%v) body: %v", respT.StatusCode, respT, string(body))
 			}
 
-			return GenerateErrorStringF("response status: %v", respT.StatusCode)
+			return fmt.Errorf("response status: %v", respT.StatusCode)
 		} else {
 			body, errT := io.ReadAll(respT.Body)
 
@@ -14838,6 +15115,36 @@ func (pA *TK) GetNodeStringFromXML(xmlA string, nodeA string) (string, error) {
 
 var GetNodeStringFromXML = TKX.GetNodeStringFromXML
 
+func (pA *TK) GetNodesStringFromXML(xmlA string, nodeA string) interface{} {
+	var errT error
+
+	treeT := etree.NewDocument()
+
+	if treeT == nil {
+		return Errf("create XML tree failed")
+	}
+
+	errT = treeT.ReadFromString(xmlA)
+
+	if errT != nil {
+		return Errf("invalid XML: %v", errT)
+	}
+
+	stringNodesT := treeT.FindElements("//" + nodeA)
+
+	aryT := make([]string, 0)
+
+	for _, v := range stringNodesT {
+		aryT = append(aryT, v.Text())
+	}
+
+	// Pl("xmlnode: %v, %v", stringNodeT, stringNodeT.FullTag())
+
+	return aryT
+}
+
+var GetNodesStringFromXML = TKX.GetNodesStringFromXML
+
 func (pA *TK) FromXMLX(xmlA string, nodeA ...interface{}) interface{} {
 	var errT error
 
@@ -17099,6 +17406,10 @@ func (pA *TK) GetRefValue(ppA interface{}) (result interface{}, err error) {
 	}()
 
 	switch nv := ppA.(type) {
+	case *FlexRef:
+		return nv.GetValue(), nil
+	case *MapRef:
+		return nv.GetValue(), nil
 	case *bool:
 		return *nv, nil
 	case *int:
@@ -19565,7 +19876,7 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		}
 		// var bufT bytes.Buffer
 		return new(bytes.Buffer)
-	case "stringbuffer", "stringbuilder":
+	case "stringbuffer", "stringbuilder", "strings.builder":
 
 		var bufT = new(strings.Builder)
 		if lenT > 1 {
