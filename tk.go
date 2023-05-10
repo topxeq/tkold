@@ -349,6 +349,8 @@ func (p *FlexRef) SetValue(vA interface{}) (result error) {
 
 	kindT := valueT.Kind()
 
+	// Pl("SetValue: %#v %#v %v", p.Data, vA, kindT)
+
 	// if kindT != reflect.Pointer {
 	// 	return fmt.Errorf("not pointer type")
 	// }
