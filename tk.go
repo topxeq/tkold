@@ -6565,6 +6565,17 @@ func (pA *TK) BoolToInt(b bool) int {
 
 var BoolToInt = TKX.BoolToInt
 
+func (pA *TK) AnyArrayToStringArray(vA []interface{}) []string {
+	mssT := make([]string, len(vA))
+	for i, v := range vA {
+		vv := ToStr(v)
+		mssT[i] = vv
+	}
+	return mssT
+}
+
+var AnyArrayToStringArray = TKX.AnyArrayToStringArray
+
 func (pA *TK) MSI2MSS(vA map[string]interface{}) map[string]string {
 	mssT := make(map[string]string, len(vA))
 	for k, v := range vA {
@@ -21959,7 +21970,7 @@ func (p *CompactIterator) Next() (int, interface{}, interface{}, bool) {
 		p.Current = cv + p.Step.(int)
 		p.Count++
 
-		return p.Count - 1, p.Count, item, true
+		return p.Count - 1, p.Count - 1, item, true
 
 	case 51: // map[string]string
 		Pl("here51")
