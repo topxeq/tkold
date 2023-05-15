@@ -35,6 +35,7 @@ require (
 	github.com/klauspost/compress v1.14.4 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/mozillazg/go-pinyin v0.20.0
 	github.com/nwaples/rardecode v1.1.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect

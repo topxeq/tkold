@@ -83,6 +83,8 @@ import (
 
 	zipx "github.com/yeka/zip"
 
+	"github.com/mozillazg/go-pinyin"
+
 	"github.com/davecgh/go-spew/spew"
 )
 
@@ -15811,6 +15813,62 @@ func (pA *TK) ReflectCallMethodSlice(vA interface{}, nameA string, argsA ...inte
 }
 
 var ReflectCallMethodSlice = TKX.ReflectCallMethodSlice
+
+// Hans Related
+
+func (pA *TK) ToPinYin(strA string, argsA ...string) interface{} {
+	pinyin1 := pinyin.NewArgs()
+
+	if IfSwitchExistsWhole(argsA, "-first") {
+		pinyin1.Style = pinyin.FirstLetter
+	}
+
+	if IfSwitchExistsWhole(argsA, "-tone") {
+		pinyin1.Style = pinyin.Tone
+	}
+
+	if IfSwitchExistsWhole(argsA, "-digitTone") {
+		pinyin1.Style = pinyin.Tone3
+	}
+
+	if IfSwitchExistsWhole(argsA, "-digitTone2") {
+		pinyin1.Style = pinyin.Tone2
+	}
+
+	if IfSwitchExistsWhole(argsA, "-ascOnly") {
+		pinyin1.Fallback = func(r rune, a pinyin.Args) []string {
+			if r > 255 {
+				return []string{}
+			}
+
+			return []string{string(r)}
+		}
+	} else if IfSwitchExistsWhole(argsA, "-pinYinOnly") {
+	} else {
+		pinyin1.Fallback = func(r rune, a pinyin.Args) []string {
+			return []string{string(r)}
+		}
+	}
+
+	var rs [][]string = pinyin.Pinyin(strA, pinyin1)
+
+	sepT := GetSwitch(argsA, "-sep=", "")
+
+	if IfSwitchExistsWhole(argsA, "-raw") {
+		return rs
+	}
+
+	sary1 := make([]string, 0, len(rs))
+
+	for _, v := range rs {
+		lineStrT := strings.Join(v, sepT)
+		sary1 = append(sary1, lineStrT)
+	}
+
+	return strings.Join(sary1, sepT)
+}
+
+var ToPinYin = TKX.ToPinYin
 
 // Misc Related
 
