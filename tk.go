@@ -4308,6 +4308,11 @@ func (pA *TK) ToTime(timeA interface{}, defaultA ...interface{}) interface{} {
 
 	maxT := int64(MAX_INT)
 
+	if len(str1T) > 10 {
+		str1T = str1T[0:10]
+		str2T = strings.TrimSpace(str1T[10:])
+	}
+
 	tickT := StrToInt64(str1T, maxT)
 
 	if tickT == maxT {
