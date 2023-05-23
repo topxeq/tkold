@@ -18208,6 +18208,16 @@ func (a *LoginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 
 // network related
 
+func (pA *TK) IsHttps(reqA *http.Request) bool {
+	if reqA.TLS != nil || reqA.Header.Get("X-Forwarded-Proto") == "https" {
+		return true
+	}
+
+	return false
+}
+
+var IsHttps = TKX.IsHttps
+
 func (pA *TK) Listen(netA string, addrA string) interface{} {
 	rsT, errT := net.Listen(netA, addrA)
 	if errT != nil {
