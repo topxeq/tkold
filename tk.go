@@ -14363,23 +14363,59 @@ func (pA *TK) GetEQResult(n1A interface{}, n2A interface{}) (result interface{})
 
 	switch nv := n1A.(type) {
 	case bool:
-		return nv == n2A.(bool)
+		nv2, ok := n2A.(bool)
+		if !ok {
+			return false
+		}
+		return nv == nv2
 	case byte:
-		return nv == n2A.(byte)
+		nv2, ok := n2A.(byte)
+		if !ok {
+			return false
+		}
+		return nv == nv2
 	case rune:
-		return nv == n2A.(rune)
+		nv2, ok := n2A.(rune)
+		if !ok {
+			return false
+		}
+		return nv == nv2
 	case int:
-		return nv == n2A.(int)
+		nv2, ok := n2A.(int)
+		if !ok {
+			return false
+		}
+		return nv == nv2
 	case int64:
-		return nv == n2A.(int64)
+		nv2, ok := n2A.(int64)
+		if !ok {
+			return false
+		}
+		return nv == nv2
 	case float32:
-		return nv == n2A.(float32)
+		nv2, ok := n2A.(float32)
+		if !ok {
+			return false
+		}
+		return nv == nv2
 	case float64:
-		return nv == n2A.(float64)
+		nv2, ok := n2A.(float64)
+		if !ok {
+			return false
+		}
+		return nv == nv2
 	case string:
-		return nv == n2A.(string)
+		nv2, ok := n2A.(string)
+		if !ok {
+			return false
+		}
+		return nv == nv2
 	case time.Time:
-		return !nv.Before(n2A.(time.Time)) && !nv.After(n2A.(time.Time))
+		nv2, ok := n2A.(time.Time)
+		if !ok {
+			return false
+		}
+		return !nv.Before(nv2) && !nv.After(nv2)
 	case interface{}:
 		return nv == n2A.(interface{})
 	default:
