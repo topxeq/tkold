@@ -13787,6 +13787,90 @@ var JSONResponseToHTML = TKX.JSONResponseToHTML
 // max integer
 const MAX_INT = int(^uint(0) >> 1)
 
+func (pA *TK) Ceil(nA interface{}) interface{} {
+	switch nv := nA.(type) {
+	case bool:
+		if nv {
+			return 1
+		}
+		return 0
+	case byte:
+		return int(nv)
+	case rune:
+		return int(nv)
+	case int:
+		return nv
+	case int64:
+		return int(nv)
+	case float32:
+		return int(math.Ceil(float64(nv)))
+	case float64:
+		return int(math.Ceil(nv))
+	case UndefinedStruct:
+		return 0
+	default:
+		return fmt.Errorf("unsupported type: %T(%v)", nA, nA)
+	}
+}
+
+var Ceil = TKX.Ceil
+
+func (pA *TK) Floor(nA interface{}) interface{} {
+	switch nv := nA.(type) {
+	case bool:
+		if nv {
+			return 1
+		}
+		return 0
+	case byte:
+		return int(nv)
+	case rune:
+		return int(nv)
+	case int:
+		return nv
+	case int64:
+		return int(nv)
+	case float32:
+		return int(math.Floor(float64(nv)))
+	case float64:
+		return int(math.Floor(nv))
+	case UndefinedStruct:
+		return 0
+	default:
+		return fmt.Errorf("unsupported type: %T(%v)", nA, nA)
+	}
+}
+
+var Floor = TKX.Floor
+
+func (pA *TK) Round(nA interface{}) interface{} {
+	switch nv := nA.(type) {
+	case bool:
+		if nv {
+			return 1
+		}
+		return 0
+	case byte:
+		return int(nv)
+	case rune:
+		return int(nv)
+	case int:
+		return nv
+	case int64:
+		return int(nv)
+	case float32:
+		return int(math.Round(float64(nv)))
+	case float64:
+		return int(math.Round(nv))
+	case UndefinedStruct:
+		return 0
+	default:
+		return fmt.Errorf("unsupported type: %T(%v)", nA, nA)
+	}
+}
+
+var Round = TKX.Round
+
 func (pA *TK) GetNegativeResult(nA interface{}) interface{} {
 	switch nv := nA.(type) {
 	case bool:
