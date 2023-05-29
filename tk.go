@@ -16959,10 +16959,12 @@ func (pA *TK) GetErrStrX(vA interface{}) string {
 	if ok {
 		if IsErrStr(nv2) {
 			return GetErrStr(nv2)
+		} else {
+			return nv2
 		}
 	}
 
-	return ""
+	return fmt.Sprintf("%v", vA)
 }
 
 var GetErrStrX = TKX.GetErrStrX
