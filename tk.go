@@ -79,7 +79,11 @@ import (
 	"github.com/boombuler/barcode/qr"
 
 	"github.com/yuin/goldmark"
-	highlighting "github.com/yuin/goldmark-highlighting"
+	mdhighlighting "github.com/yuin/goldmark-highlighting"
+	mdast "github.com/yuin/goldmark/ast"
+	mdextension "github.com/yuin/goldmark/extension"
+	mdparser "github.com/yuin/goldmark/parser"
+	mdhtml "github.com/yuin/goldmark/renderer/html"
 
 	zipx "github.com/yeka/zip"
 
@@ -15756,15 +15760,49 @@ var HTMLToText = TKX.HTMLToText
 
 // Markdown Related
 
+type myIDs struct {
+}
+
+func (s *myIDs) Generate(value []byte, kind mdast.NodeKind) []byte {
+	s1 := string(value)
+
+	// s1 = RegReplaceX(s1, `^- `, "--")
+
+	s1 = RegReplaceX(s1, `\s+`, "-")
+
+	s1 = strings.ToLower(s1)
+
+	s1 = RegReplaceX(s1, `[（）\/]`, "")
+
+	s1 = RegReplaceX(s1, `\*\*([^\*]+?)\*\*`, "${1}")
+
+	// s1 = UrlEncode2(s1)
+
+	// Pl("kind: %v, value: %#v", kind, s1)
+	return []byte(s1)
+}
+
+func (s *myIDs) Put(value []byte) {
+}
+
 func (pA *TK) RenderMarkdown(markdownA string) string {
+	ctx := mdparser.NewContext(mdparser.WithIDs(&myIDs{}))
 	markdownT := goldmark.New(
 		goldmark.WithExtensions(
-			highlighting.Highlighting,
+			mdextension.GFM,
+			mdhighlighting.Highlighting,
+		),
+		goldmark.WithParserOptions(
+			mdparser.WithAutoHeadingID(),
+		),
+		goldmark.WithRendererOptions(
+			mdhtml.WithHardWraps(),
+			mdhtml.WithXHTML(),
 		),
 	)
 
 	var buf bytes.Buffer
-	if err := markdownT.Convert([]byte(markdownA), &buf); err != nil {
+	if err := markdownT.Convert([]byte(markdownA), &buf, mdparser.WithContext(ctx)); err != nil {
 		return ErrToStr(err)
 	}
 
