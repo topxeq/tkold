@@ -10626,6 +10626,10 @@ func (pA *TK) BytesToHexX(bufA []byte) string {
 var BytesToHexX = TKX.BytesToHexX
 
 func (pA *TK) HexToBytes(strA string) []byte {
+	if strings.HasPrefix(strA, "HEX_") {
+		strA = strA[4:]
+	}
+
 	buf, err := hex.DecodeString(strA)
 	if err != nil {
 		return nil
