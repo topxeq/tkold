@@ -13795,6 +13795,238 @@ var JSONResponseToHTML = TKX.JSONResponseToHTML
 // max integer
 const MAX_INT = int(^uint(0) >> 1)
 
+// Max 取多个数值的最大值，数据类型以第一个参数为准
+func (pA *TK) Max(nA ...interface{}) interface{} {
+	lenT := len(nA)
+	if lenT < 1 {
+		return fmt.Errorf("no values")
+	}
+
+	switch nv := nA[0].(type) {
+	case bool:
+		if nv {
+			return true
+		}
+
+		for i := 1; i < lenT; i++ {
+			if ToBool(nA[i]) {
+				return true
+			}
+		}
+
+		return false
+	case byte:
+		maxT := nv
+
+		for i := 1; i < lenT; i++ {
+			vT := ToByte(nA[i])
+
+			if vT > maxT {
+				maxT = vT
+			}
+		}
+
+		return maxT
+	case rune:
+		maxT := nv
+
+		for i := 1; i < lenT; i++ {
+			vT := ToRune(nA[i])
+
+			if vT > maxT {
+				maxT = vT
+			}
+		}
+
+		return maxT
+	case int:
+		maxT := nv
+
+		for i := 1; i < lenT; i++ {
+			vT := ToInt(nA[i])
+
+			if vT > maxT {
+				maxT = vT
+			}
+		}
+
+		return maxT
+	case int64:
+		maxT := nv
+
+		for i := 1; i < lenT; i++ {
+			vT := int64(ToInt(nA[i]))
+
+			if vT > maxT {
+				maxT = vT
+			}
+		}
+
+		return maxT
+	case float32:
+		maxT := nv
+
+		for i := 1; i < lenT; i++ {
+			vT := float32(ToFloat(nA[i]))
+
+			if vT > maxT {
+				maxT = vT
+			}
+		}
+
+		return maxT
+	case float64:
+		maxT := nv
+
+		for i := 1; i < lenT; i++ {
+			vT := ToFloat(nA[i])
+
+			if vT > maxT {
+				maxT = vT
+			}
+		}
+
+		return maxT
+	case string:
+		maxT := nv
+
+		for i := 1; i < lenT; i++ {
+			vT := ToStr(nA[i])
+
+			if vT > maxT {
+				maxT = vT
+			}
+		}
+
+		return maxT
+	case UndefinedStruct:
+		for i := 1; i < lenT; i++ {
+			if ToBool(nA[i]) {
+				return true
+			}
+		}
+
+		return false
+	default:
+		return fmt.Errorf("unsupported type: %T(%v)", nA[0], nA[0])
+	}
+}
+
+var Max = TKX.Max
+
+// Min 取多个数值的最小值，数据类型以第一个参数为准
+func (pA *TK) Min(nA ...interface{}) interface{} {
+	lenT := len(nA)
+	if lenT < 1 {
+		return fmt.Errorf("no values")
+	}
+
+	switch nv := nA[0].(type) {
+	case bool:
+		if !nv {
+			return false
+		}
+
+		for i := 1; i < lenT; i++ {
+			if !ToBool(nA[i]) {
+				return false
+			}
+		}
+
+		return true
+	case byte:
+		minT := nv
+
+		for i := 1; i < lenT; i++ {
+			vT := ToByte(nA[i])
+
+			if vT < minT {
+				minT = vT
+			}
+		}
+
+		return minT
+	case rune:
+		minT := nv
+
+		for i := 1; i < lenT; i++ {
+			vT := ToRune(nA[i])
+
+			if vT < minT {
+				minT = vT
+			}
+		}
+
+		return minT
+	case int:
+		minT := nv
+
+		for i := 1; i < lenT; i++ {
+			vT := ToInt(nA[i])
+
+			if vT < minT {
+				minT = vT
+			}
+		}
+
+		return minT
+	case int64:
+		minT := nv
+
+		for i := 1; i < lenT; i++ {
+			vT := int64(ToInt(nA[i]))
+
+			if vT < minT {
+				minT = vT
+			}
+		}
+
+		return minT
+	case float32:
+		minT := nv
+
+		for i := 1; i < lenT; i++ {
+			vT := float32(ToFloat(nA[i]))
+
+			if vT < minT {
+				minT = vT
+			}
+		}
+
+		return minT
+	case float64:
+		minT := nv
+
+		for i := 1; i < lenT; i++ {
+			vT := ToFloat(nA[i])
+
+			if vT < minT {
+				minT = vT
+			}
+		}
+
+		return minT
+	case string:
+		minT := nv
+
+		for i := 1; i < lenT; i++ {
+			vT := ToStr(nA[i])
+
+			if vT < minT {
+				minT = vT
+			}
+		}
+
+		return minT
+	case UndefinedStruct:
+		return false
+	default:
+		return fmt.Errorf("unsupported type: %T(%v)", nA[0], nA[0])
+	}
+}
+
+var Min = TKX.Min
+
 func (pA *TK) Ceil(nA interface{}) interface{} {
 	switch nv := nA.(type) {
 	case bool:
