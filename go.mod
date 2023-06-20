@@ -39,6 +39,7 @@ require (
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/yuin/goldmark v1.5.4
 	github.com/yuin/goldmark-highlighting v0.0.0-20220208100518-594be1970594
+	tinygo.org/x/bluetooth v0.7.0
 )
 
 // replace github.com/topxeq/charlang v0.0.0 => ../charlang

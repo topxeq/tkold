@@ -2453,6 +2453,7 @@ func (v AnyQueueItem) String() string {
 	return fmt.Sprintf("%v", v.Value)
 }
 
+// A queue with size limit
 type AnyQueue struct {
 	Head  *AnyQueueItem
 	Tail  *AnyQueueItem
@@ -4032,6 +4033,19 @@ func (pA *TK) GetTimeFromUnixTimeStamp(timeStampA int64) time.Time {
 }
 
 var GetTimeFromUnixTimeStamp = TKX.GetTimeFromUnixTimeStamp
+
+func (pA *TK) GetNowTick() int {
+	return int(time.Now().UnixNano() / 1000000)
+}
+
+var GetNowTick = TKX.GetNowTick
+var GetNowTimeStamp = TKX.GetNowTick
+
+func (pA *TK) GetNowTickNano() int {
+	return int(time.Now().UnixNano())
+}
+
+var GetNowTickNano = TKX.GetNowTickNano
 
 func (pA *TK) GetTimeFromUnixTimeStampMid(timeStampStrA string) time.Time {
 	if len(timeStampStrA) < 13 {
@@ -19968,13 +19982,21 @@ func (pA *CountingWriter) Write(p []byte) (n int, err error) {
 	return lenT, nil
 }
 
+// SyncQueue
 type SyncQueue struct {
 	Items *doublylinkedlist.List
 	Lock  sync.Mutex
+	Cap   int
 }
 
+// no size or <= 0 indicates no size limit
 func (pA *TK) NewSyncQueue(sizeA ...int) *SyncQueue {
-	rs := &SyncQueue{Items: doublylinkedlist.New()}
+	sizeT := 0
+	if len(sizeA) > 0 {
+		sizeT = sizeA[0]
+	}
+
+	rs := &SyncQueue{Items: doublylinkedlist.New(), Cap: sizeT}
 
 	return rs
 }
@@ -19985,6 +20007,12 @@ func (p *SyncQueue) Add(vA interface{}) {
 	p.Lock.Lock()
 
 	p.Items.Add(vA)
+
+	if p.Cap > 0 {
+		if p.Items.Size() > p.Cap {
+			p.Items.Remove(0)
+		}
+	}
 
 	p.Lock.Unlock()
 }
@@ -20037,12 +20065,61 @@ func (p *SyncQueue) Get() (interface{}, bool) {
 	result, b = p.Items.Get(0)
 
 	if b {
+		// fmt.Printf("result: %v, b: %v\n", result, b)
 		p.Items.Remove(0)
 	}
 
 	p.Lock.Unlock()
 
 	return result, b
+}
+
+func (p *SyncQueue) PeekLast() (interface{}, bool) {
+	var result interface{} = nil
+	var b bool
+
+	p.Lock.Lock()
+
+	lenT := p.Items.Size()
+
+	if lenT < 1 {
+		p.Lock.Unlock()
+		return nil, false
+	}
+
+	result, b = p.Items.Get(lenT - 1)
+
+	// if b {
+	// 	p.Items.Remove(0)
+	// }
+
+	p.Lock.Unlock()
+
+	return result, b
+}
+
+func (p *SyncQueue) PeekLastCompact() interface{} {
+	var result interface{} = nil
+	var b bool
+
+	p.Lock.Lock()
+
+	lenT := p.Items.Size()
+
+	if lenT < 1 {
+		p.Lock.Unlock()
+		return nil
+	}
+
+	result, b = p.Items.Get(lenT - 1)
+
+	p.Lock.Unlock()
+
+	if !b {
+		return nil
+	}
+
+	return result
 }
 
 func (p *SyncQueue) Size() int {
@@ -22638,3 +22715,29 @@ func (p *CompactIterator) QuickNextWithIndex() interface{} {
 
 	return []interface{}{indexKey, rs, count, b}
 }
+
+// bluetooth related
+
+// func (pA *TK) BluetoothDiscoverDevice(funcA func(argsA ...interface{}) interface{}) error {
+
+// 	var bluetoothAdapter = bluetooth.DefaultAdapter
+
+// 	// errT := bluetoothAdapter.Enable()
+
+// 	// if errT != nil {
+// 	// 	return fmt.Errorf("enable Bluetooth function failed: %v", errT)
+// 	// }
+
+// 	errT := bluetoothAdapter.Scan(func(adapter *bluetooth.Adapter, device bluetooth.ScanResult) {
+// 		funcA(device.Address.String(), device.RSSI, device.LocalName(), device.Bytes())
+// 	})
+
+// 	if errT != nil {
+// 		return fmt.Errorf("scan failed: %v", errT)
+// 	}
+
+// 	return nil
+
+// }
+
+// var BluetoothDiscoverDevice = TKX.BluetoothDiscoverDevice
