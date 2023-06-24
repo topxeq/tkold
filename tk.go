@@ -4034,6 +4034,19 @@ func (pA *TK) GetTimeFromUnixTimeStamp(timeStampA int64) time.Time {
 
 var GetTimeFromUnixTimeStamp = TKX.GetTimeFromUnixTimeStamp
 
+func (pA *TK) TimeStampNanoToTime(timeStampA int64) time.Time {
+	return time.Unix(timeStampA/1000000000, timeStampA%1000000000)
+}
+
+var TimeStampNanoToTime = TKX.TimeStampNanoToTime
+
+func (pA *TK) TimeStampMilliToTime(timeStampA int64) time.Time {
+	return time.UnixMilli(timeStampA)
+}
+
+var TimeStampMilliToTime = TKX.TimeStampMilliToTime
+
+// in millisecs
 func (pA *TK) GetNowTick() int {
 	return int(time.Now().UnixNano() / 1000000)
 }
@@ -4061,6 +4074,44 @@ func (pA *TK) GetTimeFromUnixTimeStampMid(timeStampStrA string) time.Time {
 
 var GetTimeFromUnixTimeStampMid = TKX.GetTimeFromUnixTimeStampMid
 
+// TimeStampToTime 时间戳转换为时间，如果参数是nil则返回当前时间，如果参数是整数，则按纳秒转换，如果是字符串，则可转换13位（毫秒）或10位（秒）的时间戳，此时如果转换失败则返回时间的零值（1970年...）
+func (pA *TK) TimeStampToTime(timeStampA interface{}) time.Time {
+	if timeStampA == nil {
+		return time.Now()
+	}
+
+	nv2, ok := timeStampA.(int64)
+
+	if ok {
+		return time.Unix(nv2/1000000000, nv2%1000000000)
+	}
+
+	nv1, ok := timeStampA.(int)
+
+	if ok {
+		return time.Unix(int64(nv1)/1000000000, int64(nv1)%1000000000)
+	}
+
+	nv3, ok := timeStampA.(string)
+
+	if !ok {
+		return time.Now()
+	}
+
+	if len(nv3) < 13 {
+		if len(nv3) == 10 {
+			nv3 = nv3 + "000"
+		} else {
+			return time.Time{}
+		}
+	}
+
+	return time.Unix(StrToInt64WithDefaultValue(nv3[:10], 0), StrToInt64WithDefaultValue(nv3[10:], 0))
+}
+
+var TimeStampToTime = TKX.TimeStampToTime
+var TickToTime = TKX.TimeStampToTime
+
 func (pA *TK) GetTimeStamp(timeA time.Time) string {
 	return PadString(Int64ToStr(timeA.Unix()), 10)
 }
@@ -4081,6 +4132,12 @@ func (pA *TK) GetTimeStampNano(timeA time.Time) string {
 }
 
 var GetTimeStampNano = TKX.GetTimeStampNano
+
+func (pA *TK) GetTimeStampNanoInt(timeA time.Time) int {
+	return int(timeA.UnixNano())
+}
+
+var GetTimeStampNanoInt = TKX.GetTimeStampNanoInt
 
 func (pA *TK) NowToFileName() string {
 	return StringReplace(time.Now().String(), "-", "_", " ", "_", ":", "_", ".", "_", "+", "_", "=", "_")
@@ -20017,6 +20074,42 @@ func (p *SyncQueue) Add(vA interface{}) {
 	p.Lock.Unlock()
 }
 
+func (p *SyncQueue) RemoveLast() {
+	p.Lock.Lock()
+
+	lenT := p.Items.Size()
+
+	if lenT > 0 {
+		p.Items.Remove(lenT - 1)
+	}
+
+	p.Lock.Unlock()
+}
+
+func (p *SyncQueue) ReplaceFirst(vA interface{}) {
+	p.Lock.Lock()
+
+	lenT := p.Items.Size()
+
+	if lenT > 0 {
+		p.Items.Set(0, vA)
+	}
+
+	p.Lock.Unlock()
+}
+
+func (p *SyncQueue) ReplaceLast(vA interface{}) {
+	p.Lock.Lock()
+
+	lenT := p.Items.Size()
+
+	if lenT > 0 {
+		p.Items.Set(lenT-1, vA)
+	}
+
+	p.Lock.Unlock()
+}
+
 func (p *SyncQueue) Clear() {
 	p.Lock.Lock()
 
@@ -20074,6 +20167,26 @@ func (p *SyncQueue) Get() (interface{}, bool) {
 	return result, b
 }
 
+func (p *SyncQueue) GetCompact() interface{} {
+	var result interface{} = nil
+	var b bool
+
+	p.Lock.Lock()
+
+	result, b = p.Items.Get(0)
+
+	if b {
+		// fmt.Printf("result: %v, b: %v\n", result, b)
+		p.Items.Remove(0)
+	} else {
+		result = nil
+	}
+
+	p.Lock.Unlock()
+
+	return result
+}
+
 func (p *SyncQueue) PeekLast() (interface{}, bool) {
 	var result interface{} = nil
 	var b bool
@@ -20112,6 +20225,54 @@ func (p *SyncQueue) PeekLastCompact() interface{} {
 	}
 
 	result, b = p.Items.Get(lenT - 1)
+
+	p.Lock.Unlock()
+
+	if !b {
+		return nil
+	}
+
+	return result
+}
+
+func (p *SyncQueue) PeekFirstCompact() interface{} {
+	var result interface{} = nil
+	var b bool
+
+	p.Lock.Lock()
+
+	lenT := p.Items.Size()
+
+	if lenT < 1 {
+		p.Lock.Unlock()
+		return nil
+	}
+
+	result, b = p.Items.Get(0)
+
+	p.Lock.Unlock()
+
+	if !b {
+		return nil
+	}
+
+	return result
+}
+
+func (p *SyncQueue) PeekCompact(idxA int) interface{} {
+	var result interface{} = nil
+	var b bool
+
+	p.Lock.Lock()
+
+	lenT := p.Items.Size()
+
+	if idxA < 0 || idxA > (lenT-1) {
+		p.Lock.Unlock()
+		return nil
+	}
+
+	result, b = p.Items.Get(idxA)
 
 	p.Lock.Unlock()
 
