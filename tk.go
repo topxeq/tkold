@@ -90,6 +90,8 @@ import (
 	"github.com/mozillazg/go-pinyin"
 
 	"github.com/davecgh/go-spew/spew"
+
+	"github.com/antonmedv/expr"
 )
 
 var VersionG = "v1.0.1"
@@ -3248,6 +3250,26 @@ func (pA *TK) LoadDualLineListFromString(strA string) [][]string {
 }
 
 var LoadDualLineListFromString = TKX.LoadDualLineListFromString
+
+// 表达式相关 expression related
+
+func (pA *TK) FlexEval(exprA string, varsA ...interface{}) interface{} {
+	envT := map[string]interface{}{}
+
+	for i, v := range varsA {
+		envT[fmt.Sprintf("v%d", i+1)] = v
+	}
+
+	outT, errT := expr.Eval(exprA, envT)
+
+	if errT != nil {
+		return errT
+	}
+
+	return outT
+}
+
+var FlexEval = TKX.FlexEval
 
 // 正则表达式相关 regex related
 
