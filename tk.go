@@ -3271,6 +3271,18 @@ func (pA *TK) FlexEval(exprA string, varsA ...interface{}) interface{} {
 
 var FlexEval = TKX.FlexEval
 
+func (pA *TK) FlexEvalMap(exprA string, varsA map[string]interface{}) interface{} {
+	outT, errT := expr.Eval(exprA, varsA)
+
+	if errT != nil {
+		return errT
+	}
+
+	return outT
+}
+
+var FlexEvalMap = TKX.FlexEvalMap
+
 // 正则表达式相关 regex related
 
 func (pA *TK) RegReplace(strA, patternA, replaceA string) string {
