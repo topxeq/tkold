@@ -3253,6 +3253,7 @@ var LoadDualLineListFromString = TKX.LoadDualLineListFromString
 
 // 表达式相关 expression related
 
+// FlexEval 计算一个表达式，支持普通语法，第一个参数是表达式字符串，然后是0个或多个参数，在表达式中可以用v1、v2……来指代，表达式采用 github.com/antonmedv/expr 提供的表达式计算引擎，相关进一步文档也可以从这里获取
 func (pA *TK) FlexEval(exprA string, varsA ...interface{}) interface{} {
 	envT := map[string]interface{}{}
 
@@ -3271,6 +3272,7 @@ func (pA *TK) FlexEval(exprA string, varsA ...interface{}) interface{} {
 
 var FlexEval = TKX.FlexEval
 
+// 类似FlexEval，区别是：FlexEval从第二个参数开始可以接受多个参数，并在表达式中以v1、v2这样来指代，而FlexEvalMap则只允许有一个参数，需要是映射类型，这样可以直接用键名在表达式中引用这些变量
 func (pA *TK) FlexEvalMap(exprA string, varsA map[string]interface{}) interface{} {
 	outT, errT := expr.Eval(exprA, varsA)
 
