@@ -45,6 +45,9 @@ require (
 // replace github.com/topxeq/charlang v0.0.0 => ../charlang
 
 // replace github.com/topxeq/goph v0.0.0 => ../goph
+// replace github.com/topxeq/expr v0.0.0 => ../expr
+
+// replace github.com/antonmedv/expr v1.12.5 => ../../antonmedv/expr
 
 // replace github.com/topxeq/gods v0.0.0 => ../gods
 // replace github.com/topxeq/countingwriter v0.0.0 => ../countingwriter
