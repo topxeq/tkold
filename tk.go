@@ -147,6 +147,96 @@ func (pA *TK) IsUndefined(vA interface{}) bool {
 
 var IsUndefined = TKX.IsUndefined
 
+// IntSumBuffer
+type IntSumBuffer struct {
+	Size    int
+	Data    []int
+	Pointer int
+}
+
+func (pA *TK) NewIntSumBuffer(sizeA int) *IntSumBuffer {
+	return &IntSumBuffer{Data: make([]int, sizeA), Size: sizeA, Pointer: 0}
+}
+
+var NewIntSumBuffer = TKX.NewIntSumBuffer
+
+func (p *IntSumBuffer) Add(vA int) (int, bool) {
+	p.Data[p.Pointer] = vA
+
+	p.Pointer++
+
+	if p.Pointer >= p.Size {
+		var sumT int = 0
+
+		for i := 0; i < p.Size; i++ {
+			sumT += p.Data[i]
+		}
+
+		p.Pointer = 0
+		return sumT, true
+	}
+
+	return vA, false
+}
+
+func (p *IntSumBuffer) AddCompact(vA int) interface{} {
+	p.Data[p.Pointer] = vA
+
+	p.Pointer++
+
+	if p.Pointer >= p.Size {
+		var sumT int = 0
+
+		for i := 0; i < p.Size; i++ {
+			sumT += p.Data[i]
+		}
+
+		p.Pointer = 0
+		return sumT
+	}
+
+	return false
+}
+
+func (p *IntSumBuffer) AddAvg(vA int) (int, bool) {
+	p.Data[p.Pointer] = vA
+
+	p.Pointer++
+
+	if p.Pointer >= p.Size {
+		var sumT int = 0
+
+		for i := 0; i < p.Size; i++ {
+			sumT += p.Data[i]
+		}
+
+		p.Pointer = 0
+		return sumT / p.Size, true
+	}
+
+	return vA, false
+}
+
+func (p *IntSumBuffer) AddAvgCompact(vA int) interface{} {
+	p.Data[p.Pointer] = vA
+
+	p.Pointer++
+
+	if p.Pointer >= p.Size {
+		var sumT int = 0
+
+		for i := 0; i < p.Size; i++ {
+			sumT += p.Data[i]
+		}
+
+		p.Pointer = 0
+		return sumT / p.Size
+	}
+
+	return false
+}
+
+// MapRef
 type MapRef struct {
 	Data interface{}
 	Key  string
