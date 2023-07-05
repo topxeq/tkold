@@ -10097,6 +10097,42 @@ func (pA *TK) ToJSONIndentWithDefault(objA interface{}, defaultA string) string 
 
 var ToJSONIndentWithDefault = TKX.ToJSONIndentWithDefault
 
+func (pA *TK) ReadAllString(vA interface{}) string {
+	nv1, ok := vA.([]byte)
+
+	if ok {
+		return string(nv1)
+	}
+
+	nv2, ok := vA.(io.Reader)
+
+	if ok {
+		rsT, errT := io.ReadAll(nv2)
+
+		if errT != nil {
+			return ErrorToString(errT)
+		}
+
+		return string(rsT)
+	}
+
+	return ErrStrf("unsupported type: %T(%v)", vA, vA)
+}
+
+var ReadAllString = TKX.ReadAllString
+
+func (pA *TK) Close(vA interface{}) error {
+	nv1, ok := vA.(io.Closer)
+
+	if ok {
+		return nv1.Close()
+	}
+
+	return fmt.Errorf("unsupported type: %T(%v)", vA, vA)
+}
+
+var Close = TKX.Close
+
 // FromJson fast JSON decode
 func (pA *TK) FromJSON(jsonA string) (interface{}, error) {
 	var rs interface{}
@@ -10111,6 +10147,24 @@ func (pA *TK) FromJSON(jsonA string) (interface{}, error) {
 }
 
 var FromJSON = TKX.FromJSON
+
+func (pA *TK) FromJSONX(vA interface{}) interface{} {
+	jsonA, ok := vA.(string)
+
+	if ok {
+		return Errf("string type required")
+	}
+
+	rsT, errT := FromJSON(jsonA)
+
+	if errT != nil {
+		return errT
+	}
+
+	return rsT
+}
+
+var FromJSONX = TKX.FromJSONX
 
 func (pA *TK) FromJSONWithDefault(jsonA string, defaultA ...interface{}) interface{} {
 	var rs interface{}
@@ -11716,7 +11770,7 @@ func (pA *TK) ErrorToString(errA error) string {
 		return ""
 	}
 
-	return GenerateErrorString(errA.Error())
+	return "TXERROR:" + errA.Error()
 }
 
 var ErrorToString = TKX.ErrorToString
