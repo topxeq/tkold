@@ -6538,6 +6538,18 @@ func (pA *TK) ParseCommandLine(commandA string) ([]string, error) {
 
 var ParseCommandLine = TKX.ParseCommandLine
 
+func (pA *TK) ParseCommandLineCompact(commandA string) []string {
+	rsT, errT := ParseCommandLine(commandA)
+
+	if errT != nil {
+		return []string{commandA}
+	}
+
+	return rsT
+}
+
+var ParseCommandLineCompact = TKX.ParseCommandLineCompact
+
 // GetSwitchWithDefaultValue 获取命令行参数中的开关，用法：tmps := tk.GetSwitchWithDefaultValue(args, "-verbose=", "false")
 func (pA *TK) GetSwitchWithDefaultValue(argsA []string, switchStrA string, defaultA string) string {
 	if argsA == nil {
@@ -15129,24 +15141,34 @@ func (pA *TK) GetORResult(n1A interface{}, n2A interface{}) (result interface{})
 
 var GetORResult = TKX.GetORResult
 
-func (pA *TK) AdjustFloat(nA float64, digitA int) float64 {
-	return math.Round(nA*math.Pow10(digitA)) / math.Pow10(digitA)
+func (pA *TK) AdjustFloat(nA float64, digitA ...int) float64 {
+	digitT := 10
+	if len(digitA) > 0 {
+		digitT = digitA[0]
+	}
+
+	return math.Round(nA*math.Pow10(digitT)) / math.Pow10(digitT)
 }
 
 var AdjustFloat = TKX.AdjustFloat
 
-func (pA *TK) LimitPrecision(nA interface{}, digitA int) error {
+func (pA *TK) LimitPrecision(nA interface{}, digitA ...int) error {
+	digitT := 10
+	if len(digitA) > 0 {
+		digitT = digitA[0]
+	}
+
 	switch t := nA.(type) {
 	case *float64:
 		vT := *(nA.(*float64))
-		*(nA.(*float64)) = math.Round(vT*math.Pow10(digitA)) / math.Pow10(digitA)
+		*(nA.(*float64)) = math.Round(vT*math.Pow10(digitT)) / math.Pow10(digitT)
 	case *[]float64:
 		pT := (nA.(*[]float64))
 
 		lenT := len(*pT)
 
 		for i := 0; i < lenT; i++ {
-			(*pT)[i] = math.Round((*pT)[i]*math.Pow10(digitA)) / math.Pow10(digitA)
+			(*pT)[i] = math.Round((*pT)[i]*math.Pow10(digitT)) / math.Pow10(digitT)
 		}
 
 	default:
