@@ -92,9 +92,12 @@ import (
 	"github.com/davecgh/go-spew/spew"
 
 	"github.com/antonmedv/expr"
+
+	"github.com/wk8/go-ordered-map/v2"
 )
 
 var VersionG = "v1.0.1"
+var BuildG = "20230712"
 
 type TK struct {
 	Version string
@@ -3363,8 +3366,21 @@ func (pA *TK) FlexEval(exprA string, varsA ...interface{}) interface{} {
 var FlexEval = TKX.FlexEval
 
 // 类似FlexEval，区别是：FlexEval从第二个参数开始可以接受多个参数，并在表达式中以v1、v2这样来指代，而FlexEvalMap则只允许有一个参数，需要是映射类型，这样可以直接用键名在表达式中引用这些变量
-func (pA *TK) FlexEvalMap(exprA string, varsA map[string]interface{}) interface{} {
-	outT, errT := expr.Eval(exprA, varsA)
+func (pA *TK) FlexEvalMap(exprA string, varsA ...interface{}) interface{} {
+	var varsT map[string]interface{}
+	var ok bool
+
+	if len(varsA) < 1 {
+		varsT = map[string]interface{}{}
+	} else {
+		varsT, ok = varsA[0].(map[string]interface{})
+
+		if !ok {
+			varsT = map[string]interface{}{}
+		}
+	}
+
+	outT, errT := expr.Eval(exprA, varsT)
 
 	if errT != nil {
 		return errT
@@ -6795,6 +6811,16 @@ func (pA *TK) AnyArrayToStringArray(vA []interface{}) []string {
 }
 
 var AnyArrayToStringArray = TKX.AnyArrayToStringArray
+
+func (pA *TK) StringArrayToAnyArray(vA []string) []interface{} {
+	mssT := make([]interface{}, len(vA))
+	for i, v := range vA {
+		mssT[i] = v
+	}
+	return mssT
+}
+
+var StringArrayToAnyArray = TKX.StringArrayToAnyArray
 
 func (pA *TK) MSI2MSS(vA map[string]interface{}) map[string]string {
 	mssT := make(map[string]string, len(vA))
@@ -20830,6 +20856,18 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		}
 
 		return NewAnyQueue()
+	case "array":
+		return &[]interface{}{}
+	case "intarray":
+		return &[]int{}
+	case "floatarray":
+		return &[]float64{}
+	case "strarray", "stringarray":
+		return &[]string{}
+	case "map", "mapsi", "mapsa":
+		return &map[string]interface{}{}
+	case "mapss":
+		return &map[string]string{}
 	case "simplestack":
 		return NewSimpleStack()
 	case "stack":
@@ -20844,6 +20882,10 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		return linkedhashset.New()
 	case "syncqueue":
 		return NewSyncQueue()
+	case "orderedmap", "orderedmapsa", "orderedmapsi":
+		return orderedmap.New[string, any]()
+	case "orderedmapss":
+		return orderedmap.New[string, string]()
 	case "error", "err":
 		if lenT > 1 {
 			return fmt.Errorf(ToStr(argsA[1]), argsA[2:]...)
