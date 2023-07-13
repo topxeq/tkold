@@ -7,10 +7,12 @@ require (
 	github.com/atotto/clipboard v0.1.4
 	github.com/beevik/etree v1.1.0
 	github.com/boombuler/barcode v1.0.1
+	github.com/buger/jsonparser v1.1.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
 	github.com/jhillyerd/enmime v0.9.3
 	github.com/json-iterator/go v1.1.12
+	github.com/mailru/easyjson v0.7.7
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/topxeq/gods v0.0.0-20220125023913-b5718bb0c704
 	github.com/topxeq/goph v0.0.0-20230116054750-120b087d86fb
