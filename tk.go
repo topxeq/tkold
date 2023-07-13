@@ -23259,6 +23259,25 @@ func (om *OrderedMap) Get(key interface{}) (interface{}, bool) {
 	return nil, false
 }
 
+func (om *OrderedMap) GetByIndex(idxA int) (interface{}, bool) {
+
+	if idxA < 0 || idxA >= om.list.Len() {
+		return nil, false
+	}
+
+	cntT := 0
+
+	for e := om.list.Front(); e != nil; e = e.Next() {
+		if cntT == idxA {
+			return e.Value.(*OrderedMapPair).Value, true
+		}
+
+		cntT++
+	}
+
+	return nil, false
+}
+
 // Load is an alias for Get, mostly to present an API similar to `sync.Map`'s.
 func (om *OrderedMap) Load(key interface{}) (interface{}, bool) {
 	return om.Get(key)
@@ -23304,6 +23323,10 @@ func (om *OrderedMap) Delete(key interface{}) (interface{}, bool) {
 		return pair.Value, true
 	}
 	return nil, false
+}
+
+func (om *OrderedMap) Remove(key interface{}) (interface{}, bool) {
+	return om.Delete(key)
 }
 
 // Len returns the length of the ordered map.
@@ -23389,13 +23412,37 @@ func (om *OrderedMap) getElements(keys ...interface{}) ([]*list.Element, error) 
 }
 
 func (om *OrderedMap) GetKeys() []interface{} {
-	keys := make([]interface{}, len(om.pairs))
+	rsT := make([]interface{}, len(om.pairs))
+
 	cntT := 0
-	for k, _ := range om.pairs {
-		keys[cntT] = k
-		cntT++
+	for e := om.list.Front(); e != nil; e = e.Next() {
+		rsT[cntT] = e.Value.(*OrderedMapPair).Key
 	}
-	return keys
+
+	return rsT
+}
+
+func (om *OrderedMap) GetValues() []interface{} {
+	rsT := make([]interface{}, len(om.pairs))
+
+	cntT := 0
+	for e := om.list.Front(); e != nil; e = e.Next() {
+		rsT[cntT] = e.Value.(*OrderedMapPair).Value
+	}
+
+	return rsT
+}
+
+func (om *OrderedMap) GetItems() []interface{} {
+	rsT := make([]interface{}, len(om.pairs))
+
+	cntT := 0
+	for e := om.list.Front(); e != nil; e = e.Next() {
+		valueT := e.Value.(*OrderedMapPair)
+		rsT[cntT] = []interface{}{valueT.Key, valueT.Value}
+	}
+
+	return rsT
 }
 
 // MoveToBack moves the value associated with key to the back of the ordered map.
@@ -23516,6 +23563,8 @@ func dumpWriter(writer *jwriter.Writer) ([]byte, error) {
 func (om *OrderedMap) UnmarshalJSON(data []byte) error {
 	if om.list == nil {
 		// om.initialize(0)
+		om.list = list.New()
+		om.pairs = make(map[interface{}]*OrderedMapPair)
 	}
 
 	return jsonparser.ObjectEach(
