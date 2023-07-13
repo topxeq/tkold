@@ -17829,7 +17829,7 @@ func (pA *TK) TableToOrderedMapArray(tableA [][]string) []*OrderedMap {
 
 		for j, jv := range v {
 			inBufT.Set(tableA[0][j], jv)
-			Pl("%v -> %v -> %v -> %#v", tableA[0][j], jv, inBufT, inBufT)
+			// Pl("%v -> %v -> %v -> %#v", tableA[0][j], jv, inBufT, inBufT)
 		}
 
 		bufT = append(bufT, inBufT)
