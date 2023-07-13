@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"bytes"
 	"compress/gzip"
+	"container/list"
 	"crypto/aes"
 	"crypto/md5"
 	"crypto/tls"
@@ -92,8 +93,6 @@ import (
 	"github.com/davecgh/go-spew/spew"
 
 	"github.com/antonmedv/expr"
-
-	"github.com/wk8/go-ordered-map/v2"
 )
 
 var VersionG = "v1.0.1"
@@ -17800,6 +17799,41 @@ func (pA *TK) TableToMSSArray(tableA [][]string) []map[string]string {
 
 var TableToMSSArray = TKX.TableToMSSArray
 
+func (pA *TK) TableToOrderedMapArray(tableA [][]string) []*OrderedMap {
+	if tableA == nil {
+		return []*OrderedMap{}
+	}
+
+	lenT := len(tableA)
+
+	if lenT < 1 {
+		return []*OrderedMap{}
+	}
+
+	// inLenT := len(tableA[0])
+
+	bufT := make([]*OrderedMap, 0, lenT)
+
+	for i, v := range tableA {
+		if i == 0 {
+			continue
+		}
+
+		inBufT := NewOrderedMap()
+
+		for j, jv := range v {
+			inBufT.Set(tableA[0][j], jv)
+		}
+
+		bufT = append(bufT, inBufT)
+	}
+
+	return bufT
+
+}
+
+var TableToOrderedMapArray = TKX.TableToOrderedMapArray
+
 func (pA *TK) TableToMSSMap(tableA [][]string, keyA string) map[string]map[string]string {
 	if tableA == nil {
 		return map[string]map[string]string{}
@@ -20882,10 +20916,8 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		return linkedhashset.New()
 	case "syncqueue":
 		return NewSyncQueue()
-	case "orderedmap", "orderedmapsa", "orderedmapsi":
-		return orderedmap.New[string, any]()
-	case "orderedmapss":
-		return orderedmap.New[string, string]()
+	case "orderedmap":
+		return NewOrderedMap()
 	case "error", "err":
 		if lenT > 1 {
 			return fmt.Errorf(ToStr(argsA[1]), argsA[2:]...)
@@ -23146,3 +23178,209 @@ func (p *CompactIterator) QuickNextWithIndex() interface{} {
 // }
 
 // var BluetoothDiscoverDevice = TKX.BluetoothDiscoverDevice
+
+// orderedMap
+// fmt.Println("## Iterating over pairs from oldest to newest: ##")
+// for pair := om.Oldest(); pair != nil; pair = pair.Next() {
+// 	fmt.Printf("%s => %s\n", pair.Key, pair.Value)
+// }
+
+// fmt.Println("## Iterating over the 2 newest pairs: ##")
+// i := 0
+// for pair := om.Newest(); pair != nil; pair = pair.Prev() {
+// 	fmt.Printf("%s => %s\n", pair.Key, pair.Value)
+// 	i++
+// 	if i >= 2 {
+// 		break
+// 	}
+// }
+
+type OrderedMapPair struct {
+	Key   interface{}
+	Value interface{}
+
+	element *list.Element
+}
+
+type OrderedMap struct {
+	pairs map[interface{}]*OrderedMapPair
+	list  *list.List
+}
+
+// New creates a new OrderedMap.
+func NewOrderedMap() *OrderedMap {
+	return &OrderedMap{
+		pairs: make(map[interface{}]*OrderedMapPair),
+		list:  list.New(),
+	}
+}
+
+// Get looks for the given key, and returns the value associated with it,
+// or nil if not found. The boolean it returns says whether the key is present in the map.
+func (om *OrderedMap) Get(key interface{}) (interface{}, bool) {
+	if pair, present := om.pairs[key]; present {
+		return pair.Value, present
+	}
+	return nil, false
+}
+
+// Load is an alias for Get, mostly to present an API similar to `sync.Map`'s.
+func (om *OrderedMap) Load(key interface{}) (interface{}, bool) {
+	return om.Get(key)
+}
+
+// GetPair looks for the given key, and returns the pair associated with it,
+// or nil if not found. The Pair struct can then be used to iterate over the ordered map
+// from that point, either forward or backward.
+func (om *OrderedMap) GetPair(key interface{}) *OrderedMapPair {
+	return om.pairs[key]
+}
+
+// Set sets the key-value pair, and returns what `Get` would have returned
+// on that key prior to the call to `Set`.
+func (om *OrderedMap) Set(key interface{}, value interface{}) (interface{}, bool) {
+	if pair, present := om.pairs[key]; present {
+		oldValue := pair.Value
+		pair.Value = value
+		return oldValue, true
+	}
+
+	pair := &OrderedMapPair{
+		Key:   key,
+		Value: value,
+	}
+	pair.element = om.list.PushBack(pair)
+	om.pairs[key] = pair
+
+	return nil, false
+}
+
+// Store is an alias for Set, mostly to present an API similar to `sync.Map`'s.
+func (om *OrderedMap) Store(key interface{}, value interface{}) (interface{}, bool) {
+	return om.Set(key, value)
+}
+
+// Delete removes the key-value pair, and returns what `Get` would have returned
+// on that key prior to the call to `Delete`.
+func (om *OrderedMap) Delete(key interface{}) (interface{}, bool) {
+	if pair, present := om.pairs[key]; present {
+		om.list.Remove(pair.element)
+		delete(om.pairs, key)
+		return pair.Value, true
+	}
+	return nil, false
+}
+
+// Len returns the length of the ordered map.
+func (om *OrderedMap) Len() int {
+	return len(om.pairs)
+}
+
+// Oldest returns a pointer to the oldest pair. It's meant to be used to iterate on the ordered map's
+// pairs from the oldest to the newest, e.g.:
+// for pair := orderedMap.Oldest(); pair != nil; pair = pair.Next() { fmt.Printf("%v => %v\n", pair.Key, pair.Value) }
+func (om *OrderedMap) Oldest() *OrderedMapPair {
+	return listElementToPair(om.list.Front())
+}
+
+// Newest returns a pointer to the newest pair. It's meant to be used to iterate on the ordered map's
+// pairs from the newest to the oldest, e.g.:
+// for pair := orderedMap.Oldest(); pair != nil; pair = pair.Next() { fmt.Printf("%v => %v\n", pair.Key, pair.Value) }
+func (om *OrderedMap) Newest() *OrderedMapPair {
+	return listElementToPair(om.list.Back())
+}
+
+// Next returns a pointer to the next pair.
+func (p *OrderedMapPair) Next() *OrderedMapPair {
+	return listElementToPair(p.element.Next())
+}
+
+// Previous returns a pointer to the previous pair.
+func (p *OrderedMapPair) Prev() *OrderedMapPair {
+	return listElementToPair(p.element.Prev())
+}
+
+func listElementToPair(element *list.Element) *OrderedMapPair {
+	if element == nil {
+		return nil
+	}
+	return element.Value.(*OrderedMapPair)
+}
+
+// KeyNotFoundError may be returned by functions in this package when they're called with keys that are not present
+// in the map.
+// type KeyNotFoundError struct {
+// 	MissingKey interface{}
+// }
+
+// var _ error = &KeyNotFoundError{}
+
+// func (e *KeyNotFoundError) Error() string {
+// 	return fmt.Sprintf("missing key: %v", e.MissingKey)
+// }
+
+// MoveAfter moves the value associated with key to its new position after the one associated with markKey.
+// Returns an error iff key or markKey are not present in the map.
+func (om *OrderedMap) MoveAfter(key, markKey interface{}) error {
+	elements, err := om.getElements(key, markKey)
+	if err != nil {
+		return err
+	}
+	om.list.MoveAfter(elements[0], elements[1])
+	return nil
+}
+
+// MoveBefore moves the value associated with key to its new position before the one associated with markKey.
+// Returns an error iff key or markKey are not present in the map.
+func (om *OrderedMap) MoveBefore(key, markKey interface{}) error {
+	elements, err := om.getElements(key, markKey)
+	if err != nil {
+		return err
+	}
+	om.list.MoveBefore(elements[0], elements[1])
+	return nil
+}
+
+func (om *OrderedMap) getElements(keys ...interface{}) ([]*list.Element, error) {
+	elements := make([]*list.Element, len(keys))
+	for i, k := range keys {
+		pair, present := om.pairs[k]
+		if !present {
+			return nil, fmt.Errorf("missing key: %v", k) // &KeyNotFoundError{k}
+		}
+		elements[i] = pair.element
+	}
+	return elements, nil
+}
+
+func (om *OrderedMap) GetKeys() []interface{} {
+	keys := make([]interface{}, len(om.pairs))
+	cntT := 0
+	for k, _ := range om.pairs {
+		keys[cntT] = k
+		cntT++
+	}
+	return keys
+}
+
+// MoveToBack moves the value associated with key to the back of the ordered map.
+// Returns an error iff key is not present in the map.
+func (om *OrderedMap) MoveToBack(key interface{}) error {
+	pair, present := om.pairs[key]
+	if !present {
+		return fmt.Errorf("missing key: %v", key)
+	}
+	om.list.MoveToBack(pair.element)
+	return nil
+}
+
+// MoveToFront moves the value associated with key to the front of the ordered map.
+// Returns an error iff key is not present in the map.
+func (om *OrderedMap) MoveToFront(key interface{}) error {
+	pair, present := om.pairs[key]
+	if !present {
+		return fmt.Errorf("missing key: %v", key)
+	}
+	om.list.MoveToFront(pair.element)
+	return nil
+}
