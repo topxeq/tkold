@@ -7,15 +7,21 @@ import (
 	"bytes"
 	"compress/gzip"
 	"container/list"
+	"crypto"
 	"crypto/aes"
 	"crypto/md5"
+	cryptorand "crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
 	"encoding"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/pem"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -4128,6 +4134,13 @@ func (pA *TK) GetNowDateString() string {
 
 var GetNowDateString = TKX.GetNowDateString
 
+func (pA *TK) GetNowDateStringFormal() string {
+	t := time.Now()
+	return fmt.Sprintf("%04d-%02d-%02d", t.Year(), t.Month(), t.Day())
+}
+
+var GetNowDateStringFormal = TKX.GetNowDateStringFormal
+
 // GetNowTimeString GetNowTimeString
 // "20060102150405"
 func (pA *TK) GetNowTimeString() string {
@@ -7270,6 +7283,12 @@ func (pA *TK) StrToBool(strA string) bool {
 }
 
 var StrToBool = TKX.StrToBool
+
+func (pA *TK) StrToBytes(strA string) []byte {
+	return []byte(strA)
+}
+
+var StrToBytes = TKX.StrToBytes
 
 // not completed, like javascript, no value -> false, other true
 func (pA *TK) ToBool(vA interface{}) bool {
@@ -15462,6 +15481,140 @@ func (pA *TK) GetDBResultArray(dbA *sql.DB, sqlA string) ([][]string, error) {
 
 var GetDBResultArray = TKX.GetDBResultArray
 
+func (pA *TK) RecordsToMapArray(recA interface{}) []map[string]string {
+	if recA == nil {
+		return nil
+	}
+
+	nv1, ok := recA.([][]string)
+
+	if ok {
+		lenT := len(nv1)
+
+		if lenT < 1 {
+			return nil
+		}
+
+		lineLenT := len(nv1[0])
+
+		aryT := make([]map[string]string, lenT-1)
+
+		for i := 1; i < lenT; i++ {
+			mapT := make(map[string]string, lenT)
+
+			for j := 0; j < lineLenT; j++ {
+				mapT[nv1[0][j]] = nv1[i][j]
+			}
+
+			aryT[i-1] = mapT
+		}
+
+		return aryT
+	}
+
+	nv2, ok := recA.([][]interface{})
+
+	if ok {
+		lenT := len(nv2)
+
+		if lenT < 1 {
+			return nil
+		}
+
+		lineLenT := len(nv2[0])
+
+		aryT := make([]map[string]string, lenT-1)
+
+		keysT := make([]string, lineLenT)
+
+		for i0 := 0; i0 < lineLenT; i0++ {
+			keysT[i0] = ToStr(nv2[0][i0])
+		}
+
+		for i := 1; i < lenT; i++ {
+			mapT := make(map[string]string, lenT)
+
+			for j := 0; j < lineLenT; j++ {
+				mapT[keysT[j]] = ToStr(nv2[i][j])
+			}
+
+			aryT[i-1] = mapT
+		}
+
+		return aryT
+	}
+
+	nv3, ok := recA.([]interface{})
+
+	if ok {
+		lenT := len(nv3)
+
+		if lenT < 1 {
+			return nil
+		}
+
+		nv3a, ok := nv3[0].([]interface{})
+
+		if ok {
+			// Pl("weird type: %T(%#v)", nv3[0], nv3[0])
+			// return nil
+			lineLenT := len(nv3a)
+
+			aryT := make([]map[string]string, lenT-1)
+
+			keysT := make([]string, lineLenT)
+
+			for i0 := 0; i0 < lineLenT; i0++ {
+				keysT[i0] = ToStr(nv3a[i0])
+			}
+
+			for i := 1; i < lenT; i++ {
+				mapT := make(map[string]string, lenT)
+
+				for j := 0; j < lineLenT; j++ {
+					mapT[keysT[j]] = ToStr(nv3[i].([]interface{})[j])
+				}
+
+				aryT[i-1] = mapT
+			}
+
+			return aryT
+		}
+
+		nv3b, ok := nv3[0].([]string)
+
+		if ok {
+			lineLenT := len(nv3b)
+
+			aryT := make([]map[string]string, lenT-1)
+
+			keysT := make([]string, lineLenT)
+
+			for i0 := 0; i0 < lineLenT; i0++ {
+				keysT[i0] = ToStr(nv3b[i0])
+			}
+
+			for i := 1; i < lenT; i++ {
+				mapT := make(map[string]string, lenT)
+
+				for j := 0; j < lineLenT; j++ {
+					mapT[keysT[j]] = ToStr(nv3[i].([]string)[j])
+				}
+
+				aryT[i-1] = mapT
+			}
+
+			return aryT
+		}
+
+	}
+
+	Pl("unsupported type: %T(%#v)", recA, recA)
+	return nil
+}
+
+var RecordsToMapArray = TKX.RecordsToMapArray
+
 // 文本编码相关 encoding related
 
 // ConvertToGB18030 转换UTF-8字符串为GB18030编码
@@ -23641,3 +23794,273 @@ func decodeUTF8(input []byte) (string, error) {
 
 	return string(runes), nil
 }
+
+func (pA *TK) WeixinPaySignString(valuesA interface{}, keyA string) string {
+	if valuesA == nil {
+		return ""
+	}
+
+	var bufT strings.Builder
+
+	var keysT []string
+
+	// valuesT := make([]string, 0, lenT)
+
+	nv1, ok := valuesA.(url.Values)
+
+	if ok {
+		lenT := len(nv1)
+
+		keysT = make([]string, 0, lenT)
+
+		for k := range nv1 {
+			keysT = append(keysT, k)
+			// valuesT = append(valuesT, nv1[k])
+		}
+
+		sort.Strings(keysT)
+
+		for i, k := range keysT {
+			vi := nv1[k]
+
+			if len(vi) < 1 {
+				continue
+			}
+
+			if i > 0 {
+				bufT.WriteString("&")
+			}
+
+			bufT.WriteString(k)
+			bufT.WriteString("=")
+			bufT.WriteString(vi[0])
+		}
+
+		strT := bufT.String() + "&key=" + keyA
+
+		hmacT := strings.ToUpper(MD5Encrypt(strT))
+
+		return hmacT
+	}
+
+	nv2, ok := valuesA.(map[string]string)
+
+	if ok {
+		lenT := len(nv1)
+
+		keysT = make([]string, 0, lenT)
+
+		for k := range nv2 {
+			keysT = append(keysT, k)
+			// valuesT = append(valuesT, nv1[k])
+		}
+
+		sort.Strings(keysT)
+
+		for i, k := range keysT {
+			vi := nv2[k]
+
+			if len(vi) < 1 {
+				continue
+			}
+
+			if i > 0 {
+				bufT.WriteString("&")
+			}
+
+			bufT.WriteString(k)
+			bufT.WriteString("=")
+			bufT.WriteString(vi)
+		}
+
+		strT := bufT.String() + "&key=" + keyA
+
+		hmacT := strings.ToUpper(MD5Encrypt(strT))
+
+		return hmacT
+
+	}
+
+	nv3, ok := valuesA.(map[string]interface{})
+
+	if ok {
+		lenT := len(nv1)
+
+		keysT = make([]string, 0, lenT)
+
+		for k := range nv3 {
+			keysT = append(keysT, k)
+			// valuesT = append(valuesT, nv1[k])
+		}
+
+		sort.Strings(keysT)
+
+		for i, k := range keysT {
+			vi := ToStr(nv3[k])
+
+			if len(vi) < 1 {
+				continue
+			}
+
+			if i > 0 {
+				bufT.WriteString("&")
+			}
+
+			bufT.WriteString(k)
+			bufT.WriteString("=")
+			bufT.WriteString(vi)
+		}
+
+		strT := bufT.String() + "&key=" + keyA
+
+		hmacT := strings.ToUpper(MD5Encrypt(strT))
+
+		return hmacT
+	}
+
+	return ""
+
+	// strT := bufT.String() + "&key=" + keyA
+
+	// // hmacT := hmac.New(sha256.New, []byte(keyA))
+	// // hmacT := hmac.New(md5.New, []byte(strT))
+	// hmacT := strings.ToUpper(MD5Encrypt(strT))
+
+	// // hmacT.Write([]byte(strT))
+	// return hmacT
+
+	// return strings.ToUpper(hex.EncodeToString(hmacT.Sum([]byte(""))))
+}
+
+var WeixinPaySignString = TKX.WeixinPaySignString
+
+func (pA *TK) SignRSAWithSHA256(strA string, keyA string) string {
+	bytesToSign := []byte(strA)
+
+	block, err8 := pem.Decode([]byte("-----BEGIN RSA PRIVATE KEY-----\n" + keyA + "\n-----END RSA PRIVATE KEY-----")) //-----BEGIN RSA PRIVATE KEY----
+	if err8 != nil {
+		// tk.Pl("Error trying decode endorser private key: %v - %v", block, err8)
+		// return ""
+	}
+
+	key, _ := x509.ParsePKCS1PrivateKey(block.Bytes)
+
+	h := sha256.New()
+	h.Write(bytesToSign)
+	d := h.Sum(nil)
+
+	signature, err := rsa.SignPKCS1v15(cryptorand.Reader, key, crypto.SHA256, d)
+	if err != nil {
+		// tk.Pl("Error trying decode endorser private key")
+		return ErrStrf("Error trying decode endorser private key: %v", err)
+	}
+
+	signatureString := base64.StdEncoding.EncodeToString(signature)
+
+	return signatureString
+}
+
+var SignRSAWithSHA256 = TKX.SignRSAWithSHA256
+
+func (pA *TK) AlipaySignString(valuesA interface{}, keyA string) string {
+	if valuesA == nil {
+		return ""
+	}
+
+	var bufT strings.Builder
+
+	nv1, ok := valuesA.(url.Values)
+
+	if ok {
+		keysT := make([]string, 0, len(nv1))
+
+		for k := range nv1 {
+			keysT = append(keysT, k)
+		}
+
+		sort.Strings(keysT)
+
+		for i, k := range keysT {
+			vi := nv1[k]
+
+			if len(vi) < 1 {
+				continue
+			}
+
+			if i > 0 {
+				bufT.WriteString("&")
+			}
+
+			bufT.WriteString(k)
+			bufT.WriteString("=")
+			bufT.WriteString(vi[0])
+		}
+
+		return SignRSAWithSHA256(bufT.String(), keyA)
+	}
+
+	nv2, ok := valuesA.(map[string]string)
+
+	if ok {
+		keysT := make([]string, 0, len(nv2))
+
+		for k := range nv2 {
+			keysT = append(keysT, k)
+		}
+
+		sort.Strings(keysT)
+
+		for i, k := range keysT {
+			vi := nv2[k]
+
+			if len(vi) < 1 {
+				continue
+			}
+
+			if i > 0 {
+				bufT.WriteString("&")
+			}
+
+			bufT.WriteString(k)
+			bufT.WriteString("=")
+			bufT.WriteString(vi)
+		}
+
+		return SignRSAWithSHA256(bufT.String(), keyA)
+	}
+
+	nv3, ok := valuesA.(map[string]interface{})
+
+	if ok {
+		keysT := make([]string, 0, len(nv3))
+
+		for k := range nv3 {
+			keysT = append(keysT, k)
+		}
+
+		sort.Strings(keysT)
+
+		for i, k := range keysT {
+			vi := ToStr(nv3[k])
+
+			if len(vi) < 1 {
+				continue
+			}
+
+			if i > 0 {
+				bufT.WriteString("&")
+			}
+
+			bufT.WriteString(k)
+			bufT.WriteString("=")
+			bufT.WriteString(vi)
+		}
+
+		return SignRSAWithSHA256(bufT.String(), keyA)
+	}
+
+	return ""
+
+}
+
+var AlipaySignString = TKX.AlipaySignString
