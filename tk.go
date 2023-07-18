@@ -653,16 +653,115 @@ func (p *TXCollection) GetListString(ifUpA bool, sepA string) string {
 }
 
 // 存放TX格式的网络API返回结果
-type TXResult struct {
-	Status  string
-	Value   string
-	Object  string
-	Object2 string
-	Object3 string
-	Token   string
+type TXResult map[string]string // struct {
+
+// Status  string
+// Value   string
+// Debuf   string
+// Reason  string
+// Object  string
+// Object2 string
+// Object3 string
+// Token   string
+//}
+
+var InvalidTXResultG = TXResult{"Status": "fail", "Value": "general error"}
+
+func (vA TXResult) String() string {
+	return ToJSONX(vA)
 }
 
-var invalidTXResultG = TXResult{Status: "fail", Value: "invalid response"}
+func (vA TXResult) Wrap() string {
+	return "TX_RESULT: " + ToJSONX(vA) + "_XT"
+}
+
+func (pA *TXResult) FromJSON(jsonA string) interface{} {
+	vT := NewTXResultFromJSON(jsonA)
+
+	if IsError(vT) {
+		return vT
+	}
+
+	// nv1 := vT.(*TXResult)
+
+	// for k, v = range nv1 {
+	// 	pA[k] = v
+	// }
+
+	*pA = *(vT.(*TXResult))
+
+	return pA
+}
+
+func (pA *TK) NewTXResult(statusA string, valueA ...string) *TXResult {
+	var valueT = ""
+
+	if len(valueA) > 0 {
+		valueT = valueA[0]
+	}
+
+	pT := &TXResult{"Status": statusA, "Value": valueT}
+
+	return pT
+}
+
+var NewTXResult = TKX.NewTXResult
+
+func (pA *TK) NewTXResultFromJSON(jsonA string) interface{} {
+	var rs = new(TXResult)
+
+	errT := jsoniter.Unmarshal([]byte(jsonA), rs)
+
+	if errT != nil {
+		return errT
+	}
+
+	return rs
+}
+
+var NewTXResultFromJSON = TKX.NewTXResultFromJSON
+
+func (pA *TK) NewTXResultFromJSONX(jsonA string) *TXResult {
+	var rs = new(TXResult)
+
+	errT := jsoniter.Unmarshal([]byte(jsonA), rs)
+
+	if errT != nil {
+		return NewTXResult("fail", "failed to parse TXResult: "+errT.Error())
+	}
+
+	return rs
+}
+
+var NewTXResultFromJSONX = TKX.NewTXResultFromJSONX
+
+func (pA *TK) NewTXResultFromWrap(strA string) interface{} {
+	strT := RegFindFirstX(strA, `(?sm)TX_RESULT: ({.*?"Status".*?)_XT`, 1)
+
+	if IsErrorString(strT) {
+		return ErrStrToErr(strT)
+	}
+
+	var rs = NewTXResultFromJSON(strT)
+
+	return rs
+}
+
+var NewTXResultFromWrap = TKX.NewTXResultFromWrap
+
+func (pA *TK) NewTXResultFromWrapX(strA string) *TXResult {
+	strT := RegFindFirstX(strA, `(?sm)TX_RESULT: ({.*?"Status".*?)_XT`, 1)
+
+	if IsErrorString(strT) {
+		return NewTXResult("fail", "failed to parse TXResult wrapped: "+GetErrStr(strT))
+	}
+
+	var rs = NewTXResultFromJSONX(strT)
+
+	return rs
+}
+
+var NewTXResultFromWrapX = TKX.NewTXResultFromWrapX
 
 func (pA *TK) TXResultFromStringE(strA string) (*TXResult, error) {
 	pT := new(TXResult)
@@ -698,13 +797,19 @@ func (pA *TK) TXResultFromStringSafely(strA string) *TXResult {
 	errT := json.Unmarshal([]byte(strA), p)
 
 	if errT != nil {
-		return &invalidTXResultG
+		return &InvalidTXResultG
 	}
 
 	return p
 }
 
 var TXResultFromStringSafely = TKX.TXResultFromStringSafely
+
+func (pA *TK) Resultf(statusA string, formatA string, argsA ...interface{}) *TXResult {
+	return NewTXResult(statusA, fmt.Sprintf(formatA, argsA...))
+}
+
+var Resultf = TKX.Resultf
 
 // 全局变量 global variables
 
@@ -21090,6 +21195,16 @@ func (pA *TK) NewObject(argsA ...interface{}) interface{} {
 		}
 
 		return GenerateErrorStringF("")
+	case "txresult":
+		if lenT > 2 {
+			return NewTXResult(ToStr(argsA[1]), ToStr(argsA[2]))
+		}
+
+		if lenT > 1 {
+			return NewTXResult(ToStr(argsA[1]), "")
+		}
+
+		return NewTXResult("success", "")
 	case "tree", "btree":
 		if lenT < 2 {
 			return Errf("not enough parameters")
