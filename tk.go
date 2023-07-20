@@ -4743,6 +4743,15 @@ var IsYesterday = TKX.IsYesterday
 
 // 切片、数组相关 slice related and array related
 
+func (pA *TK) ReverseStringSlice(ss []string) {
+	last := len(ss) - 1
+	for i := 0; i < len(ss)/2; i++ {
+		ss[i], ss[last-i] = ss[last-i], ss[i]
+	}
+}
+
+var ReverseStringSlice = TKX.ReverseStringSlice
+
 func (pA *TK) GetArrayItem(aryA interface{}, idxA int, defaultA ...interface{}) interface{} {
 	// Pl("GetArrayItem: %#v %v %#v", aryA, idxA, defaultA)
 	var defaultT interface{} = Undefined
@@ -5469,6 +5478,8 @@ func (pA *TK) GetMapItem(mapA interface{}, keyA interface{}, defaultA ...interfa
 		rv, ok = nv[ToStr(keyA)]
 	case map[string]map[string]interface{}:
 		rv, ok = nv[ToStr(keyA)]
+	case *OrderedMap:
+		rv, ok = nv.Get(ToStr(keyA))
 	default:
 		// tk.Plo("here1", v1, v2o)
 		valueT := reflect.ValueOf(mapA)
@@ -5503,6 +5514,50 @@ func (pA *TK) GetMapItem(mapA interface{}, keyA interface{}, defaultA ...interfa
 
 var GetMapItem = TKX.GetMapItem
 
+func (pA *TK) SetMapItem(vA interface{}, keyA interface{}, valueA interface{}) error {
+	switch nv := vA.(type) {
+	case map[int]int:
+		nv[ToInt(keyA)] = ToInt(valueA)
+	case map[int]float64:
+		nv[ToInt(keyA)] = ToFloat(valueA)
+	case map[string]int:
+		nv[ToStr(keyA)] = ToInt(valueA)
+	case map[string]bool:
+		nv[ToStr(keyA)] = ToBool(valueA)
+	case map[string]byte:
+		nv[ToStr(keyA)] = ToByte(valueA)
+	case map[string]rune:
+		nv[ToStr(keyA)] = ToRune(valueA)
+	case map[string]float64:
+		nv[ToStr(keyA)] = ToFloat(valueA)
+	case map[string]string:
+		nv[ToStr(keyA)] = ToStr(valueA)
+	case map[string]interface{}:
+		nv[ToStr(keyA)] = valueA
+	case *OrderedMap:
+		nv.Set(keyA, valueA)
+	case url.Values:
+		nv.Set(ToStr(keyA), ToStr(valueA))
+	case *url.Values:
+		nv.Set(ToStr(keyA), ToStr(valueA))
+	default:
+		valueT := reflect.ValueOf(vA)
+
+		kindT := valueT.Kind()
+
+		if kindT == reflect.Map {
+			valueT.SetMapIndex(reflect.ValueOf(keyA), reflect.ValueOf(valueA))
+			return nil
+		}
+
+		return fmt.Errorf("unsupported type: %T(%v)", vA, vA)
+	}
+
+	return nil
+}
+
+var SetMapItem = TKX.SetMapItem
+
 // GetValueOfMSS get the value for key in map[string]string
 // returns default value if not ok
 func (pA *TK) GetValueOfMSS(mapA map[string]string, keyA string, defaultA string) string {
@@ -5516,6 +5571,152 @@ func (pA *TK) GetValueOfMSS(mapA map[string]string, keyA string, defaultA string
 }
 
 var GetValueOfMSS = TKX.GetValueOfMSS
+
+func (pA *TK) GetMapKeys(vA interface{}, argsA ...string) interface{} {
+	if vA == nil {
+		return fmt.Errorf("nil input")
+	}
+
+	var rs []interface{}
+
+	switch nv := vA.(type) {
+	case map[string]string:
+		rs = make([]interface{}, len(nv))
+
+		countT := 0
+		for k, _ := range nv {
+			rs[countT] = k
+			countT++
+		}
+
+		return rs
+	case map[string]bool:
+		rs = make([]interface{}, len(nv))
+
+		countT := 0
+		for k, _ := range nv {
+			rs[countT] = k
+			countT++
+		}
+
+		return rs
+	case map[string]byte:
+		rs = make([]interface{}, len(nv))
+
+		countT := 0
+		for k, _ := range nv {
+			rs[countT] = k
+			countT++
+		}
+
+		return rs
+	case map[string]rune:
+		rs = make([]interface{}, len(nv))
+
+		countT := 0
+		for k, _ := range nv {
+			rs[countT] = k
+			countT++
+		}
+
+		return rs
+	case map[string]int:
+		rs = make([]interface{}, len(nv))
+
+		countT := 0
+		for k, _ := range nv {
+			rs[countT] = k
+			countT++
+		}
+
+		return rs
+	case map[string]int64:
+		rs = make([]interface{}, len(nv))
+
+		countT := 0
+		for k, _ := range nv {
+			rs[countT] = k
+			countT++
+		}
+
+		return rs
+	case map[string]float64:
+		rs = make([]interface{}, len(nv))
+
+		countT := 0
+		for k, _ := range nv {
+			rs[countT] = k
+			countT++
+		}
+
+		return rs
+	case map[int]string:
+		rs = make([]interface{}, len(nv))
+
+		countT := 0
+		for k, _ := range nv {
+			rs[countT] = k
+			countT++
+		}
+
+		return rs
+	case map[int]int:
+		rs = make([]interface{}, len(nv))
+
+		countT := 0
+		for k, _ := range nv {
+			rs[countT] = k
+			countT++
+		}
+
+		return rs
+	case map[int]float64:
+		rs = make([]interface{}, len(nv))
+
+		countT := 0
+		for k, _ := range nv {
+			rs[countT] = k
+			countT++
+		}
+
+		return rs
+	case map[string]interface{}:
+		rs = make([]interface{}, len(nv))
+
+		countT := 0
+		for k, _ := range nv {
+			rs[countT] = k
+			countT++
+		}
+
+		return rs
+	case *OrderedMap:
+		return nv.GetKeys()
+	default:
+		valueT := reflect.ValueOf(vA)
+
+		kindT := valueT.Kind()
+
+		if kindT == reflect.Map {
+			keysT := valueT.MapKeys()
+
+			rvo := reflect.MakeSlice(valueT.Type().Key(), 0, len(keysT))
+
+			for _, v := range keysT {
+				reflect.Append(rvo, v)
+			}
+
+			rvi := rvo.Interface()
+
+			return rvi
+		}
+
+	}
+
+	return fmt.Errorf("unsupported type: %T(%v)", vA, vA)
+}
+
+var GetMapKeys = TKX.GetMapKeys
 
 // 系统相关函数 system related
 
@@ -12958,6 +13159,10 @@ func (pA *TK) GetWeb(urlA string, optsA ...interface{}) interface{} {
 				return errT
 			}
 
+			if IfSwitchExistsWholeI(optsA, "-detail") {
+				Pl("response status: %v (%v) body: %v", respT.StatusCode, respT, string(body))
+			}
+
 			if IfSwitchExistsWholeI(optsA, "-bytes") {
 				return body
 			}
@@ -15714,7 +15919,7 @@ func (pA *TK) RecordsToMapArray(recA interface{}) []map[string]string {
 
 	}
 
-	Pl("unsupported type: %T(%#v)", recA, recA)
+	// Pl("unsupported type: %T(%#v)", recA, recA)
 	return nil
 }
 
@@ -23511,11 +23716,166 @@ type OrderedMap struct {
 }
 
 // New creates a new OrderedMap.
-func NewOrderedMap() *OrderedMap {
+func (pA *TK) NewOrderedMap() *OrderedMap {
 	return &OrderedMap{
 		pairs: make(map[interface{}]*OrderedMapPair),
 		list:  list.New(),
 	}
+}
+
+var NewOrderedMap = TKX.NewOrderedMap
+
+func (pA *TK) ToOrderedMap(vA interface{}) interface{} {
+	if vA == nil {
+		return fmt.Errorf("nil input")
+	}
+
+	var rs *OrderedMap
+
+	switch nv := vA.(type) {
+	case map[string]string:
+		rs = NewOrderedMap()
+
+		for k, v := range nv {
+			rs.Set(k, v)
+		}
+
+		return rs
+	case map[string]bool:
+		rs = NewOrderedMap()
+
+		for k, v := range nv {
+			rs.Set(k, v)
+		}
+
+		return rs
+	case map[string]byte:
+		rs = NewOrderedMap()
+
+		for k, v := range nv {
+			rs.Set(k, v)
+		}
+
+		return rs
+	case map[string]rune:
+		rs = NewOrderedMap()
+
+		for k, v := range nv {
+			rs.Set(k, v)
+		}
+
+		return rs
+	case map[string]int:
+		rs = NewOrderedMap()
+
+		for k, v := range nv {
+			rs.Set(k, v)
+		}
+
+		return rs
+	case map[string]int64:
+		rs = NewOrderedMap()
+
+		for k, v := range nv {
+			rs.Set(k, v)
+		}
+
+		return rs
+	case map[string]float64:
+		rs = NewOrderedMap()
+
+		for k, v := range nv {
+			rs.Set(k, v)
+		}
+
+		return rs
+	case map[int]string:
+		rs = NewOrderedMap()
+
+		for k, v := range nv {
+			rs.Set(k, v)
+		}
+
+		return rs
+	case map[int]int:
+		rs = NewOrderedMap()
+
+		for k, v := range nv {
+			rs.Set(k, v)
+		}
+
+		return rs
+	case map[int]float64:
+		rs = NewOrderedMap()
+
+		for k, v := range nv {
+			rs.Set(k, v)
+		}
+
+		return rs
+	case map[string]interface{}:
+		rs = NewOrderedMap()
+
+		for k, v := range nv {
+			rs.Set(k, v)
+		}
+
+		return rs
+
+	}
+
+	return fmt.Errorf("unsupported type: %T(%v)", vA, vA)
+}
+
+var ToOrderedMap = TKX.ToOrderedMap
+
+func (pA *OrderedMap) Dump() string {
+	var bufT = new(strings.Builder)
+
+	bufT.WriteString("pairs: [")
+
+	for k, v := range pA.pairs {
+		bufT.WriteString(fmt.Sprintf(" <key: %v, value: %v>", k, v))
+	}
+
+	bufT.WriteString("] list: [")
+
+	cntT := 0
+
+	for e := pA.list.Front(); e != nil; e = e.Next() {
+		v := e.Value.(*OrderedMapPair)
+		bufT.WriteString(fmt.Sprintf(" <%v key: %v, value: %v>", cntT, v.Key, v.Value))
+
+		cntT++
+	}
+
+	bufT.WriteString("]")
+
+	return bufT.String()
+}
+
+func (pA *OrderedMap) SortStringKeys(argsA ...string) error {
+	keysT := pA.GetStringKeys()
+
+	descT := IfSwitchExists(argsA, "-desc")
+
+	if descT {
+		sort.Sort(sort.Reverse(sort.StringSlice(keysT)))
+	} else {
+		sort.Strings(keysT)
+	}
+
+	pA.list.Init()
+	for _, v := range keysT {
+		// pair := &OrderedMapPair{
+		// 	Key:   v,
+		// 	Value: pA.pairs[v].Value,
+		// }
+		// pair.element = om.list.PushBack(pair)
+		pA.pairs[v].element = pA.list.PushBack(pA.pairs[v])
+	}
+
+	return nil
 }
 
 // Get looks for the given key, and returns the value associated with it,
@@ -23685,6 +24045,19 @@ func (om *OrderedMap) GetKeys() []interface{} {
 	cntT := 0
 	for e := om.list.Front(); e != nil; e = e.Next() {
 		rsT[cntT] = e.Value.(*OrderedMapPair).Key
+		cntT++
+	}
+
+	return rsT
+}
+
+func (om *OrderedMap) GetStringKeys() []string {
+	rsT := make([]string, len(om.pairs))
+
+	cntT := 0
+	for e := om.list.Front(); e != nil; e = e.Next() {
+		rsT[cntT] = ToStr(e.Value.(*OrderedMapPair).Key)
+		cntT++
 	}
 
 	return rsT
@@ -23696,6 +24069,7 @@ func (om *OrderedMap) GetValues() []interface{} {
 	cntT := 0
 	for e := om.list.Front(); e != nil; e = e.Next() {
 		rsT[cntT] = e.Value.(*OrderedMapPair).Value
+		cntT++
 	}
 
 	return rsT
@@ -23708,6 +24082,29 @@ func (om *OrderedMap) GetItems() []interface{} {
 	for e := om.list.Front(); e != nil; e = e.Next() {
 		valueT := e.Value.(*OrderedMapPair)
 		rsT[cntT] = []interface{}{valueT.Key, valueT.Value}
+		cntT++
+	}
+
+	return rsT
+}
+
+func (om *OrderedMap) ToMap() map[string]interface{} {
+	rsT := make(map[string]interface{}, len(om.pairs))
+
+	for e := om.list.Front(); e != nil; e = e.Next() {
+		valueT := e.Value.(*OrderedMapPair)
+		rsT[ToStr(valueT.Key)] = valueT.Value
+	}
+
+	return rsT
+}
+
+func (om *OrderedMap) ToMapAnyKey() map[interface{}]interface{} {
+	rsT := make(map[interface{}]interface{}, len(om.pairs))
+
+	for e := om.list.Front(); e != nil; e = e.Next() {
+		valueT := e.Value.(*OrderedMapPair)
+		rsT[valueT.Key] = valueT.Value
 	}
 
 	return rsT
@@ -23754,6 +24151,7 @@ func (om *OrderedMap) MarshalJSON() ([]byte, error) { //nolint:funlen
 	writer.RawByte('{')
 
 	for pair, firstIteration := om.Oldest(), true; pair != nil; pair = pair.Next() {
+		// Pl("pair: %v", pair)
 		if firstIteration {
 			firstIteration = false
 		} else {
