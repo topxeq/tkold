@@ -675,6 +675,18 @@ func (vA TXResult) Wrap() string {
 	return "TX_RESULT: " + ToJSONX(vA) + "_XT"
 }
 
+func (vA TXResult) Get(keyA string) string {
+	return vA[keyA]
+}
+
+func (pA *TXResult) Set(keyA string, valueA string) {
+	(*pA)[keyA] = valueA
+}
+
+func (pA *TXResult) Remove(keyA string) {
+	delete(*pA, keyA)
+}
+
 func (pA *TXResult) FromJSON(jsonA string) interface{} {
 	vT := NewTXResultFromJSON(jsonA)
 
