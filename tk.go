@@ -10533,6 +10533,7 @@ func (pA *TK) FromJSONX(vA interface{}) interface{} {
 
 	// if ok {
 	// 	return Errf("string type required")
+
 	// }
 
 	rsT, errT := FromJSON(jsonA)
