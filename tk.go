@@ -10529,11 +10529,11 @@ func (pA *TK) FromJSON(jsonA string) (interface{}, error) {
 var FromJSON = TKX.FromJSON
 
 func (pA *TK) FromJSONX(vA interface{}) interface{} {
-	jsonA, ok := vA.(string)
+	jsonA := ToStr(vA)
 
-	if ok {
-		return Errf("string type required")
-	}
+	// if ok {
+	// 	return Errf("string type required")
+	// }
 
 	rsT, errT := FromJSON(jsonA)
 
@@ -24320,7 +24320,7 @@ func decodeUTF8(input []byte) (string, error) {
 	return string(runes), nil
 }
 
-func (pA *TK) WeixinPaySignString(valuesA interface{}, keyA string) string {
+func (pA *TK) WeixinPaySignString(valuesA interface{}, keyA string, argsA ...string) string {
 	if valuesA == nil {
 		return ""
 	}
@@ -24330,6 +24330,10 @@ func (pA *TK) WeixinPaySignString(valuesA interface{}, keyA string) string {
 	var keysT []string
 
 	// valuesT := make([]string, 0, lenT)
+
+	methodT := GetSwitch(argsA, "-method=", "")
+
+	var hmacT string
 
 	nv1, ok := valuesA.(url.Values)
 
@@ -24363,7 +24367,14 @@ func (pA *TK) WeixinPaySignString(valuesA interface{}, keyA string) string {
 
 		strT := bufT.String() + "&key=" + keyA
 
-		hmacT := strings.ToUpper(MD5Encrypt(strT))
+		if methodT == "sha256" {
+			h := sha256.New()
+			h.Write([]byte(strT))
+			d := h.Sum(nil)
+			hmacT = string(d)
+		} else {
+			hmacT = strings.ToUpper(MD5Encrypt(strT))
+		}
 
 		return hmacT
 	}
@@ -24400,7 +24411,14 @@ func (pA *TK) WeixinPaySignString(valuesA interface{}, keyA string) string {
 
 		strT := bufT.String() + "&key=" + keyA
 
-		hmacT := strings.ToUpper(MD5Encrypt(strT))
+		if methodT == "sha256" {
+			h := sha256.New()
+			h.Write([]byte(strT))
+			d := h.Sum(nil)
+			hmacT = string(d)
+		} else {
+			hmacT = strings.ToUpper(MD5Encrypt(strT))
+		}
 
 		return hmacT
 
@@ -24438,7 +24456,14 @@ func (pA *TK) WeixinPaySignString(valuesA interface{}, keyA string) string {
 
 		strT := bufT.String() + "&key=" + keyA
 
-		hmacT := strings.ToUpper(MD5Encrypt(strT))
+		if methodT == "sha256" {
+			h := sha256.New()
+			h.Write([]byte(strT))
+			d := h.Sum(nil)
+			hmacT = string(d)
+		} else {
+			hmacT = strings.ToUpper(MD5Encrypt(strT))
+		}
 
 		return hmacT
 	}
